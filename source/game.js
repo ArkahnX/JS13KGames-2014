@@ -17,7 +17,7 @@ var LEFT = -1;
 
 var player = {
 	x: 16 * 5,
-	y: 16*3,
+	y: 16 * 3,
 	w: 16,
 	h: 32,
 	img: null,
@@ -106,8 +106,53 @@ function DOMLoaded() {
 	canvas = getByType(getElementById, "canvas");
 	context = canvas.getContext("2d");
 	resizeCanvas();
-	loop();
 	createMap();
+	loop();
+}
+
+function parseViewPort() {
+	var deadZoneX = canvas.width / 2;
+	var deadZoneY = canvas.height / 2;
+	if (player.x - viewPortX + deadZoneX > canvas.width) {
+		viewPortX = player.x - (canvas.width - deadZoneX);
+	} else if (player.x - deadZoneX < viewPortX) {
+		viewPortX = player.x - deadZoneX;
+	}
+	if (player.y - viewPortY + deadZoneY > canvas.height) {
+		viewPortY = player.y - (canvas.height - deadZoneY);
+	} else if (player.y - deadZoneY < viewPortY) {
+		viewPortY = player.y - deadZoneY;
+	}
+	// if (!(0 <= viewPortX &&
+	// 	width * 16 >= viewPortX + canvas.width &&
+	// 	0 <= viewPortY &&
+	// 	height * 16 >= viewPortY + canvas.height)) {
+	// 	if (viewPortX < 0) {
+	// 		viewPortX = 0;
+	// 	}
+	// 	if (viewPortY < 0) {
+	// 		viewPortY = 0;
+	// 	}
+	// 	if (viewPortX + canvas.width > width * 16) {
+	// 		viewPortX = (width / 2 * 16) - deadZoneX;
+	// 	}
+	// 	if (viewPortY + canvas.height > height * 16) {
+	// 	console.log(true)
+	// 		viewPortY = (height / 2 * 16) - deadZoneY;
+	// 	}
+	// }
+	viewPortY = ~~ (0.5 + viewPortY);
+	viewPortY = ~~ (0.5 + viewPortY);
+	// viewPortX = (window.innerWidth / 2) - (width*16) + player.x;
+	// viewPortX = player.x;
+	// viewPortY = (window.innerHeight / 2) - (height*16) + player.y;
+	// viewPortY = player.y;
+	// if(viewPortX < (window.innerWidth-(width*16))/2) {
+	// viewPortX = 0;
+	// }
+	// if(viewPortY < (window.innerHeight-(height*16))/2) {
+	// viewPortY = (window.innerHeight-(height*16))/2;
+	// }
 }
 
 function resizeCanvas() {
@@ -220,13 +265,6 @@ function handleJump(entity) {
 
 function eachFrame(event) {
 	context.clearRect(0, 0, canvas.width, canvas.height);
-		randomizeMap();
-	if (evenNumber % 12 === 0) {
-		// createMap();
-		evenNumber = 0;
-	}
-	evenNumber++;
-	drawMap();
 	for (var i = 0; i < entities.length; i++) {
 		var entity = entities[i];
 		handleXMovement(entity);
@@ -244,23 +282,30 @@ function eachFrame(event) {
 		// 	context.fillStyle = "#FFFFFF";
 		// }
 		// context.fillRect((entity.x - entity.x % 16) / 16, entity.y, entity.w, entity.h);
-		context.fillStyle = "#000000";
-		context.fillRect(entity.x, entity.y, entity.w, entity.h);
+		// context.fillStyle = "#000000";
+		// context.fillRect(entity.x-viewPortX, entity.y-viewPortY, entity.w, entity.h);
 		// testHit(entity);
+	}
+	parseViewPort();
+	drawMap();
+	for (var i = 0; i < entities.length; i++) {
+		var entity = entities[i];
+		context.fillStyle = "#000000";
+		context.fillRect(entity.x - viewPortX, entity.y - viewPortY, entity.w, entity.h);
 	}
 }
 
 function testFalling(entity) {
 	var xAlignment = entity.x % 16;
-	var bottomLeft = tilePosition(modulus(entity.x), modulus(entity.y + entity.h));
-	var bottomRight = tilePosition(modulus(entity.x + entity.w), modulus(entity.y + entity.h));
+	var bottomLeft = coordinate(modulus(entity.x), modulus(entity.y + entity.h), numMapTiles);
+	var bottomRight = coordinate(modulus(entity.x + entity.w), modulus(entity.y + entity.h), numMapTiles);
 	var falling = false;
 	if (xAlignment === 0) {
 		falling = map[bottomLeft];
 	} else {
 		falling = map[bottomRight] !== 0 || map[bottomLeft] !== 0;
 	}
-	if (falling && entity.yDirection === FALLING) {
+	if ((falling || entity.y + entity.h > height * 16) && entity.yDirection === FALLING) {
 		// console.log("STOP FALL")
 		entity.y = modulus(entity.y) * 16;
 		entity.yAccel = 0;
@@ -272,8 +317,8 @@ function testFalling(entity) {
 
 function testJumping(entity) {
 	var xAlignment = entity.x % 16;
-	var aboveLeft = tilePosition(modulus(entity.x), modulus(entity.y - (entity.h / 2)));
-	var aboveRight = tilePosition(modulus(entity.x + entity.w), modulus(entity.y - (entity.h / 2)));
+	var aboveLeft = coordinate(modulus(entity.x), modulus(entity.y - (entity.h / 2)), numMapTiles);
+	var aboveRight = coordinate(modulus(entity.x + entity.w), modulus(entity.y - (entity.h / 2)), numMapTiles);
 	var jumping = false;
 	if (xAlignment === 0) {
 		jumping = map[aboveLeft];
@@ -292,14 +337,14 @@ function testJumping(entity) {
 function testWalking(entity) {
 	var yAlignment = entity.y % 16;
 	var xAlignment = entity.x % 16;
-	var aboveLeft = tilePosition(modulus(entity.x), modulus(entity.y - (entity.h / 2)));
-	var aboveRight = tilePosition(modulus(entity.x + entity.w), modulus(entity.y - (entity.h / 2)));
-	var topLeft = tilePosition(modulus(entity.x), modulus(entity.y));
-	var topRight = tilePosition(modulus(entity.x + entity.w), modulus(entity.y));
-	var midLeft = tilePosition(modulus(entity.x), modulus(entity.y + (entity.h / 2)));
-	var midRight = tilePosition(modulus(entity.x + entity.w), modulus(entity.y + (entity.h / 2)));
-	var bottomLeft = tilePosition(modulus(entity.x), modulus(entity.y + entity.h));
-	var bottomRight = tilePosition(modulus(entity.x + entity.w), modulus(entity.y + entity.h));
+	var aboveLeft = coordinate(modulus(entity.x), modulus(entity.y - (entity.h / 2)), numMapTiles);
+	var aboveRight = coordinate(modulus(entity.x + entity.w), modulus(entity.y - (entity.h / 2)), numMapTiles);
+	var topLeft = coordinate(modulus(entity.x), modulus(entity.y), numMapTiles);
+	var topRight = coordinate(modulus(entity.x + entity.w), modulus(entity.y), numMapTiles);
+	var midLeft = coordinate(modulus(entity.x), modulus(entity.y + (entity.h / 2)), numMapTiles);
+	var midRight = coordinate(modulus(entity.x + entity.w), modulus(entity.y + (entity.h / 2)), numMapTiles);
+	var bottomLeft = coordinate(modulus(entity.x), modulus(entity.y + entity.h), numMapTiles);
+	var bottomRight = coordinate(modulus(entity.x + entity.w), modulus(entity.y + entity.h), numMapTiles);
 	var walkLeft = false;
 	var walkRight = false;
 	if (yAlignment === 0) {
@@ -315,19 +360,19 @@ function testWalking(entity) {
 		}
 	}
 	if (xAlignment === 0) {
-		if (walkRight && entity.xAccel > 0) {
+		if ((walkRight || entity.x + entity.w > width * 16 || entity.x < 0) && entity.xAccel > 0) {
 			// console.log("STOP RIGHT")
 			entity.x = modulus(entity.x) * 16;
 			// entity.xDirection = IDLE;
 			entity.xAccel = 0;
 		}
 	} else {
-		if (walkRight && entity.xAccel > 0) {
+		if ((walkRight || entity.x + entity.w > width * 16 || entity.x < 0) && entity.xAccel > 0) {
 			// console.log("STOP RIGHT")
 			entity.x = modulus(entity.x) * 16;
 			// entity.xDirection = IDLE;
 			entity.xAccel = 0;
-		} else if (walkLeft && entity.xAccel < 0) {
+		} else if ((walkLeft || entity.x + entity.w > width * 16 || entity.x < 0) && entity.xAccel < 0) {
 			// console.log("STOP LEFT")
 			entity.x = modulus(entity.x + entity.w) * 16;
 			// entity.xDirection = IDLE;
@@ -339,14 +384,14 @@ function testWalking(entity) {
 function testHit(entity) {
 	var xAlignment = entity.x % 16;
 	var yAlignment = entity.y % 16;
-	var aboveLeft = tilePosition(modulus(entity.x), modulus(entity.y - (entity.h / 2)));
-	var aboveRight = tilePosition(modulus(entity.x + entity.w), modulus(entity.y - (entity.h / 2)));
-	var topLeft = tilePosition(modulus(entity.x), modulus(entity.y));
-	var topRight = tilePosition(modulus(entity.x + entity.w), modulus(entity.y));
-	var midLeft = tilePosition(modulus(entity.x), modulus(entity.y + (entity.h / 2)));
-	var midRight = tilePosition(modulus(entity.x + entity.w), modulus(entity.y + (entity.h / 2)));
-	var bottomLeft = tilePosition(modulus(entity.x), modulus(entity.y + entity.h));
-	var bottomRight = tilePosition(modulus(entity.x + entity.w), modulus(entity.y + entity.h));
+	var aboveLeft = coordinate(modulus(entity.x), modulus(entity.y - (entity.h / 2)), numMapTiles);
+	var aboveRight = coordinate(modulus(entity.x + entity.w), modulus(entity.y - (entity.h / 2)), numMapTiles);
+	var topLeft = coordinate(modulus(entity.x), modulus(entity.y), numMapTiles);
+	var topRight = coordinate(modulus(entity.x + entity.w), modulus(entity.y), numMapTiles);
+	var midLeft = coordinate(modulus(entity.x), modulus(entity.y + (entity.h / 2)), numMapTiles);
+	var midRight = coordinate(modulus(entity.x + entity.w), modulus(entity.y + (entity.h / 2)), numMapTiles);
+	var bottomLeft = coordinate(modulus(entity.x), modulus(entity.y + entity.h), numMapTiles);
+	var bottomRight = coordinate(modulus(entity.x + entity.w), modulus(entity.y + entity.h), numMapTiles);
 	context.fillStyle = "#FFFFFF";
 	if (map[aboveLeft] === 0) {
 		context.fillStyle = "#FF0000";
@@ -380,11 +425,11 @@ function testHit(entity) {
 }
 
 function loop() {
+	currentTick = window.performance.now();
+	dt = currentTick - lastTick;
+	lastTick = currentTick;
+	document.dispatchEvent(frameEvent);
 	if (runGameLoop) {
-		currentTick = window.performance.now();
-		dt = currentTick - lastTick;
-		lastTick = currentTick;
-		document.dispatchEvent(frameEvent);
 		requestAnimationFrame(loop);
 	}
 }
