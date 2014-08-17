@@ -1,10 +1,14 @@
+process.on("uncaughtException", function(err) {
+	"use strict";
+	console.log(err.stack);
+	console.log(err.toString());
+});
 var program = require('commander');
 var browserify = require('browserify');
 var chalk = require('chalk');
 var express = require('express');
 var path = require('path');
 var rimraf = require('rimraf');
-var fs = require('fs');
 
 var gulp = require('gulp');
 var gutil = require('gulp-util');
@@ -32,47 +36,6 @@ program.on('--help', function() {
 	console.log();
 });
 
-var badList = ["build_system", "node_modules", ".git", "crashes", "build", "app.js"];
-
-function isGoodFile(file) {
-	"use strict";
-	for (var i = 0; i < badList.length; i++) {
-		if (file.indexOf(badList[i]) > -1) {
-			return false;
-		}
-	}
-	return true;
-}
-
-var walk = function(dir) {
-	"use strict";
-	var results = [];
-	var list = fs.readdirSync(dir);
-	var pending = list.length;
-	if (!pending) {
-		return results;
-	}
-	for (var i = 0; i < list.length; i++) {
-		var file = list[i];
-		file = dir + "/" + file;
-		var stat = fs.statSync(file);
-		if (stat && stat.isDirectory()) {
-			var res = walk(file);
-			results = results.concat(res);
-			if (!--pending) {
-				return results;
-			}
-		} else {
-			if (isGoodFile(file)) {
-				results.push(file);
-			}
-			if (!--pending) {
-				return results;
-			}
-		}
-	}
-};
-
 program
 	.usage('<task> [options]')
 	.option('-P, --prod', 'generate production assets')
@@ -81,33 +44,7 @@ program
 var prod = !!program.prod;
 
 gulp.task('default', ['build']);
-gulp.task('build', ['build_source', 'build_styles']);
-
-gulp.task('build_source', function() {
-	var rootDir = "D:/GitHub/js13kgames-2014/";
-	var files = walk(rootDir + "source");
-	var data = "";
-	for (var i = 0; i < files.length; i++) {
-		if (files[i].indexOf(".js") > 0 && files[i].indexOf(".json") === -1) {
-			data += fs.readFileSync(files[i], "utf8");
-		}
-	}
-	fs.writeFileSync(rootDir + 'source/app.js', data);
-	var bundler = browserify('./source/app.js', {
-		debug: !prod
-	});
-	if (prod) {
-		bundler.plugin(require('bundle-collapser/plugin'));
-	}
-
-	return bundler
-		.bundle()
-		.on('error', browserifyError)
-		.pipe(source('build.js'))
-		.pipe(buffer())
-		.pipe(gulpif(prod, uglify()))
-		.pipe(gulp.dest('build'));
-});
+gulp.task('build', ['build_styles']);
 
 gulp.task('build_index', function() {
 	return gulp.src('source/index.html')

@@ -29,7 +29,8 @@
     "gulp-util": "^3.0.0",
     "gulp-zip": "^1.0.0",
     "rimraf": "^2.2.8",
-    "vinyl-source-stream": "^0.1.1"
+    "vinyl-source-stream": "^0.1.1",
+    "uglify-js":"^2.4.0"
   },
   "scripts": {
     "build": "gulp build --prod",
