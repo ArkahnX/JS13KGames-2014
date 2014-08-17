@@ -16,18 +16,20 @@ function drawMap() {
 				drawTile(x, y);
 				// drawImg(tile1, i * 16, e * 16);
 			}
-			context.fillStyle = '#000';
-			context.font = '5pt Calibri';
+			// context.fillStyle = '#000';
+			// context.font = '5pt Calibri';
 			// context.fillText((x % roomSize) + "-" + (y % roomSize), x * 16, (y+0.6) * 16);
-			context.fillText(coordinate(x, y, numMapTiles), x * 16, (y + 0.6) * 16);
+			// context.fillText(coordinate(x, y, numMapTiles), x * 16, (y + 0.6) * 16);
 		}
 	}
 	// console.log(sample)
 }
 
 function drawTile(x, y) {
+	var canvasX = (x * 16) - viewPortX;
+	var canvasY = (y * 16) - viewPortY;
 	context.fillStyle = '#FF9900';
-	context.fillRect((x * 16) - viewPortX, (y * 16) - viewPortY, 16, 16);
+	context.fillRect(canvasX, canvasY, 16, 16);
 	var leftTile = map[coordinate(x - 1, y, numMapTiles)];
 	var topTile = map[coordinate(x, y - 1, numMapTiles)];
 	var middleTile = map[coordinate(x, y, numMapTiles)];
@@ -46,27 +48,26 @@ function drawTile(x, y) {
 		bottomTile = 0;
 	}
 
+	context.lineWidth = 2;
+	context.strokeStyle = '#ff0000';
+	context.beginPath();
 	if (topTile === 0 || isNaN(topTile)) {
-		drawLine(x * tileSize, y * tileSize, (x + 1) * tileSize, y * tileSize);
+		drawLine(canvasX, canvasY, ((x + 1) * tileSize) - viewPortX, canvasY);
 	}
 	if (leftTile === 0 || isNaN(leftTile)) {
-		drawLine(x * tileSize, y * tileSize, x * tileSize, (y + 1) * tileSize);
+		drawLine(canvasX, canvasY, canvasX, ((y + 1) * tileSize) - viewPortY);
 	}
 	if (bottomTile === 0 || isNaN(bottomTile)) {
-		drawLine(x * tileSize, (y + 1) * tileSize, (x + 1) * tileSize, (y + 1) * tileSize);
+		drawLine(canvasX, ((y + 1) * tileSize) - viewPortY, ((x + 1) * tileSize) - viewPortX, ((y + 1) * tileSize) - viewPortY);
 	}
 	if (rightTile === 0 || isNaN(rightTile)) {
-		drawLine((x + 1) * tileSize, y * tileSize, (x + 1) * tileSize, (y + 1) * tileSize);
+		drawLine(((x + 1) * tileSize) - viewPortX, canvasY, ((x + 1) * tileSize) - viewPortX, ((y + 1) * tileSize) - viewPortY);
 	}
-
+	context.closePath();
+	context.stroke();
 }
 
 function drawLine(startX, startY, endX, endY) {
-	context.beginPath();
-	context.lineWidth = 2;
 	context.moveTo(startX, startY);
 	context.lineTo(endX, endY);
-	context.strokeStyle = '#ff0000';
-	context.stroke();
-	context.closePath();
 }
