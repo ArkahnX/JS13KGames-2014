@@ -31,7 +31,7 @@ var player = {
 	jumpStart: 0,
 	jumping: 0,
 	jumpsUsed: 0,
-	maxJumps: 3,
+	maxJumps: 1,
 	angle: 0
 }
 var dt = currentTick - lastTick;
@@ -102,7 +102,7 @@ function DOMLoaded() {
 	canvas = getByType(getElementById, "canvas");
 	context = canvas.getContext("2d");
 	resizeCanvas();
-	createMap();
+	// createMap();
 	loop();
 }
 
@@ -140,6 +140,7 @@ function eachFrame(event) {
 	}
 	parseViewPort();
 	drawMap();
+	// drawRoom();
 	for (var i = 0; i < entities.length; i++) {
 		var entity = entities[i];
 		context.fillStyle = "#000000";
@@ -158,21 +159,6 @@ function loop() {
 		requestAnimationFrame(loop);
 	}
 }
-
-
-var imageObj = new Image();
-
-imageObj.onload = function() {
-	player.img = imageObj;
-};
-imageObj.src = 'img/32x32.png';
-
-var imageObj2 = new Image();
-
-imageObj2.onload = function() {
-	tile1.img = imageObj2;
-};
-imageObj2.src = 'img/16x16.png';
 
 // canvas.addEventListener("mousedown")
 listen("keydown", handleKeyDown);

@@ -4,68 +4,178 @@ function drawImg(entity, x, y) {
 	}
 }
 
-function drawMap() {
-	var sample = 0;
-	for (var y = 0; y < numMapTiles; y++) {
-		for (var x = 0; x < numMapTiles; x++) {
-			sample++;
-			// console.log("X and Y: ", x, y, coordinate(x, y, numMapTiles), coordinate(x, y, roomSize));
-			// console.log("Tile: ", map[coordinate(x, y, numMapTiles)], "-", Math.floor(x / roomSize) + "-" + Math.floor(y / roomSize))
-			if (map[coordinate(x, y, numMapTiles)] !== 0) {
-				// console.log(tilePosition(i, e), (i * width) + e, i, e)
-				drawTile(x, y);
-				// drawImg(tile1, i * 16, e * 16);
+function drawRoom() {
+	var mapWidth = bigRoomList[0].width;
+	var mapHeight = bigRoomList[0].height;
+	var currentX = 0;
+	var currentY = 0;
+	var mapSize = bigRoomList[0].size * roomSize;
+	for (var y = 0; y < mapSize; y++) {
+		for (var x = 0; x < mapSize; x++) {
+			if (bigRoomList[0].map[coordinate(x, y, mapSize)] !== 0) {
+				drawRect(x, y, bigRoomList[0].map, mapSize, 1, 1);
 			}
-			// context.fillStyle = '#000';
-			// context.font = '5pt Calibri';
-			// context.fillText((x % roomSize) + "-" + (y % roomSize), x * 16, (y+0.6) * 16);
-			// context.fillText(coordinate(x, y, numMapTiles), x * 16, (y + 0.6) * 16);
 		}
 	}
-	// console.log(sample)
+	for (var y = 0; y < mapSize; y++) {
+		for (var x = 0; x < mapSize; x++) {
+			if (bigRoomList[0].map[coordinate(x, y, mapSize)] !== 0) {
+				drawTile(x, y, bigRoomList[0].map, mapSize, 1, 1);
+			}
+		}
+	}
+	// // console.log(bigRoomList[0].map,bigRoomList[0].width,bigRoomList[0].height)
+	// for (var i = 0; i < bigRoomList[0].map.length; i++) {
+	// 	// console.log(currentX,currentY, bigRoomList[0].map[i])
+	// 	var room = roomList[bigRoomList[0].map[i]];
+	// 	for (var x = 0; x < roomSize; x++) {
+	// 		for (var y = 0; y < roomSize; y++) {
+	// 			if (room.map[coordinate(x, y, roomSize)] !== 0) {
+	// 				drawRect(x, y, room.map, roomSize,currentX,currentY);
+	// 			}
+	// 		}
+	// 	}
+	// 	for (var x = 0; x < roomSize; x++) {
+	// 		for (var y = 0; y < roomSize; y++) {
+	// 			if (room.map[coordinate(x, y, roomSize)] !== 0) {
+	// 				drawTile(x, y, room.map, roomSize,currentX,currentY);
+	// 			}
+	// 		}
+	// 	}
+	// 	currentX++;
+	// 	if (currentX > mapWidth-1) {
+	// 		currentX = 0;
+	// 		currentY++;
+	// 	}
+	// 	if(currentY > mapHeight-1) {
+	// 		i = bigRoomList[0].map.length;
+	// 	}
+	// }
 }
 
-function drawTile(x, y) {
-	var canvasX = (x * 16) - viewPortX;
-	var canvasY = (y * 16) - viewPortY;
+function drawMap() {
+	var startTime = window.performance.now();
+	for (var y = 0; y < currentMapTiles; y++) {
+		for (var x = 0; x < currentMapTiles; x++) {
+			if (currentMap[coordinate(x, y, currentMapTiles)] !== 0) {
+				drawRect(x, y, currentMap, currentMapTiles, 1, 1);
+			}
+		}
+	}
+	for (var y = 0; y < currentMapTiles; y++) {
+		for (var x = 0; x < currentMapTiles; x++) {
+			if (currentMap[coordinate(x, y, currentMapTiles)] !== 0) {
+				drawTile(x, y, currentMap, currentMapTiles, 1, 1);
+			}
+		}
+	}
+	var time = window.performance.now() - startTime
+	if (time > longestTime) {
+		longestTime = time;
+	}
+	// console.log(longestTime)
+}
+
+function drawRect(x, y, map, mapSize, worldX, worldY) {
+	var canvasX = (x * tileSize) - viewPortX;
+	var canvasY = (y * tileSize) - viewPortY;
+	if (y - 1 < 0) {
+		var topTile = -1;
+	} else {
+		var topTile = map[coordinate(x, y - 1, mapSize)];
+	}
 	context.fillStyle = '#FF9900';
-	context.fillRect(canvasX, canvasY, 16, 16);
-	var leftTile = map[coordinate(x - 1, y, numMapTiles)];
-	var topTile = map[coordinate(x, y - 1, numMapTiles)];
-	var middleTile = map[coordinate(x, y, numMapTiles)];
-	var rightTile = map[coordinate(x + 1, y, numMapTiles)];
-	var bottomTile = map[coordinate(x, y + 1, numMapTiles)];
+	if (topTile === 0) {
+		context.fillRect(canvasX, canvasY - 5, tileSize, 21);
+	} else {
+		context.fillRect(canvasX, canvasY, tileSize, tileSize);
+	}
+}
+
+function drawTile(x, y, map, mapSize, worldX, worldY) {
+	var canvasX = (x * tileSize) - viewPortX;
+	var canvasY =  (y * tileSize) - viewPortY;
+	var canvasX2 = ((x + 1) * tileSize) - viewPortX;
+	var canvasY2 =  ((y + 1) * tileSize) - viewPortY;
+	var leftTile = map[coordinate(x - 1, y, mapSize)];
+	var topTile = map[coordinate(x, y - 1, mapSize)];
+	// var middleTile = map[coordinate(x, y, mapSize)];
+	var rightTile = map[coordinate(x + 1, y, mapSize)];
+	var bottomTile = map[coordinate(x, y + 1, mapSize)];
+	var topLeftTile = map[coordinate(x - 1, y - 1, mapSize)];
+	var topRightTile = map[coordinate(x + 1, y - 1, mapSize)];
+	var bottomLeftTile = map[coordinate(x - 1, y + 1, mapSize)];
+	var bottomRightTile = map[coordinate(x + 1, y + 1, mapSize)];
 	if (x - 1 < 0) {
-		leftTile = 0;
+		leftTile = -1;
+		bottomLeftTile = -1;
+		topLeftTile = -1;
 	}
 	if (y - 1 < 0) {
-		topTile = 0;
+		topTile = -1;
+		topLeftTile = -1;
+		topRightTile = -1;
+
 	}
-	if (x + 1 > numMapTiles - 1) {
-		rightTile = 0;
+	if (x + 1 > mapSize - 1) {
+		rightTile = -1;
+		topRightTile = -1;
+		bottomRightTile = -1;
 	}
-	if (y + 1 > numMapTiles - 1) {
-		bottomTile = 0;
+	if (y + 1 > mapSize - 1) {
+		bottomTile = -1;
+		bottomLeftTile = -1;
+		bottomRightTile = -1;
 	}
 
+	// context.fillStyle = '#FF9900';
+	// if (topTile === 0) {
+	// 	context.fillRect(canvasX, canvasY - 5, 16, 21);
+	// } else {
+	// 	context.fillRect(canvasX, canvasY, 16, 16);
+	// }
 	context.lineWidth = 2;
 	context.strokeStyle = '#ff0000';
 	context.beginPath();
-	if (topTile === 0 || isNaN(topTile)) {
-		drawLine(canvasX, canvasY, ((x + 1) * tileSize) - viewPortX, canvasY);
+	if (topTile === 0) {
+		drawLine(canvasX, canvasY - 5, canvasX2, canvasY - 5);
+		drawLine(canvasX, canvasY + 3, canvasX2, canvasY + 3);
 	}
-	if (leftTile === 0 || isNaN(leftTile)) {
-		drawLine(canvasX, canvasY, canvasX, ((y + 1) * tileSize) - viewPortY);
+	if (topTile === -1) {
+		drawLine(canvasX, canvasY, canvasX2, canvasY);
 	}
-	if (bottomTile === 0 || isNaN(bottomTile)) {
-		drawLine(canvasX, ((y + 1) * tileSize) - viewPortY, ((x + 1) * tileSize) - viewPortX, ((y + 1) * tileSize) - viewPortY);
+	if (rightTile < 1) {
+		// fills the right "floor" line
+		if (topTile === 0) {
+			drawLine(canvasX2, canvasY - 5, canvasX2, canvasY2);
+		} else {
+			drawLine(canvasX2, canvasY, canvasX2, canvasY2);
+		}
 	}
-	if (rightTile === 0 || isNaN(rightTile)) {
-		drawLine(((x + 1) * tileSize) - viewPortX, canvasY, ((x + 1) * tileSize) - viewPortX, ((y + 1) * tileSize) - viewPortY);
+	if (bottomTile < 1) {
+		drawLine(canvasX2, canvasY2, canvasX, canvasY2);
+	}
+	if (leftTile < 1) {
+		// fills the left "floor" line
+		if (topTile === 0) {
+			drawLine(canvasX, canvasY2, canvasX, canvasY - 5);
+		} else {
+			drawLine(canvasX, canvasY2, canvasX, canvasY);
+		}
+	}
+	// fills the left floor line if there is a wall
+	if (leftTile > 0 && topTile > 0 && topLeftTile < 1) {
+		drawLine(canvasX, canvasY - 5, canvasX, canvasY + 3);
+	}
+	// fills the right floor line if there is a wall
+	if (rightTile > 0 && topTile > 0 && topRightTile < 1) {
+		drawLine(canvasX2, canvasY - 5, canvasX2, canvasY + 3);
 	}
 	context.closePath();
 	context.stroke();
+
 }
+var longestTime = 0;
 
 function drawLine(startX, startY, endX, endY) {
 	context.moveTo(startX, startY);

@@ -1,24 +1,27 @@
 var map = [];
-var evenNumber = 0;
-var mapSize = 160;
+
 var tileSize = 16;
-var numMapTiles = 30;
-var width = numMapTiles;
-var height = numMapTiles;
-var roomSize = 10;
-var roomList = [];
+var numMapTiles = roomSize * 3;
+
+
+
 var viewPortX = 0;
 var viewPortY = 0;
-var minViewPortX = 0;
-var minViewPortY = 0;
-var room1 = [32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 0, 0, 0, 0, 0, 0, 0, 0, 0, 32, 0, 0, 0, 0, 0, 0, 0, 0, 0, 32, 0, 0, 0, 0, 0, 0, 0, 0, 32, 32, 0, 0, 0, 0, 0, 0, 0, 32, 32, 32, 0, 0, 0, 0, 0, 32, 32, 32, 32, 32, 0, 0, 0, 32, 32, 32, 32, 0, 32, 32, 0, 32, 32, 32, 32, 32, 0, 0, 32, 32, 32, 32, 32, 32, 32, 0, 0, 0, 32, 32, 32, 32, 32, 0, 0, 0, 0, 0, 0, 32];
-var room2 = [1, 1, 1, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 1, 1, 1];
-roomList.push(room2);
+
+// var room1 = [32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 0, 0, 0, 0, 0, 0, 0, 0, 0, 32, 0, 0, 0, 0, 0, 0, 0, 0, 0, 32, 0, 0, 0, 0, 0, 0, 0, 0, 32, 32, 0, 0, 0, 0, 0, 0, 0, 32, 32, 32, 0, 0, 0, 0, 0, 32, 32, 32, 32, 32, 0, 0, 0, 32, 32, 32, 32, 0, 32, 32, 0, 32, 32, 32, 32, 32, 0, 0, 32, 32, 32, 32, 32, 32, 32, 0, 0, 0, 32, 32, 32, 32, 32, 0, 0, 0, 0, 0, 0, 32];
+// var room2 = [1, 1, 1, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 1, 1, 1];
+// var room3 = [1, 1, 1, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1];
+// var room4 = [1, 1, 1, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 1];
+// var room5 = [1, 1, 1, 0, 0, 0, 1, 1, 1, 1, 1, 1, 0, 0, 0, 1, 1, 1, 1, 1, 1, 0, 0, 0, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 0, 0, 0, 1, 1, 1, 1, 1, 1, 0, 0, 0, 1, 1, 1, 1, 1, 1, 0, 0, 0, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0];
+// var room6 = [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0];
+
+
+// roomList.push(room5, room6);
 var spareArray = [];
-var blankArray = [];
-for (var i = 0; i < 100; i++) {
-	blankArray[i] = 0;
-}
+
+
+
+
 
 function flip(room, width, height, vertical, horizontal) {
 	spareArray.length = room.length;
@@ -51,11 +54,14 @@ function rotate(room, width, height, times) {
 	return spareArray.slice(0);
 }
 
-function coordinate(x, y, size) {
-	return (y * size + x);
-}
+
 
 var rooms = {};
+var path = [0,1];
+
+function makePath() {
+
+}
 
 function createMap() {
 	var room;
@@ -66,11 +72,36 @@ function createMap() {
 				var rotation = null;
 				if (!rooms[roomId]) {
 					rotation = random(0, 3);
-					room = roomList[random(0,roomList.length-1)];
-					rooms[roomId] = rotate(room, roomSize, roomSize, rotation);
+					// room = cloneRoom(roomList[9]);
+					room = cloneRoom(roomList[random(0, usableRooms)]);
+					if(Math.floor(x / roomSize) === 1 && Math.floor(y / roomSize) === 1) {
+						room = cloneRoom(roomList[9]);
+					}
+					if(Math.floor(x / roomSize) === 0 && Math.floor(y / roomSize) === 0) {
+						room = cloneRoom(roomList[9]);
+					}
+					if(Math.floor(x / roomSize) === 1 && Math.floor(y / roomSize) === 0) {
+						room = cloneRoom(roomList[7]);
+					}
+					if(Math.floor(x / roomSize) === 1 && Math.floor(y / roomSize) === 1) {
+						room = cloneRoom(roomList[5]);
+					}
+					if(Math.floor(x / roomSize) === 2 && Math.floor(y / roomSize) === 1) {
+						room = cloneRoom(roomList[7]);
+					}
+					if(Math.floor(x / roomSize) === 2 && Math.floor(y / roomSize) === 2) {
+						room = cloneRoom(roomList[3]);
+					}
+					if (room.options & allowRotate) {
+						rooms[roomId] = rotate(room, roomSize, roomSize, rotation);
+					} else {
+						rooms[roomId] = room;
+					}
+
 					// console.log(Math.floor(x / roomSize) + "-" + Math.floor(y / roomSize), x, y)
 				}
 				room = rooms[roomId];
+					// console.log(room.type, x, y, room.map)
 				// console.log(room)
 			}
 			// if ((y * numMapTiles + x) % (roomSize * roomSize) === 0) {
@@ -81,7 +112,7 @@ function createMap() {
 			// X and Y for room arent being calculated properly
 			// console.log("X and Y: ", x, y, "map coord: ", coordinate(x, y, numMapTiles), "room coord: ", coordinate(x % roomSize, y % roomSize, roomSize));
 			// console.log("Tile: ", room[coordinate(x % roomSize, y % roomSize, roomSize)], "-", roomId)
-			map[coordinate(x, y, numMapTiles)] = room[coordinate(x % roomSize, y % roomSize, roomSize)];
+			map[coordinate(x, y, numMapTiles)] = room.map[coordinate(x % roomSize, y % roomSize, roomSize)];
 			// console.log(x * numMapTiles + y)1
 			// console.log((i * 10 + e) % 100,(e + 1) * (i + 1))
 			// console.log(i,e,tilePosition(i, e, width),tilePosition(i, e, 10) % 100)
@@ -173,7 +204,3 @@ var tile1 = {
 function tilePosition(x, y, dimention) {
 	return (y * dimention || height) + x;
 }
-
-
-
-

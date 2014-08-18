@@ -16,59 +16,82 @@ function drawMap() {
 				drawTile(x, y);
 				// drawImg(tile1, i * 16, e * 16);
 			}
-			context.fillStyle = '#000';
-			context.font = '5pt Calibri';
+			// context.fillStyle = '#000';
+			// context.font = '5pt Calibri';
 			// context.fillText((x % roomSize) + "-" + (y % roomSize), x * 16, (y+0.6) * 16);
-			context.fillText(coordinate(x, y, numMapTiles), x * 16, (y + 0.6) * 16);
+			// context.fillText(coordinate(x, y, numMapTiles), x * 16, (y + 0.6) * 16);
 		}
 	}
 	// console.log(sample)
 }
 
 function drawTile(x, y) {
+	var canvasX = (x * 16) - viewPortX;
+	var canvasY = (y * 16) - viewPortY;
+	var canvasX2 = ((x + 1) * 16) - viewPortX;
+	var canvasY2 = ((y + 1) * 16) - viewPortY
 	context.fillStyle = '#FF9900';
-	context.fillRect((x * 16) - viewPortX, (y * 16) - viewPortY, 16, 16);
+	context.fillRect(canvasX, canvasY, 16, 16);
 	var leftTile = map[coordinate(x - 1, y, numMapTiles)];
 	var topTile = map[coordinate(x, y - 1, numMapTiles)];
 	var middleTile = map[coordinate(x, y, numMapTiles)];
 	var rightTile = map[coordinate(x + 1, y, numMapTiles)];
 	var bottomTile = map[coordinate(x, y + 1, numMapTiles)];
+	var topLeftTile = map[coordinate(x - 1, y - 1, numMapTiles)];
+	var topRightTile = map[coordinate(x + 1, y - 1, numMapTiles)];
+	var bottomLeftTile = map[coordinate(x - 1, y + 1, numMapTiles)];
+	var bottomRightTile = map[coordinate(x + 1, y + 1, numMapTiles)];
 	if (x - 1 < 0) {
 		leftTile = 0;
+		bottomLeftTile = 0;
+		topLeftTile = 0;
 	}
 	if (y - 1 < 0) {
 		topTile = 0;
+		topLeftTile = 0;
+		topRightTile = 0;
+
 	}
 	if (x + 1 > numMapTiles - 1) {
 		rightTile = 0;
+		topRightTile = 0;
+		bottomRightTile = 0;
 	}
 	if (y + 1 > numMapTiles - 1) {
 		bottomTile = 0;
+		bottomLeftTile = 0;
+		bottomRightTile = 0;
 	}
 
-	if (topTile === 0 || isNaN(topTile)) {
-		drawLine(x * tileSize, y * tileSize, (x + 1) * tileSize, y * tileSize);
+	context.lineWidth = 2;
+	context.strokeStyle = '#ff0000';
+	context.beginPath();
+	if (topTile === 0) {
+		drawLine(canvasX, canvasY, canvasX2, canvasY);
+		drawLine(canvasX, canvasY + 5, canvasX2, canvasY + 5);
 	}
-	if (leftTile === 0 || isNaN(leftTile)) {
-		drawLine(x * tileSize, y * tileSize, x * tileSize, (y + 1) * tileSize);
+	if (leftTile === 0) {
+		drawLine(canvasX, canvasY, canvasX, canvasY2);
 	}
-	if (bottomTile === 0 || isNaN(bottomTile)) {
-		drawLine(x * tileSize, (y + 1) * tileSize, (x + 1) * tileSize, (y + 1) * tileSize);
+	if (bottomTile === 0) {
+		drawLine(canvasX, canvasY2, canvasX2, canvasY2);
 	}
-	if (rightTile === 0 || isNaN(rightTile)) {
-		drawLine((x + 1) * tileSize, y * tileSize, (x + 1) * tileSize, (y + 1) * tileSize);
+	if (rightTile === 0) {
+		drawLine(canvasX2, canvasY, canvasX2, canvasY2);
 	}
-
+	if (leftTile !== 0 && topTile !== 0 && topLeftTile === 0) {
+		drawLine(canvasX, canvasY, canvasX, canvasY + 5);
+	}
+	if (rightTile !== 0 && topTile !== 0 && topRightTile === 0) {
+		drawLine(canvasX2, canvasY, canvasX2, canvasY + 5);
+	}
+	context.closePath();
+	context.stroke();
 }
 
 function drawLine(startX, startY, endX, endY) {
-	context.beginPath();
-	context.lineWidth = 2;
 	context.moveTo(startX, startY);
 	context.lineTo(endX, endY);
-	context.strokeStyle = '#ff0000';
-	context.stroke();
-	context.closePath();
 }var canvas, context;
 var domtypes = ["getElementById", "querySelector", "querySelectorAll"];
 var getElementById = 0;
@@ -229,21 +252,6 @@ function loop() {
 		requestAnimationFrame(loop);
 	}
 }
-
-
-var imageObj = new Image();
-
-imageObj.onload = function() {
-	player.img = imageObj;
-};
-imageObj.src = 'img/32x32.png';
-
-var imageObj2 = new Image();
-
-imageObj2.onload = function() {
-	tile1.img = imageObj2;
-};
-imageObj2.src = 'img/16x16.png';
 
 // canvas.addEventListener("mousedown")
 listen("keydown", handleKeyDown);
@@ -499,7 +507,7 @@ function handleXMovement(entity) {
 		} else if (entity.xAccel < 0) {
 			entity.xAccel = entity.xAccel + ((RIGHT * 2 / 60) * dt);
 		}
-		if (entity.xAccel < ((RIGHT / 60) * dt) && entity.xAccel > ((LEFT / 60) * dt)) {
+		if ((entity.xAccel < ((RIGHT / 60) * dt) && entity.xAccel > ((LEFT / 60) * dt)) || entity.yDirection === FALLING || entity.yDirection === JUMPING) {
 			entity.xAccel = 0;
 		}
 	}
@@ -535,13 +543,6 @@ function handleJump(entity) {
 		entity.yAccel = 10;
 	}
 	entity.y = entity.y + entity.yAccel;
-	// if (entity.y > 400) {
-	// 	entity.y = 400;
-	// 	entity.yAccel = 0;
-	// 	entity.yDirection = 0;
-	// 	entity.jumpsUsed = 0;
-	// 	entity.jumping = 0;
-	// }
 }
 
 function testFalling(entity) {
@@ -570,14 +571,14 @@ function testJumping(entity) {
 	var aboveRight = coordinate(modulus(entity.x + entity.w), modulus(entity.y - (entity.h / 2)), numMapTiles);
 	var jumping = false;
 	if (xAlignment === 0) {
-		jumping = map[aboveLeft];
+		jumping = map[aboveLeft] !== 0;
 	} else {
 		jumping = map[aboveLeft] !== 0 || map[aboveRight] !== 0;
 	}
 	if (jumping && entity.jumping === 1) {
 		// console.log("STOP JUMP")
 		entity.y = modulus(entity.y) * 16;
-		entity.yAccel = 0;
+		entity.yAccel = -1;
 		entity.yDirection = FALLING;
 		entity.jumping = 0;
 	}

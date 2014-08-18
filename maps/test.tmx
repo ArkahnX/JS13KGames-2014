@@ -1,11 +1,76 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<map version="1.0" orientation="orthogonal" width="10" height="10" tilewidth="16" tileheight="16">
- <tileset firstgid="1" name="tiles" tilewidth="16" tileheight="16">
-  <image source="C:/Users/ArkahnX/Desktop/BiotechGameArt/tileset.png" width="288" height="288"/>
+<map version="1.0" orientation="orthogonal" width="10" height="10" tilewidth="40" tileheight="40">
+ <tileset firstgid="1" name="tiles" tilewidth="40" tileheight="40">
+  <image source="tiles.png" width="350" height="350"/>
  </tileset>
- <layer name="Tile Layer 1" width="10" height="10">
+ <layer name="0" width="10" height="10" visible="0">
   <data encoding="base64" compression="zlib">
-   eJxjZGBgYIRiXICQPLpaWgJi3UKKmylxC7HqiAlfEAYADjAAEQ==
+   eJxjYBgFgwkAAAGQAAE=
+  </data>
+ </layer>
+ <layer name="1" width="10" height="10" visible="0">
+  <data encoding="base64" compression="zlib">
+   eJxjZGBgYBwAPFBgIPxKCgYANnQARw==
+  </data>
+ </layer>
+ <layer name="2" width="10" height="10" visible="0">
+  <data encoding="base64" compression="zlib">
+   eJxjZGBgYIRiZMCIB4+qo506ADiQAEc=
+  </data>
+ </layer>
+ <layer name="3" width="10" height="10" visible="0">
+  <data encoding="base64" compression="zlib">
+   eJxjZCAMGJEwMWpwqcUlx4iDPVgAPn9h8zclGAAX5AAn
+  </data>
+ </layer>
+ <layer name="4" width="10" height="10" visible="0">
+  <data encoding="base64" compression="zlib">
+   eJxjZGBgYCQRowN8ctQGxNhDyL30dA8xbkGWBwAecAAg
+  </data>
+ </layer>
+ <layer name="5" width="10" height="10" visible="0">
+  <data encoding="base64" compression="zlib">
+   eJxjZGBgYGTADRjRMCXq0NVQw0xK3UmpW3GpIxcDACWMADg=
+  </data>
+ </layer>
+ <layer name="6" width="10" height="10" visible="0">
+  <data encoding="base64" compression="zlib">
+   eJxjZGBgYCQSEwLEqiNFLTZ1+MQIiRPyDyl+p0QdNrUgMQAlWAAv
+  </data>
+ </layer>
+ <layer name="7" width="10" height="10" visible="0">
+  <data encoding="base64" compression="zlib">
+   eJxjZGBgYCQSEwLEqCFWHTY7iRHDp4YRjxpc6vCpwRc25KoBACNcAC8=
+  </data>
+ </layer>
+ <layer name="8" width="10" height="10">
+  <data encoding="base64" compression="zlib">
+   eJxjZGBgYGTADRjRMLHqcKkl1Sx8gBx3EaMGmzpsamiBASP4ADg=
+  </data>
+ </layer>
+ <layer name="9" width="10" height="10" visible="0">
+  <data encoding="base64" compression="zlib">
+   eJxjZGBgYIRibIARDeMChOSpBYi1Z7C4h5jwQ5YHABLsABc=
+  </data>
+ </layer>
+ <layer name="10" width="10" height="10" visible="0">
+  <data encoding="base64" compression="zlib">
+   eJxjZGBgYIRifICRBuqYoJje6gbKv8SoAwAgXAAl
+  </data>
+ </layer>
+ <layer name="11" width="10" height="10" visible="0">
+  <data encoding="base64" compression="zlib">
+   eJxjYMAOGNEwLkBtdUxQTG91A+VfdHUAJEQALw==
+  </data>
+ </layer>
+ <layer name="12" width="10" height="10" visible="0">
+  <data encoding="base64" compression="zlib">
+   eJxjYBhZgBEJMyFhRjyYWHXUwAARSAAv
+  </data>
+ </layer>
+ <layer name="13" width="10" height="10" visible="0">
+  <data encoding="base64" compression="zlib">
+   eJxjZGBgYCQRMyFhctWNAuwAADE8ACU=
   </data>
  </layer>
 </map>
