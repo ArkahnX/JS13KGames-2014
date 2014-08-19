@@ -236,7 +236,7 @@ function setRoom(startX, startY, currentX, currentY, arraySize, array, validRoom
 		validRooms[12] = -1;
 		validRooms[13] = -1;
 	}
-	validRooms[0] = 0;
+	validRooms[9] = 9;
 	for (var i = 0; i < validRooms.length; i++) {
 		if (validRooms[i] !== -1) {
 			roomSelection.push(validRooms[i]);

@@ -1,4 +1,4 @@
-var canvas, context;
+var playerCanvas, tileCanvas, borderCanvas, playerContext, tileContext, borderContext;
 var domtypes = ["getElementById", "querySelector", "querySelectorAll"];
 var getElementById = 0;
 var querySelector = 1;
@@ -47,7 +47,7 @@ var keys = {
 	alt: 18,
 	tab: 9,
 	debug: 192
-}
+};
 
 function listen(eventName, fn) {
 	if (!events[eventName]) {
@@ -99,24 +99,36 @@ function getByType(type, id) {
 
 
 function DOMLoaded() {
-	canvas = getByType(getElementById, "canvas");
-	context = canvas.getContext("2d");
+	playerCanvas = getByType(getElementById, "player");
+	borderCanvas = getByType(getElementById, "border");
+	tileCanvas = getByType(getElementById, "tile");
+	playerContext = playerCanvas.getContext("2d");
+	borderContext = borderCanvas.getContext("2d");
+	tileContext = tileCanvas.getContext("2d");
 	resizeCanvas();
 	// createMap();
 	loop();
 }
 
 function resizeCanvas() {
-	canvas.width = window.innerWidth;
-	canvas.height = window.innerHeight;
+	if (window.innerWidth > 300) {
+		borderCanvas.width = playerCanvas.width = tileCanvas.width = 300;
+	} else {
+		borderCanvas.width = playerCanvas.width = tileCanvas.width = window.innerWidth;
+	}
+	if (window.innerHeight > 300) {
+		borderCanvas.height = playerCanvas.height = tileCanvas.height = 300;
+	} else {
+		borderCanvas.height = playerCanvas.height = tileCanvas.height = window.innerHeight;
+	}
 }
 
 
 
-
-
 function eachFrame(event) {
-	context.clearRect(0, 0, canvas.width, canvas.height);
+	playerContext.clearRect(0, 0, playerCanvas.width, playerCanvas.height);
+	borderContext.clearRect(0, 0, borderCanvas.width, borderCanvas.height);
+	tileContext.clearRect(0, 0, tileCanvas.width, tileCanvas.height);
 	for (var i = 0; i < entities.length; i++) {
 		var entity = entities[i];
 		handleXMovement(entity);
@@ -143,8 +155,9 @@ function eachFrame(event) {
 	// drawRoom();
 	for (var i = 0; i < entities.length; i++) {
 		var entity = entities[i];
-		context.fillStyle = "#000000";
-		context.fillRect(entity.x - viewPortX, entity.y - viewPortY, entity.w, entity.h);
+		// playerContext.fillStyle = "#000000";
+		setStyle(playerContext, "player", "fillStyle", '#000000');
+		playerContext.fillRect(entity.x - viewPortX, entity.y - viewPortY, entity.w, entity.h);
 	}
 }
 

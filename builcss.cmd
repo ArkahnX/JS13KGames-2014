@@ -1,1 +1,1 @@
-gulp dist --prod
+gulp build_styles

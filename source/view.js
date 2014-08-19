@@ -1,4 +1,5 @@
 function parseViewPort() {
+	var canvas = tileContext.canvas;
 	var deadZoneX = canvas.width / 2;
 	var deadZoneY = canvas.height / 2;
 	if (player.x - viewPortX + deadZoneX > canvas.width) {

@@ -1,6 +1,23 @@
+var styles = {
+	player: {},
+	border: {},
+	tile: {},
+};
+
 function drawImg(entity, x, y) {
 	if (entity.img !== null) {
 		context.drawImage(entity.img, entity.x || x, entity.y || y, entity.w, entity.h);
+	}
+}
+
+function setStyle(context, id, style, value) {
+	if (!styles[id][style]) {
+		context[style] = value;
+		styles[id][style] = value;
+	}
+	if (styles[id][style] !== value) {
+		context[style] = value;
+		styles[id][style] = value;
 	}
 }
 
@@ -24,48 +41,38 @@ function drawRoom() {
 			}
 		}
 	}
-	// // console.log(bigRoomList[0].map,bigRoomList[0].width,bigRoomList[0].height)
-	// for (var i = 0; i < bigRoomList[0].map.length; i++) {
-	// 	// console.log(currentX,currentY, bigRoomList[0].map[i])
-	// 	var room = roomList[bigRoomList[0].map[i]];
-	// 	for (var x = 0; x < roomSize; x++) {
-	// 		for (var y = 0; y < roomSize; y++) {
-	// 			if (room.map[coordinate(x, y, roomSize)] !== 0) {
-	// 				drawRect(x, y, room.map, roomSize,currentX,currentY);
-	// 			}
-	// 		}
-	// 	}
-	// 	for (var x = 0; x < roomSize; x++) {
-	// 		for (var y = 0; y < roomSize; y++) {
-	// 			if (room.map[coordinate(x, y, roomSize)] !== 0) {
-	// 				drawTile(x, y, room.map, roomSize,currentX,currentY);
-	// 			}
-	// 		}
-	// 	}
-	// 	currentX++;
-	// 	if (currentX > mapWidth-1) {
-	// 		currentX = 0;
-	// 		currentY++;
-	// 	}
-	// 	if(currentY > mapHeight-1) {
-	// 		i = bigRoomList[0].map.length;
-	// 	}
-	// }
 }
 
 function drawMap() {
 	var startTime = window.performance.now();
 	for (var y = 0; y < currentMapTiles; y++) {
+		var rectWidth = 0;
+		var startX = -1;
+		var hasFloor = 0;
+		var topTile;
 		for (var x = 0; x < currentMapTiles; x++) {
 			if (currentMap[coordinate(x, y, currentMapTiles)] !== 0) {
-				drawRect(x, y, currentMap, currentMapTiles, 1, 1);
+				rectWidth += 1 * tileSize;
+				if (startX === -1) {
+					startX = (x * tileSize) - viewPortX;
+				}
+				if (y - 1 < 0) {
+					topTile = -1;
+				} else {
+					topTile = currentMap[coordinate(x, y - 1, currentMapTiles)];
+				}
+				if (topTile === 0) {
+					hasFloor = 1;
+				}
+				// drawTile(x, y, currentMap, currentMapTiles, startX, rectWidth, hasFloor);
 			}
-		}
-	}
-	for (var y = 0; y < currentMapTiles; y++) {
-		for (var x = 0; x < currentMapTiles; x++) {
-			if (currentMap[coordinate(x, y, currentMapTiles)] !== 0) {
-				drawTile(x, y, currentMap, currentMapTiles, 1, 1);
+			if (currentMap[coordinate(x, y, currentMapTiles)] === 0 || x === currentMapTiles - 1) {
+				drawRect(x, y, currentMap, currentMapTiles, startX, rectWidth, hasFloor);
+			}
+			if (currentMap[coordinate(x, y, currentMapTiles)] === 0 || x === currentMapTiles - 1) {
+				rectWidth = 0;
+				startX = -1;
+				hasFloor = 0;
 			}
 		}
 	}
@@ -73,30 +80,25 @@ function drawMap() {
 	if (time > longestTime) {
 		longestTime = time;
 	}
-	// console.log(longestTime)
 }
 
-function drawRect(x, y, map, mapSize, worldX, worldY) {
+function drawRect(x, y, map, currentMapTiles, startX, rectWidth, hasFloor) {
+	var canvasX = startX;
+	var canvasY = (y * tileSize) - viewPortY;
+	setStyle(tileContext, "tile", "fillStyle", '#FF9900');
+	if (hasFloor === 1) {
+		tileContext.fillRect(canvasX, canvasY - 5, rectWidth, 21);
+	} else {
+		tileContext.fillRect(canvasX, canvasY, rectWidth, tileSize);
+	}
+	// }
+}
+
+function drawTile(x, y, map, mapSize, startX, rectWidth, hasFloor) {
 	var canvasX = (x * tileSize) - viewPortX;
 	var canvasY = (y * tileSize) - viewPortY;
-	if (y - 1 < 0) {
-		var topTile = -1;
-	} else {
-		var topTile = map[coordinate(x, y - 1, mapSize)];
-	}
-	context.fillStyle = '#FF9900';
-	if (topTile === 0) {
-		context.fillRect(canvasX, canvasY - 5, tileSize, 21);
-	} else {
-		context.fillRect(canvasX, canvasY, tileSize, tileSize);
-	}
-}
-
-function drawTile(x, y, map, mapSize, worldX, worldY) {
-	var canvasX = (x * tileSize) - viewPortX;
-	var canvasY =  (y * tileSize) - viewPortY;
 	var canvasX2 = ((x + 1) * tileSize) - viewPortX;
-	var canvasY2 =  ((y + 1) * tileSize) - viewPortY;
+	var canvasY2 = ((y + 1) * tileSize) - viewPortY;
 	var leftTile = map[coordinate(x - 1, y, mapSize)];
 	var topTile = map[coordinate(x, y - 1, mapSize)];
 	// var middleTile = map[coordinate(x, y, mapSize)];
@@ -134,9 +136,11 @@ function drawTile(x, y, map, mapSize, worldX, worldY) {
 	// } else {
 	// 	context.fillRect(canvasX, canvasY, 16, 16);
 	// }
-	context.lineWidth = 2;
-	context.strokeStyle = '#ff0000';
-	context.beginPath();
+	// borderContext.lineWidth = 2;
+	// borderContext.strokeStyle = '#ff0000';
+	setStyle(borderContext, "border", "strokeStyle", '#ff0000');
+	setStyle(borderContext, "border", "lineWidth", 2);
+	borderContext.beginPath();
 	if (topTile === 0) {
 		drawLine(canvasX, canvasY - 5, canvasX2, canvasY - 5);
 		drawLine(canvasX, canvasY + 3, canvasX2, canvasY + 3);
@@ -171,13 +175,13 @@ function drawTile(x, y, map, mapSize, worldX, worldY) {
 	if (rightTile > 0 && topTile > 0 && topRightTile < 1) {
 		drawLine(canvasX2, canvasY - 5, canvasX2, canvasY + 3);
 	}
-	context.closePath();
-	context.stroke();
+	borderContext.closePath();
+	borderContext.stroke();
 
 }
 var longestTime = 0;
 
 function drawLine(startX, startY, endX, endY) {
-	context.moveTo(startX, startY);
-	context.lineTo(endX, endY);
+	borderContext.moveTo(startX, startY);
+	borderContext.lineTo(endX, endY);
 }
