@@ -79,7 +79,6 @@ function BigRoom(width, height, flipX, flipY, rotate, RoomType, doors, paths, ro
 		// array[i] = random(0,usableRooms);
 	}
 	array = roomCreator(array, width, height, topSize);
-	console.log(array);
 	var room;
 	var rooms = [];
 	var currentX = -1;
@@ -108,7 +107,6 @@ function BigRoom(width, height, flipX, flipY, rotate, RoomType, doors, paths, ro
 	currentMap = map;
 	mapHeight = topSize * roomSize;
 	mapWidth = topSize * roomSize;
-	console.log(map);
 	return {
 		map: map,
 		doors: doors,
@@ -253,7 +251,6 @@ function setRoom(startX, startY, currentX, currentY, arraySize, array, validRoom
 			setRoom(startX, startY, currentX, currentY - 1, arraySize, array, validRooms, roomSelection, roomsX, roomsY);
 		}
 	}
-	console.log(selectedRoom, roomSelection, array, startX, startY)
 	array[coordinate(currentX, currentY, arraySize)] = selectedRoom;
 }
 

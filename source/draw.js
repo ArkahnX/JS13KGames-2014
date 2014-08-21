@@ -45,15 +45,31 @@ function drawRoom() {
 
 function drawMap() {
 	var startTime = window.performance.now();
-	for (var y = 0; y < currentMapTiles; y++) {
+	var mapX1 = modulus(viewPortX) - 1;
+	var mapY1 = modulus(viewPortY) - 1;
+	var mapX2 = modulus(viewPortX) + modulus(playerCanvas.width)+2;
+	var mapY2 = modulus(viewPortY) + modulus(playerCanvas.height)+2;
+	if (mapX1 < 0) {
+		mapX1 = 0;
+	}
+	if (mapY1 < 0) {
+		mapY1 = 0;
+	}
+	if (mapX2 > currentMapTiles) {
+		mapX2 = currentMapTiles;
+	}
+	if (mapY2 > currentMapTiles) {
+		mapY2 = currentMapTiles;
+	}
+	for (var y = mapY1; y < mapY2; y++) {
 		var rectWidth = 0;
-		var startX = -1;
+		var startX = -currentMapTiles * tileSize * 2;
 		var hasFloor = 0;
 		var topTile;
-		for (var x = 0; x < currentMapTiles; x++) {
+		for (var x = mapX1; x < mapX2; x++) {
 			if (currentMap[coordinate(x, y, currentMapTiles)] !== 0) {
 				rectWidth += 1 * tileSize;
-				if (startX === -1) {
+				if (startX === -currentMapTiles * tileSize * 2) {
 					startX = (x * tileSize) - viewPortX;
 				}
 				if (y - 1 < 0) {
@@ -66,15 +82,40 @@ function drawMap() {
 				}
 				// drawTile(x, y, currentMap, currentMapTiles, startX, rectWidth, hasFloor);
 			}
-			if (currentMap[coordinate(x, y, currentMapTiles)] === 0 || x === currentMapTiles - 1) {
+			if (currentMap[coordinate(x, y, currentMapTiles)] === 0 || x === mapX2 - 1) {
 				drawRect(x, y, currentMap, currentMapTiles, startX, rectWidth, hasFloor);
 			}
-			if (currentMap[coordinate(x, y, currentMapTiles)] === 0 || x === currentMapTiles - 1) {
+			if (currentMap[coordinate(x, y, currentMapTiles)] === 0 || x === mapX2 - 1) {
 				rectWidth = 0;
-				startX = -1;
+				startX = -currentMapTiles * tileSize * 2;
 				hasFloor = 0;
 			}
 		}
+		// for (var x = 0; x < currentMapTiles; x++) {
+		// 	if (currentMap[coordinate(x, y, currentMapTiles)] !== 0) {
+		// 		rectWidth += 1 * tileSize;
+		// 		if (startX === -1) {
+		// 			startX = (x * tileSize) - viewPortX;
+		// 		}
+		// 		if (y - 1 < 0) {
+		// 			topTile = -1;
+		// 		} else {
+		// 			topTile = currentMap[coordinate(x, y - 1, currentMapTiles)];
+		// 		}
+		// 		if (topTile === 0) {
+		// 			hasFloor = 1;
+		// 		}
+		// 		// drawTile(x, y, currentMap, currentMapTiles, startX, rectWidth, hasFloor);
+		// 	}
+		// 	if (currentMap[coordinate(x, y, currentMapTiles)] === 0 || x === currentMapTiles - 1) {
+		// 		drawRect(x, y, currentMap, currentMapTiles, startX, rectWidth, hasFloor);
+		// 	}
+		// 	if (currentMap[coordinate(x, y, currentMapTiles)] === 0 || x === currentMapTiles - 1) {
+		// 		rectWidth = 0;
+		// 		startX = -1;
+		// 		hasFloor = 0;
+		// 	}
+		// }
 	}
 	var time = window.performance.now() - startTime
 	if (time > longestTime) {

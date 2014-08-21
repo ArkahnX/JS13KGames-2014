@@ -1,4 +1,4 @@
-var playerCanvas, tileCanvas, borderCanvas, playerContext, tileContext, borderContext;
+var playerCanvas, tileCanvas, borderCanvas, playerContext, tileContext, borderContext, mapCanvas, mapContext;
 var domtypes = ["getElementById", "querySelector", "querySelectorAll"];
 var getElementById = 0;
 var querySelector = 1;
@@ -16,7 +16,7 @@ var RIGHT = 1;
 var LEFT = -1;
 
 var player = {
-	x: 16 * 5,
+	x: 151,
 	y: 16 * 3,
 	w: 16,
 	h: 32,
