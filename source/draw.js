@@ -1,7 +1,7 @@
 var styles = {
 	player: {},
 	border: {},
-	tile: {},
+	tile: {}
 };
 
 function drawImg(entity, x, y) {

@@ -1,1 +1,1 @@
-gulp dist --prod
+node dist.js

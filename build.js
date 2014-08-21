@@ -44,7 +44,7 @@ var Minify = function(code, s) {
 	return result;
 };
 
-var badList = ["build_system", "node_modules", ".git", "crashes", "build", "app.js", "seedrandom.min.js"];
+var badList = ["build_system", "node_modules", ".git", "crashes", "build", "app.js", "seedrandom.min.js", "app.min.js"];
 
 function isGoodFile(file) {
 	"use strict";
@@ -126,6 +126,9 @@ var options = {
 		// bracketize: false, // use brackets every time?
 		// comments: false, // output comments?
 		// semicolons: true // use semicolons to separate statements? (otherwise, newlines)
+	},
+	mangle: {
+		toplevel: true,
 	}
 };
 
@@ -152,6 +155,7 @@ for (var i = 0; i < files.length; i++) {
 		data += fs.readFileSync(files[i], "utf8");
 	}
 }
+fs.truncateSync(rootDir + 'source/app.js');
 fs.writeFileSync(rootDir + 'source/app.js', data);
 options.parse.filename = rootDir + "source/app.js";
 var parseOptions = UglifyJS.defaults({}, options.parse);
@@ -163,7 +167,7 @@ var outputOptions = UglifyJS.defaults({}, options.output);
 // outputOptions = defaults(outputOptions, defaultOptions.output, true);
 
 // 1. Parse
-var fullCode = data;
+var fullCode = fs.readFileSync(rootDir + "source/app.js", "utf8");
 var topLevelAst = UglifyJS.parse(fullCode, parseOptions);
 topLevelAst.figure_out_scope();
 
@@ -174,7 +178,7 @@ var compressedAst = topLevelAst.transform(compressor);
 // 3. Mangle
 compressedAst.figure_out_scope();
 compressedAst.compute_char_frequency();
-// compressedAst.mangle_names();
+compressedAst.mangle_names(options.mangle);
 
 // 4. Generate output
 var uglifiedCode = compressedAst.print_to_string(outputOptions);
@@ -182,6 +186,8 @@ var oldSize = getUTF8Size(fullCode);
 var newSize = getUTF8Size(uglifiedCode);
 var saved = ((1 - newSize / oldSize) * 100).toFixed(2);
 console.log("Saved " + saved + " % of old size: " + oldSize + "B with new size: " + newSize + "B for build.js");
+fs.truncateSync(rootDir + 'source/app.min.js');
+fs.writeFileSync(rootDir + 'source/app.min.js', uglifiedCode);
 var minifiedCode = Minify(uglifiedCode);
 
 // fs.writeFileSync(rootDir + "build/" + folder + "/" + fileName + ".js", uglifiedCode);

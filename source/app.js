@@ -1,98 +1,231 @@
+var styles = {
+	player: {},
+	border: {},
+	tile: {}
+};
+
 function drawImg(entity, x, y) {
 	if (entity.img !== null) {
 		context.drawImage(entity.img, entity.x || x, entity.y || y, entity.w, entity.h);
 	}
 }
 
-function drawMap() {
-	var sample = 0;
-	for (var y = 0; y < numMapTiles; y++) {
-		for (var x = 0; x < numMapTiles; x++) {
-			sample++;
-			// console.log("X and Y: ", x, y, coordinate(x, y, numMapTiles), coordinate(x, y, roomSize));
-			// console.log("Tile: ", map[coordinate(x, y, numMapTiles)], "-", Math.floor(x / roomSize) + "-" + Math.floor(y / roomSize))
-			if (map[coordinate(x, y, numMapTiles)] !== 0) {
-				// console.log(tilePosition(i, e), (i * width) + e, i, e)
-				drawTile(x, y);
-				// drawImg(tile1, i * 16, e * 16);
+function setStyle(context, id, style, value) {
+	if (!styles[id][style]) {
+		context[style] = value;
+		styles[id][style] = value;
+	}
+	if (styles[id][style] !== value) {
+		context[style] = value;
+		styles[id][style] = value;
+	}
+}
+
+function drawRoom() {
+	var mapWidth = bigRoomList[0].width;
+	var mapHeight = bigRoomList[0].height;
+	var currentX = 0;
+	var currentY = 0;
+	var mapSize = bigRoomList[0].size * roomSize;
+	for (var y = 0; y < mapSize; y++) {
+		for (var x = 0; x < mapSize; x++) {
+			if (bigRoomList[0].map[coordinate(x, y, mapSize)] !== 0) {
+				drawRect(x, y, bigRoomList[0].map, mapSize, 1, 1);
 			}
-			// context.fillStyle = '#000';
-			// context.font = '5pt Calibri';
-			// context.fillText((x % roomSize) + "-" + (y % roomSize), x * 16, (y+0.6) * 16);
-			// context.fillText(coordinate(x, y, numMapTiles), x * 16, (y + 0.6) * 16);
 		}
 	}
-	// console.log(sample)
+	for (var y = 0; y < mapSize; y++) {
+		for (var x = 0; x < mapSize; x++) {
+			if (bigRoomList[0].map[coordinate(x, y, mapSize)] !== 0) {
+				drawTile(x, y, bigRoomList[0].map, mapSize, 1, 1);
+			}
+		}
+	}
 }
 
-function drawTile(x, y) {
-	var canvasX = (x * 16) - viewPortX;
-	var canvasY = (y * 16) - viewPortY;
-	var canvasX2 = ((x + 1) * 16) - viewPortX;
-	var canvasY2 = ((y + 1) * 16) - viewPortY
-	context.fillStyle = '#FF9900';
-	context.fillRect(canvasX, canvasY, 16, 16);
-	var leftTile = map[coordinate(x - 1, y, numMapTiles)];
-	var topTile = map[coordinate(x, y - 1, numMapTiles)];
-	var middleTile = map[coordinate(x, y, numMapTiles)];
-	var rightTile = map[coordinate(x + 1, y, numMapTiles)];
-	var bottomTile = map[coordinate(x, y + 1, numMapTiles)];
-	var topLeftTile = map[coordinate(x - 1, y - 1, numMapTiles)];
-	var topRightTile = map[coordinate(x + 1, y - 1, numMapTiles)];
-	var bottomLeftTile = map[coordinate(x - 1, y + 1, numMapTiles)];
-	var bottomRightTile = map[coordinate(x + 1, y + 1, numMapTiles)];
+function drawMap() {
+	var startTime = window.performance.now();
+	var mapX1 = modulus(viewPortX) - 1;
+	var mapY1 = modulus(viewPortY) - 1;
+	var mapX2 = modulus(viewPortX) + modulus(playerCanvas.width)+2;
+	var mapY2 = modulus(viewPortY) + modulus(playerCanvas.height)+2;
+	if (mapX1 < 0) {
+		mapX1 = 0;
+	}
+	if (mapY1 < 0) {
+		mapY1 = 0;
+	}
+	if (mapX2 > currentMapTiles) {
+		mapX2 = currentMapTiles;
+	}
+	if (mapY2 > currentMapTiles) {
+		mapY2 = currentMapTiles;
+	}
+	for (var y = mapY1; y < mapY2; y++) {
+		var rectWidth = 0;
+		var startX = -currentMapTiles * tileSize * 2;
+		var hasFloor = 0;
+		var topTile;
+		for (var x = mapX1; x < mapX2; x++) {
+			if (currentMap[coordinate(x, y, currentMapTiles)] !== 0) {
+				rectWidth += 1 * tileSize;
+				if (startX === -currentMapTiles * tileSize * 2) {
+					startX = (x * tileSize) - viewPortX;
+				}
+				if (y - 1 < 0) {
+					topTile = -1;
+				} else {
+					topTile = currentMap[coordinate(x, y - 1, currentMapTiles)];
+				}
+				if (topTile === 0) {
+					hasFloor = 1;
+				}
+				// drawTile(x, y, currentMap, currentMapTiles, startX, rectWidth, hasFloor);
+			}
+			if (currentMap[coordinate(x, y, currentMapTiles)] === 0 || x === mapX2 - 1) {
+				drawRect(x, y, currentMap, currentMapTiles, startX, rectWidth, hasFloor);
+			}
+			if (currentMap[coordinate(x, y, currentMapTiles)] === 0 || x === mapX2 - 1) {
+				rectWidth = 0;
+				startX = -currentMapTiles * tileSize * 2;
+				hasFloor = 0;
+			}
+		}
+		// for (var x = 0; x < currentMapTiles; x++) {
+		// 	if (currentMap[coordinate(x, y, currentMapTiles)] !== 0) {
+		// 		rectWidth += 1 * tileSize;
+		// 		if (startX === -1) {
+		// 			startX = (x * tileSize) - viewPortX;
+		// 		}
+		// 		if (y - 1 < 0) {
+		// 			topTile = -1;
+		// 		} else {
+		// 			topTile = currentMap[coordinate(x, y - 1, currentMapTiles)];
+		// 		}
+		// 		if (topTile === 0) {
+		// 			hasFloor = 1;
+		// 		}
+		// 		// drawTile(x, y, currentMap, currentMapTiles, startX, rectWidth, hasFloor);
+		// 	}
+		// 	if (currentMap[coordinate(x, y, currentMapTiles)] === 0 || x === currentMapTiles - 1) {
+		// 		drawRect(x, y, currentMap, currentMapTiles, startX, rectWidth, hasFloor);
+		// 	}
+		// 	if (currentMap[coordinate(x, y, currentMapTiles)] === 0 || x === currentMapTiles - 1) {
+		// 		rectWidth = 0;
+		// 		startX = -1;
+		// 		hasFloor = 0;
+		// 	}
+		// }
+	}
+	var time = window.performance.now() - startTime
+	if (time > longestTime) {
+		longestTime = time;
+	}
+}
+
+function drawRect(x, y, map, currentMapTiles, startX, rectWidth, hasFloor) {
+	var canvasX = startX;
+	var canvasY = (y * tileSize) - viewPortY;
+	setStyle(tileContext, "tile", "fillStyle", '#FF9900');
+	if (hasFloor === 1) {
+		tileContext.fillRect(canvasX, canvasY - 5, rectWidth, 21);
+	} else {
+		tileContext.fillRect(canvasX, canvasY, rectWidth, tileSize);
+	}
+	// }
+}
+
+function drawTile(x, y, map, mapSize, startX, rectWidth, hasFloor) {
+	var canvasX = (x * tileSize) - viewPortX;
+	var canvasY = (y * tileSize) - viewPortY;
+	var canvasX2 = ((x + 1) * tileSize) - viewPortX;
+	var canvasY2 = ((y + 1) * tileSize) - viewPortY;
+	var leftTile = map[coordinate(x - 1, y, mapSize)];
+	var topTile = map[coordinate(x, y - 1, mapSize)];
+	// var middleTile = map[coordinate(x, y, mapSize)];
+	var rightTile = map[coordinate(x + 1, y, mapSize)];
+	var bottomTile = map[coordinate(x, y + 1, mapSize)];
+	var topLeftTile = map[coordinate(x - 1, y - 1, mapSize)];
+	var topRightTile = map[coordinate(x + 1, y - 1, mapSize)];
+	var bottomLeftTile = map[coordinate(x - 1, y + 1, mapSize)];
+	var bottomRightTile = map[coordinate(x + 1, y + 1, mapSize)];
 	if (x - 1 < 0) {
-		leftTile = 0;
-		bottomLeftTile = 0;
-		topLeftTile = 0;
+		leftTile = -1;
+		bottomLeftTile = -1;
+		topLeftTile = -1;
 	}
 	if (y - 1 < 0) {
-		topTile = 0;
-		topLeftTile = 0;
-		topRightTile = 0;
+		topTile = -1;
+		topLeftTile = -1;
+		topRightTile = -1;
 
 	}
-	if (x + 1 > numMapTiles - 1) {
-		rightTile = 0;
-		topRightTile = 0;
-		bottomRightTile = 0;
+	if (x + 1 > mapSize - 1) {
+		rightTile = -1;
+		topRightTile = -1;
+		bottomRightTile = -1;
 	}
-	if (y + 1 > numMapTiles - 1) {
-		bottomTile = 0;
-		bottomLeftTile = 0;
-		bottomRightTile = 0;
+	if (y + 1 > mapSize - 1) {
+		bottomTile = -1;
+		bottomLeftTile = -1;
+		bottomRightTile = -1;
 	}
 
-	context.lineWidth = 2;
-	context.strokeStyle = '#ff0000';
-	context.beginPath();
+	// context.fillStyle = '#FF9900';
+	// if (topTile === 0) {
+	// 	context.fillRect(canvasX, canvasY - 5, 16, 21);
+	// } else {
+	// 	context.fillRect(canvasX, canvasY, 16, 16);
+	// }
+	// borderContext.lineWidth = 2;
+	// borderContext.strokeStyle = '#ff0000';
+	setStyle(borderContext, "border", "strokeStyle", '#ff0000');
+	setStyle(borderContext, "border", "lineWidth", 2);
+	borderContext.beginPath();
 	if (topTile === 0) {
+		drawLine(canvasX, canvasY - 5, canvasX2, canvasY - 5);
+		drawLine(canvasX, canvasY + 3, canvasX2, canvasY + 3);
+	}
+	if (topTile === -1) {
 		drawLine(canvasX, canvasY, canvasX2, canvasY);
-		drawLine(canvasX, canvasY + 5, canvasX2, canvasY + 5);
 	}
-	if (leftTile === 0) {
-		drawLine(canvasX, canvasY, canvasX, canvasY2);
+	if (rightTile < 1) {
+		// fills the right "floor" line
+		if (topTile === 0) {
+			drawLine(canvasX2, canvasY - 5, canvasX2, canvasY2);
+		} else {
+			drawLine(canvasX2, canvasY, canvasX2, canvasY2);
+		}
 	}
-	if (bottomTile === 0) {
-		drawLine(canvasX, canvasY2, canvasX2, canvasY2);
+	if (bottomTile < 1) {
+		drawLine(canvasX2, canvasY2, canvasX, canvasY2);
 	}
-	if (rightTile === 0) {
-		drawLine(canvasX2, canvasY, canvasX2, canvasY2);
+	if (leftTile < 1) {
+		// fills the left "floor" line
+		if (topTile === 0) {
+			drawLine(canvasX, canvasY2, canvasX, canvasY - 5);
+		} else {
+			drawLine(canvasX, canvasY2, canvasX, canvasY);
+		}
 	}
-	if (leftTile !== 0 && topTile !== 0 && topLeftTile === 0) {
-		drawLine(canvasX, canvasY, canvasX, canvasY + 5);
+	// fills the left floor line if there is a wall
+	if (leftTile > 0 && topTile > 0 && topLeftTile < 1) {
+		drawLine(canvasX, canvasY - 5, canvasX, canvasY + 3);
 	}
-	if (rightTile !== 0 && topTile !== 0 && topRightTile === 0) {
-		drawLine(canvasX2, canvasY, canvasX2, canvasY + 5);
+	// fills the right floor line if there is a wall
+	if (rightTile > 0 && topTile > 0 && topRightTile < 1) {
+		drawLine(canvasX2, canvasY - 5, canvasX2, canvasY + 3);
 	}
-	context.closePath();
-	context.stroke();
+	borderContext.closePath();
+	borderContext.stroke();
+
 }
+var longestTime = 0;
 
 function drawLine(startX, startY, endX, endY) {
-	context.moveTo(startX, startY);
-	context.lineTo(endX, endY);
-}var canvas, context;
+	borderContext.moveTo(startX, startY);
+	borderContext.lineTo(endX, endY);
+}var playerCanvas, tileCanvas, borderCanvas, playerContext, tileContext, borderContext, mapCanvas, mapContext;
 var domtypes = ["getElementById", "querySelector", "querySelectorAll"];
 var getElementById = 0;
 var querySelector = 1;
@@ -110,7 +243,7 @@ var RIGHT = 1;
 var LEFT = -1;
 
 var player = {
-	x: 16 * 5,
+	x: 151,
 	y: 16 * 3,
 	w: 16,
 	h: 32,
@@ -125,7 +258,7 @@ var player = {
 	jumpStart: 0,
 	jumping: 0,
 	jumpsUsed: 0,
-	maxJumps: 3,
+	maxJumps: 1,
 	angle: 0
 }
 var dt = currentTick - lastTick;
@@ -141,7 +274,7 @@ var keys = {
 	alt: 18,
 	tab: 9,
 	debug: 192
-}
+};
 
 function listen(eventName, fn) {
 	if (!events[eventName]) {
@@ -193,24 +326,36 @@ function getByType(type, id) {
 
 
 function DOMLoaded() {
-	canvas = getByType(getElementById, "canvas");
-	context = canvas.getContext("2d");
+	playerCanvas = getByType(getElementById, "player");
+	borderCanvas = getByType(getElementById, "border");
+	tileCanvas = getByType(getElementById, "tile");
+	playerContext = playerCanvas.getContext("2d");
+	borderContext = borderCanvas.getContext("2d");
+	tileContext = tileCanvas.getContext("2d");
 	resizeCanvas();
-	createMap();
+	// createMap();
 	loop();
 }
 
 function resizeCanvas() {
-	canvas.width = window.innerWidth;
-	canvas.height = window.innerHeight;
+	if (window.innerWidth > 300) {
+		borderCanvas.width = playerCanvas.width = tileCanvas.width = 300;
+	} else {
+		borderCanvas.width = playerCanvas.width = tileCanvas.width = window.innerWidth;
+	}
+	if (window.innerHeight > 300) {
+		borderCanvas.height = playerCanvas.height = tileCanvas.height = 300;
+	} else {
+		borderCanvas.height = playerCanvas.height = tileCanvas.height = window.innerHeight;
+	}
 }
 
 
 
-
-
 function eachFrame(event) {
-	context.clearRect(0, 0, canvas.width, canvas.height);
+	playerContext.clearRect(0, 0, playerCanvas.width, playerCanvas.height);
+	borderContext.clearRect(0, 0, borderCanvas.width, borderCanvas.height);
+	tileContext.clearRect(0, 0, tileCanvas.width, tileCanvas.height);
 	for (var i = 0; i < entities.length; i++) {
 		var entity = entities[i];
 		handleXMovement(entity);
@@ -234,10 +379,12 @@ function eachFrame(event) {
 	}
 	parseViewPort();
 	drawMap();
+	// drawRoom();
 	for (var i = 0; i < entities.length; i++) {
 		var entity = entities[i];
-		context.fillStyle = "#000000";
-		context.fillRect(entity.x - viewPortX, entity.y - viewPortY, entity.w, entity.h);
+		// playerContext.fillStyle = "#000000";
+		setStyle(playerContext, "player", "fillStyle", '#000000');
+		playerContext.fillRect(entity.x - viewPortX, entity.y - viewPortY, entity.w, entity.h);
 	}
 }
 
@@ -269,9 +416,13 @@ document.addEventListener("frame", trigger);function random(min, max) {
 	return Math.floor(Math.random() * (max - min + 1) + min);
 }
 
-function modulus(num) {
-	var mod = num % 16;
-	return (num - mod) / 16;
+function modulus(num, size) {
+	var mod = num % (size || 16);
+	return (num - mod) / (size || 16);
+}
+
+function coordinate(x, y, size) {
+	return (y * size + x);
 }function handleKeyDown(event) {
 	for (var attr in keys) {
 		if (keys[attr] === event.keyCode) {
@@ -315,26 +466,29 @@ function handleKeyUp(event) {
 		}
 	}
 }var map = [];
-var evenNumber = 0;
-var mapSize = 160;
+
 var tileSize = 16;
-var numMapTiles = 30;
-var width = numMapTiles;
-var height = numMapTiles;
-var roomSize = 10;
-var roomList = [];
+var numMapTiles = roomSize * 3;
+
+
+
 var viewPortX = 0;
 var viewPortY = 0;
-var minViewPortX = 0;
-var minViewPortY = 0;
-var room1 = [32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 0, 0, 0, 0, 0, 0, 0, 0, 0, 32, 0, 0, 0, 0, 0, 0, 0, 0, 0, 32, 0, 0, 0, 0, 0, 0, 0, 0, 32, 32, 0, 0, 0, 0, 0, 0, 0, 32, 32, 32, 0, 0, 0, 0, 0, 32, 32, 32, 32, 32, 0, 0, 0, 32, 32, 32, 32, 0, 32, 32, 0, 32, 32, 32, 32, 32, 0, 0, 32, 32, 32, 32, 32, 32, 32, 0, 0, 0, 32, 32, 32, 32, 32, 0, 0, 0, 0, 0, 0, 32];
-var room2 = [1, 1, 1, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 1, 1, 1];
-roomList.push(room2);
+
+// var room1 = [32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 0, 0, 0, 0, 0, 0, 0, 0, 0, 32, 0, 0, 0, 0, 0, 0, 0, 0, 0, 32, 0, 0, 0, 0, 0, 0, 0, 0, 32, 32, 0, 0, 0, 0, 0, 0, 0, 32, 32, 32, 0, 0, 0, 0, 0, 32, 32, 32, 32, 32, 0, 0, 0, 32, 32, 32, 32, 0, 32, 32, 0, 32, 32, 32, 32, 32, 0, 0, 32, 32, 32, 32, 32, 32, 32, 0, 0, 0, 32, 32, 32, 32, 32, 0, 0, 0, 0, 0, 0, 32];
+// var room2 = [1, 1, 1, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 1, 1, 1];
+// var room3 = [1, 1, 1, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1];
+// var room4 = [1, 1, 1, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 1];
+// var room5 = [1, 1, 1, 0, 0, 0, 1, 1, 1, 1, 1, 1, 0, 0, 0, 1, 1, 1, 1, 1, 1, 0, 0, 0, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 0, 0, 0, 1, 1, 1, 1, 1, 1, 0, 0, 0, 1, 1, 1, 1, 1, 1, 0, 0, 0, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0];
+// var room6 = [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0];
+
+
+// roomList.push(room5, room6);
 var spareArray = [];
-var blankArray = [];
-for (var i = 0; i < 100; i++) {
-	blankArray[i] = 0;
-}
+
+
+
+
 
 function flip(room, width, height, vertical, horizontal) {
 	spareArray.length = room.length;
@@ -367,11 +521,14 @@ function rotate(room, width, height, times) {
 	return spareArray.slice(0);
 }
 
-function coordinate(x, y, size) {
-	return (y * size + x);
-}
+
 
 var rooms = {};
+var path = [0,1];
+
+function makePath() {
+
+}
 
 function createMap() {
 	var room;
@@ -382,11 +539,36 @@ function createMap() {
 				var rotation = null;
 				if (!rooms[roomId]) {
 					rotation = random(0, 3);
-					room = roomList[random(0,roomList.length-1)];
-					rooms[roomId] = rotate(room, roomSize, roomSize, rotation);
+					// room = cloneRoom(roomList[9]);
+					room = cloneRoom(roomList[random(0, usableRooms)]);
+					if(Math.floor(x / roomSize) === 1 && Math.floor(y / roomSize) === 1) {
+						room = cloneRoom(roomList[9]);
+					}
+					if(Math.floor(x / roomSize) === 0 && Math.floor(y / roomSize) === 0) {
+						room = cloneRoom(roomList[9]);
+					}
+					if(Math.floor(x / roomSize) === 1 && Math.floor(y / roomSize) === 0) {
+						room = cloneRoom(roomList[7]);
+					}
+					if(Math.floor(x / roomSize) === 1 && Math.floor(y / roomSize) === 1) {
+						room = cloneRoom(roomList[5]);
+					}
+					if(Math.floor(x / roomSize) === 2 && Math.floor(y / roomSize) === 1) {
+						room = cloneRoom(roomList[7]);
+					}
+					if(Math.floor(x / roomSize) === 2 && Math.floor(y / roomSize) === 2) {
+						room = cloneRoom(roomList[3]);
+					}
+					if (room.options & allowRotate) {
+						rooms[roomId] = rotate(room, roomSize, roomSize, rotation);
+					} else {
+						rooms[roomId] = room;
+					}
+
 					// console.log(Math.floor(x / roomSize) + "-" + Math.floor(y / roomSize), x, y)
 				}
 				room = rooms[roomId];
+					// console.log(room.type, x, y, room.map)
 				// console.log(room)
 			}
 			// if ((y * numMapTiles + x) % (roomSize * roomSize) === 0) {
@@ -397,7 +579,7 @@ function createMap() {
 			// X and Y for room arent being calculated properly
 			// console.log("X and Y: ", x, y, "map coord: ", coordinate(x, y, numMapTiles), "room coord: ", coordinate(x % roomSize, y % roomSize, roomSize));
 			// console.log("Tile: ", room[coordinate(x % roomSize, y % roomSize, roomSize)], "-", roomId)
-			map[coordinate(x, y, numMapTiles)] = room[coordinate(x % roomSize, y % roomSize, roomSize)];
+			map[coordinate(x, y, numMapTiles)] = room.map[coordinate(x % roomSize, y % roomSize, roomSize)];
 			// console.log(x * numMapTiles + y)1
 			// console.log((i * 10 + e) % 100,(e + 1) * (i + 1))
 			// console.log(i,e,tilePosition(i, e, width),tilePosition(i, e, 10) % 100)
@@ -488,12 +670,7 @@ var tile1 = {
 
 function tilePosition(x, y, dimention) {
 	return (y * dimention || height) + x;
-}
-
-
-
-
-function handleXMovement(entity) {
+}function handleXMovement(entity) {
 	entity.xAccel = entity.xAccel + (entity.xDirection / 60 * dt);
 	if (entity.xAccel > entity.maxAccel) {
 		entity.xAccel = entity.maxAccel;
@@ -547,15 +724,15 @@ function handleJump(entity) {
 
 function testFalling(entity) {
 	var xAlignment = entity.x % 16;
-	var bottomLeft = coordinate(modulus(entity.x), modulus(entity.y + entity.h), numMapTiles);
-	var bottomRight = coordinate(modulus(entity.x + entity.w), modulus(entity.y + entity.h), numMapTiles);
+	var bottomLeft = coordinate(modulus(entity.x), modulus(entity.y + entity.h), currentMapTiles);
+	var bottomRight = coordinate(modulus(entity.x + entity.w), modulus(entity.y + entity.h), currentMapTiles);
 	var falling = false;
 	if (xAlignment === 0) {
-		falling = map[bottomLeft];
+		falling = currentMap[bottomLeft];
 	} else {
-		falling = map[bottomRight] !== 0 || map[bottomLeft] !== 0;
+		falling = currentMap[bottomRight] !== 0 || currentMap[bottomLeft] !== 0;
 	}
-	if ((falling || entity.y + entity.h > height * 16) && entity.yDirection === FALLING) {
+	if ((falling || entity.y + entity.h > mapHeight * 16) && entity.yDirection === FALLING) {
 		// console.log("STOP FALL")
 		entity.y = modulus(entity.y) * 16;
 		entity.yAccel = 0;
@@ -567,13 +744,13 @@ function testFalling(entity) {
 
 function testJumping(entity) {
 	var xAlignment = entity.x % 16;
-	var aboveLeft = coordinate(modulus(entity.x), modulus(entity.y - (entity.h / 2)), numMapTiles);
-	var aboveRight = coordinate(modulus(entity.x + entity.w), modulus(entity.y - (entity.h / 2)), numMapTiles);
+	var aboveLeft = coordinate(modulus(entity.x), modulus(entity.y - (entity.h / 2)), currentMapTiles);
+	var aboveRight = coordinate(modulus(entity.x + entity.w), modulus(entity.y - (entity.h / 2)), currentMapTiles);
 	var jumping = false;
 	if (xAlignment === 0) {
-		jumping = map[aboveLeft] !== 0;
+		jumping = currentMap[aboveLeft] !== 0;
 	} else {
-		jumping = map[aboveLeft] !== 0 || map[aboveRight] !== 0;
+		jumping = currentMap[aboveLeft] !== 0 || currentMap[aboveRight] !== 0;
 	}
 	if (jumping && entity.jumping === 1) {
 		// console.log("STOP JUMP")
@@ -587,49 +764,392 @@ function testJumping(entity) {
 function testWalking(entity) {
 	var yAlignment = entity.y % 16;
 	var xAlignment = entity.x % 16;
-	var aboveLeft = coordinate(modulus(entity.x), modulus(entity.y - (entity.h / 2)), numMapTiles);
-	var aboveRight = coordinate(modulus(entity.x + entity.w), modulus(entity.y - (entity.h / 2)), numMapTiles);
-	var topLeft = coordinate(modulus(entity.x), modulus(entity.y), numMapTiles);
-	var topRight = coordinate(modulus(entity.x + entity.w), modulus(entity.y), numMapTiles);
-	var midLeft = coordinate(modulus(entity.x), modulus(entity.y + (entity.h / 2)), numMapTiles);
-	var midRight = coordinate(modulus(entity.x + entity.w), modulus(entity.y + (entity.h / 2)), numMapTiles);
-	var bottomLeft = coordinate(modulus(entity.x), modulus(entity.y + entity.h), numMapTiles);
-	var bottomRight = coordinate(modulus(entity.x + entity.w), modulus(entity.y + entity.h), numMapTiles);
+	var aboveLeft = coordinate(modulus(entity.x), modulus(entity.y - (entity.h / 2)), currentMapTiles);
+	var aboveRight = coordinate(modulus(entity.x + entity.w), modulus(entity.y - (entity.h / 2)), currentMapTiles);
+	var topLeft = coordinate(modulus(entity.x), modulus(entity.y), currentMapTiles);
+	var topRight = coordinate(modulus(entity.x + entity.w), modulus(entity.y), currentMapTiles);
+	var midLeft = coordinate(modulus(entity.x), modulus(entity.y + (entity.h / 2)), currentMapTiles);
+	var midRight = coordinate(modulus(entity.x + entity.w), modulus(entity.y + (entity.h / 2)), currentMapTiles);
+	var bottomLeft = coordinate(modulus(entity.x), modulus(entity.y + entity.h), currentMapTiles);
+	var bottomRight = coordinate(modulus(entity.x + entity.w), modulus(entity.y + entity.h), currentMapTiles);
 	var walkLeft = false;
 	var walkRight = false;
 	if (yAlignment === 0) {
-		walkLeft = map[midLeft] !== 0 || map[topLeft] !== 0;
-		walkRight = map[midRight] !== 0 || map[topRight] !== 0;
+		walkLeft = currentMap[midLeft] !== 0 || currentMap[topLeft] !== 0;
+		walkRight = currentMap[midRight] !== 0 || currentMap[topRight] !== 0;
 	} else {
 		if (modulus(entity.y + entity.h) * 16 > entity.y + entity.h) {
-			walkLeft = map[midLeft] !== 0 || map[topLeft] !== 0 || map[aboveLeft] !== 0;
-			walkRight = map[midRight] !== 0 || map[topRight] !== 0 || map[aboveRight] !== 0;
+			walkLeft = currentMap[midLeft] !== 0 || currentMap[topLeft] !== 0 || currentMap[aboveLeft] !== 0;
+			walkRight = currentMap[midRight] !== 0 || currentMap[topRight] !== 0 || currentMap[aboveRight] !== 0;
 		} else {
-			walkLeft = map[midLeft] !== 0 || map[topLeft] !== 0 || map[bottomLeft] !== 0;
-			walkRight = map[midRight] !== 0 || map[topRight] !== 0 || map[bottomRight] !== 0;
+			walkLeft = currentMap[midLeft] !== 0 || currentMap[topLeft] !== 0 || currentMap[bottomLeft] !== 0;
+			walkRight = currentMap[midRight] !== 0 || currentMap[topRight] !== 0 || currentMap[bottomRight] !== 0;
 		}
 	}
 	if (xAlignment === 0) {
-		if ((walkRight || entity.x + entity.w > width * 16 || entity.x < 0) && entity.xAccel > 0) {
+		if ((walkRight || entity.x + entity.w > mapWidth * 16 || entity.x < 0) && entity.xAccel > 0) {
 			// console.log("STOP RIGHT")
 			entity.x = modulus(entity.x) * 16;
 			// entity.xDirection = IDLE;
 			entity.xAccel = 0;
 		}
 	} else {
-		if ((walkRight || entity.x + entity.w > width * 16 || entity.x < 0) && entity.xAccel > 0) {
+		if ((walkRight || entity.x + entity.w > mapWidth * 16 || entity.x < 0) && entity.xAccel > 0) {
 			// console.log("STOP RIGHT")
 			entity.x = modulus(entity.x) * 16;
 			// entity.xDirection = IDLE;
 			entity.xAccel = 0;
-		} else if ((walkLeft || entity.x + entity.w > width * 16 || entity.x < 0) && entity.xAccel < 0) {
+		} else if ((walkLeft || entity.x + entity.w > mapWidth * 16 || entity.x < 0) && entity.xAccel < 0) {
 			// console.log("STOP LEFT")
 			entity.x = modulus(entity.x + entity.w) * 16;
 			// entity.xDirection = IDLE;
 			entity.xAccel = 0;
 		}
 	}
-}function parseViewPort() {
+}var mapLeft = 1;
+var mapTop = 2;
+var mapRight = 4;
+var mapBottom = 8;
+var allowFlipX = 1;
+var allowFlipY = 2;
+var allowRotate = 4;
+var usableRooms = 9;
+var roomSize = 10;
+var currentMapTiles = 0;
+var mapWidth = 0;
+var mapHeight = 0;
+var width = currentMapTiles;
+var height = currentMapTiles;
+var roomList = [];
+var bigRoomList = [];
+var blankArray = [];
+for (var i = 0; i < roomSize * roomSize; i++) {
+	blankArray[i] = 0;
+}
+var currentMap = null;
+
+
+var room1 = [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1];
+var room2 = [1, 1, 1, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 1, 1, 1, 1];
+var room3 = [1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 0, 0, 0, 0, 1, 1, 1, 0, 0, 0, 1, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1];
+var room4 = [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 0, 0, 0, 0, 0, 1, 1, 1];
+var room5 = [1, 1, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1];
+var room6 = [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 1, 1, 0, 0, 0, 1, 1, 1, 0, 0, 0, 1, 1, 1, 0, 1, 1, 1, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 1];
+var room7 = [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 1, 1, 0, 0, 0, 1, 1, 0, 0, 1, 1, 0, 0, 0, 1, 1, 1, 0, 1, 1, 0, 0, 0, 0, 1, 1, 1, 0, 1, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 1, 1, 1, 1, 1, 0, 0, 0, 0, 1, 1, 1, 1, 1];
+var room8 = [1, 1, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 1, 1, 1, 0, 0, 0, 0, 0, 0, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1];
+var room9 = [1, 1, 1, 0, 0, 0, 0, 0, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 0, 0, 0, 0, 0, 1, 1, 1];
+var room10 = [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 1, 2, 2, 0, 0, 0, 0, 0, 0, 0, 1, 2, 2, 0, 0, 0, 0, 0, 0, 0, 1, 2, 2, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1];
+var room11 = [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 2, 2, 1, 1, 0, 0, 0, 0, 0, 0, 2, 2, 1, 1, 0, 0, 0, 0, 0, 0, 2, 2, 1, 1, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1];
+var room12 = [1, 1, 1, 0, 0, 0, 0, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 1, 1, 0, 0, 0, 1, 1, 0, 0, 1, 1, 1, 1, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 2, 2, 2, 2, 1, 1, 1, 1, 1, 1, 2, 2, 2, 2, 1, 1, 1];
+var room13 = [1, 1, 1, 2, 2, 2, 2, 1, 1, 1, 1, 1, 1, 2, 2, 2, 2, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 1, 1, 1, 1, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 0, 0, 0, 0, 0, 1, 1, 1];
+
+function Room(flipX, flipY, rotate, RoomType, doors, paths, array) {
+	return {
+		map: array,
+		doors: doors,
+		paths: paths,
+		options: (flipX * 1) | (flipY * 2) | (rotate * 4),
+		type: RoomType
+	};
+}
+
+function cloneRoom(room) {
+	return {
+		map: room.map.slice(0),
+		doors: room.doors,
+		paths: room.paths,
+		options: room.options,
+		type: room.type
+	};
+}
+
+roomList.push(Room(0, 0, 0, 0, 0, 1 | 2 | 4 | 8, blankArray));
+roomList.push(Room(0, 0, 0, 1, 0, 1 | 0 | 4 | 0, room1));
+roomList.push(Room(0, 0, 0, 2, 0, 0 | 2 | 0 | 8, room2));
+roomList.push(Room(0, 0, 0, 3, 0, 1 | 2 | 0 | 8, room3));
+roomList.push(Room(0, 0, 0, 4, 0, 1 | 0 | 4 | 8, room4));
+roomList.push(Room(0, 0, 0, 5, 0, 0 | 2 | 4 | 0, room5));
+roomList.push(Room(0, 0, 0, 6, 0, 0 | 0 | 4 | 8, room6));
+roomList.push(Room(0, 0, 0, 7, 0, 1 | 0 | 0 | 8, room7));
+roomList.push(Room(0, 0, 0, 8, 0, 1 | 2 | 0 | 0, room8));
+roomList.push(Room(0, 0, 0, 9, 0, 1 | 2 | 4 | 8, room9));
+roomList.push(Room(0, 0, 0, 10, 1, 0 | 2 | 4 | 8, room10));
+roomList.push(Room(0, 0, 0, 11, 4, 1 | 2 | 0 | 8, room11));
+roomList.push(Room(0, 0, 0, 12, 8, 1 | 2 | 4 | 0, room12));
+roomList.push(Room(0, 0, 0, 13, 2, 1 | 0 | 4 | 8, room13));
+
+function BigRoom(width, height, flipX, flipY, rotate, RoomType, doors, paths, roomCreator) {
+	var array = [];
+	var map = [];
+	var topSize = Math.max(width, height);
+	for (var i = 0; i < topSize * topSize; i++) {
+		array[i] = 0;
+		// array[i] = random(0,usableRooms);
+	}
+	array = roomCreator(array, width, height, topSize);
+	var room;
+	var rooms = [];
+	var currentX = -1;
+	var currentY = 0;
+	for (var y = 0; y < topSize * roomSize; y++) {
+		for (var x = 0; x < topSize * roomSize; x++) {
+			var arrayIndex = coordinate(Math.floor(x / roomSize), Math.floor(y / roomSize), topSize);
+			var roomId = Math.floor(x / roomSize) + "-" + Math.floor(y / roomSize);
+			if (x % roomSize === 0 || y % roomSize === 0) {
+				var rotation = null;
+				if (!rooms[roomId]) {
+					rotation = random(0, 3);
+					room = cloneRoom(roomList[array[arrayIndex]]);
+					if (room.options & allowRotate) {
+						rooms[roomId] = rotate(room, roomSize, roomSize, rotation);
+					} else {
+						rooms[roomId] = room;
+					}
+				}
+				room = rooms[roomId];
+			}
+			map[coordinate(x, y, topSize * roomSize)] = room.map[coordinate(x % roomSize, y % roomSize, roomSize)];
+		}
+	}
+	currentMapTiles = topSize * roomSize;
+	currentMap = map;
+	mapHeight = topSize * roomSize;
+	mapWidth = topSize * roomSize;
+	return {
+		map: map,
+		doors: doors,
+		paths: paths,
+		width: width,
+		height: height,
+		size: topSize,
+		options: (flipX * 1) | (flipY * 2) | (rotate * 4),
+		type: RoomType
+	};
+}
+
+function setRoom(startX, startY, currentX, currentY, arraySize, array, validRooms, roomSelection, roomsX, roomsY) {
+	roomSelection.length = 0;
+	for (var e = 0; e < roomList.length; e++) {
+		validRooms[e] = e;
+	}
+	var aboveRoom = array[coordinate(currentX, currentY - 1, arraySize)];
+	var leftRoom = array[coordinate(currentX - 1, currentY, arraySize)];
+	var rightRoom = array[coordinate(currentX + 1, currentY, arraySize)];
+	var belowRoom = array[coordinate(currentX, currentY + 1, arraySize)];
+	if (currentY - 1 < 0) {
+		aboveRoom = -1;
+	}
+	if (currentX - 1 < 0) {
+		leftRoom = -1;
+	}
+	if (currentY + 1 > roomsY - 1) {
+		belowRoom = -1;
+	}
+	if (currentX + 1 > roomsX - 1) {
+		rightRoom = -1;
+	}
+	if (aboveRoom === 4 || aboveRoom === 2 || aboveRoom === 6 || aboveRoom === 7 || aboveRoom === 9 || aboveRoom === 13) {
+		console.warn("Room for Above")
+		for (var i = 0; i < validRooms.length; i++) {
+			validRooms[i] = -1;
+		}
+		validRooms[2] = 2;
+		validRooms[3] = 3;
+		validRooms[5] = 5;
+		validRooms[8] = 8;
+		validRooms[9] = 9;
+		if (leftRoom !== -1) {
+			if (leftRoom === 1 || leftRoom === 3 || leftRoom === 4 || leftRoom === 5 || leftRoom === 6 || leftRoom === 9 || leftRoom === 10) {
+				console.warn("Room for Above and Left")
+				validRooms[2] = -1;
+				validRooms[5] = -1;
+				validRooms[3] = 3;
+				validRooms[8] = 8;
+				validRooms[9] = 9;
+				if (rightRoom !== -1) {
+					if (rightRoom === 1 || rightRoom === 3 || rightRoom === 4 || rightRoom === 7 || rightRoom === 8 || rightRoom === 9 || rightRoom === 11) {
+						validRooms[8] = -1;
+					}
+				}
+			}
+		}
+		if (rightRoom !== -1) {
+			if (rightRoom === 1 || rightRoom === 3 || rightRoom === 4 || rightRoom === 7 || rightRoom === 8 || rightRoom === 9 || rightRoom === 11) {
+				console.warn("Room for Above and Left")
+				validRooms[2] = -1;
+				validRooms[8] = -1;
+				validRooms[3] = 3;
+				validRooms[5] = 5;
+				validRooms[9] = 9;
+				if (leftRoom !== -1) {
+					if (leftRoom === 1 || leftRoom === 3 || leftRoom === 4 || leftRoom === 5 || leftRoom === 6 || leftRoom === 9 || leftRoom === 10) {
+						validRooms[5] = -1;
+					}
+				}
+			}
+		}
+	}
+	if (currentX === 0) {
+		console.warn("Left of Map")
+		validRooms[7] = -1;
+		validRooms[8] = -1;
+		validRooms[1] = -1;
+	}
+	if (currentX === roomsX - 1) {
+		console.warn("Right of Map")
+		validRooms[5] = -1;
+		validRooms[6] = -1;
+		validRooms[1] = -1;
+	}
+	if (currentY === 0) {
+		console.warn("Top of Map")
+		validRooms[3] = -1;
+		validRooms[5] = -1;
+		validRooms[8] = -1;
+		validRooms[2] = -1;
+	}
+	if (currentY === roomsY - 1) {
+		console.warn("Bottom of Map")
+		validRooms[4] = -1;
+		validRooms[6] = -1;
+		validRooms[7] = -1;
+		validRooms[2] = -1;
+	}
+	if (currentX === startX && currentY === startY) {
+		console.warn("Room for Start")
+		for (var i = 0; i < validRooms.length; i++) {
+			validRooms[i] = -1;
+		}
+		validRooms[10] = 10;
+		validRooms[11] = 11;
+		validRooms[12] = 12;
+		validRooms[13] = 13;
+		if (leftRoom === -1) {
+			validRooms[11] = -1;
+		}
+		if (aboveRoom === -1) {
+			validRooms[12] = -1;
+		}
+		if (rightRoom === -1) {
+			validRooms[10] = -1;
+		}
+		if (belowRoom === -1) {
+			validRooms[13] = -1;
+		}
+	} else {
+		validRooms[10] = -1;
+		validRooms[11] = -1;
+		validRooms[12] = -1;
+		validRooms[13] = -1;
+	}
+	validRooms[9] = 9;
+	for (var i = 0; i < validRooms.length; i++) {
+		if (validRooms[i] !== -1) {
+			roomSelection.push(validRooms[i]);
+		}
+	}
+	var selectedRoom = roomSelection[random(0, roomSelection.length - 1)];
+	if (selectedRoom === 11) {
+		if ([1, 3, 4, 5, 6, 9].indexOf(leftRoom) === -1) {
+			setRoom(startX, startY, currentX - 1, currentY, arraySize, array, validRooms, roomSelection, roomsX, roomsY);
+		}
+	}
+	if (selectedRoom === 12) {
+		if ([2, 4, 6, 7, 9].indexOf(aboveRoom) === -1) {
+			setRoom(startX, startY, currentX, currentY - 1, arraySize, array, validRooms, roomSelection, roomsX, roomsY);
+		}
+	}
+	array[coordinate(currentX, currentY, arraySize)] = selectedRoom;
+}
+
+bigRoomList.push(BigRoom(4, 4, 0, 0, 0, 0, 0, 1 | 2 | 4 | 8, function(array, roomsX, roomsY, arraySize) {
+	var startX = random(0, roomsX - 1);
+	var startY = random(0, roomsY - 1);
+	var startDirection = random(0, 3);
+	var currentX = 0;
+	var currentY = 0;
+	var validRooms = [];
+	var roomSelection = [];
+	for (var i = 0; i < arraySize * arraySize; i++) {
+		setRoom(startX, startY, currentX, currentY, arraySize, array, validRooms, roomSelection, roomsX, roomsY);
+		currentX++;
+		if (currentX > roomsX - 1) {
+			currentX = 0;
+			currentY++;
+		}
+		if (currentY > roomsY - 1) {
+			i = arraySize * arraySize;
+		}
+	}
+	// var currentX = startX;
+	// var currentY = startY;
+	// if (startDirection === 0) { // door is in the left wall
+	// 	array[coordinate(startX, startY, arraySize)] = 10;
+	// }
+	// if (startDirection === 1) { // door is in the top wall
+	// 	array[coordinate(startX, startY, arraySize)] = 13;
+
+	// }
+	// if (startDirection === 2) { // door is in the right wall
+	// 	array[coordinate(startX, startY, arraySize)] = 11;
+	// }
+	// if (startDirection === 3) { // door is in the bottom wall
+	// 	array[coordinate(startX, startY, arraySize)] = 12;
+	// }
+	// var path = true;
+	// var visited = [startX + "-" + startY];
+	// var previousX = startX;
+	// var previousY = startY;
+	// var previousRoom = roomList[array[coordinate(startX, startY, arraySize)]];
+	// var attempts = 0;
+	// while (path && attempts < 4) {
+	// 	var direction = random(1, 5);
+	// 	if (direction === 2 || direction === 1) {
+	// 		currentX++;
+	// 	}
+	// 	if (direction === 4 || direction === 3) {
+	// 		currentX--;
+	// 	}
+	// 	if (direction === 5) {
+	// 		currentY++;
+	// 	}
+	// 	if (currentX > roomsX - 1) {
+	// 		currentY++;
+	// 		currentX = roomsX - 1;
+	// 	}
+	// 	if (currentX < 0) {
+	// 		currentY++;
+	// 		currentX = 0;
+	// 	}
+	// 	if (currentY > roomsY - 1) {
+	// 		currentY = roomsY - 1;
+	// 	}
+	// 	if (currentY < 0) {
+	// 		currentY = 0;
+	// 	}
+	// 	if (visited.indexOf(currentX + "-" + currentY) === -1) {
+	// 		console.log()
+	// 		array[coordinate(currentX, currentY, arraySize)] = 9;
+	// 		previousRoom = roomList[array[coordinate(currentX, currentY, arraySize)]];
+	// 		previousX = currentX;
+	// 		previousY = currentY;
+	// 		visited.push(currentX + "-" + currentY);
+	// 	} else {
+	// 		attempts++;
+	// 	}
+
+	// }
+
+	// for (var x = 0; x < roomsX; x++) {
+	// 	for (var y = 0; y < roomsY; y++) {
+	// 		if (x === 0 && y === 0) {
+
+	// 		}
+	// 	}
+	// }
+	return array;
+}));function parseViewPort() {
+	var canvas = tileContext.canvas;
 	var deadZoneX = canvas.width / 2;
 	var deadZoneY = canvas.height / 2;
 	if (player.x - viewPortX + deadZoneX > canvas.width) {
