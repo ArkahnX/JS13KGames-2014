@@ -1,2 +1,5 @@
 node_modules
 *.zip
+source/app.min.js
+source/app.js
+source/app.min.js

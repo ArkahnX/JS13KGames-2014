@@ -9,11 +9,6 @@ var currentTick = window.performance.now();
 var lastTick = window.performance.now();
 var events = {};
 var keymap = {};
-var JUMPING = -1;
-var FALLING = 1;
-var IDLE = 0;
-var RIGHT = 1;
-var LEFT = -1;
 
 var player = {
 	x: 151,
@@ -153,9 +148,9 @@ function eachFrame(event) {
 	parseViewPort();
 	drawMap();
 	// drawRoom();
+	playerContext.fillStyle = "#000000";
 	for (var i = 0; i < entities.length; i++) {
 		var entity = entities[i];
-		// playerContext.fillStyle = "#000000";
 		setStyle(playerContext, "player", "fillStyle", '#000000');
 		playerContext.fillRect(entity.x - viewPortX, entity.y - viewPortY, entity.w, entity.h);
 	}

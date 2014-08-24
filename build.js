@@ -44,7 +44,7 @@ var Minify = function(code, s) {
 	return result;
 };
 
-var badList = ["build_system", "node_modules", ".git", "crashes", "build", "app.js", "seedrandom.min.js", "app.min.js"];
+var badList = ["build_system", "node_modules", ".git", "crashes", "build", "app.js", "seedrandom.min.js", "app.min.js", "var.js"];
 
 function isGoodFile(file) {
 	"use strict";
@@ -84,7 +84,7 @@ var walk = function(dir) {
 		}
 	}
 };
-
+var globals = require("D:/GitHub/js13kgames-2014/globals.js");
 var options = {
 	parse: {
 		strict: false,
@@ -109,7 +109,7 @@ var options = {
 		cascade: true, // try to cascade `right` into `left` in sequences
 		side_effects: true, // drop side-effect-free statements
 		warnings: true, // warn about potentially dangerous optimizations/code
-		global_defs: {} // global definitions
+		global_defs: globals // global definitions
 	},
 	output: {
 		// indent_start: 0, // start indentation on every line (only when `beautify`)
@@ -156,6 +156,11 @@ for (var i = 0; i < files.length; i++) {
 	}
 }
 fs.truncateSync(rootDir + 'source/app.js');
+for (var attr in globals) {
+	if (data.indexOf(attr) > -1) {
+		data = data.replace(new RegExp(attr, "g"), globals[attr]);
+	}
+}
 fs.writeFileSync(rootDir + 'source/app.js', data);
 options.parse.filename = rootDir + "source/app.js";
 var parseOptions = UglifyJS.defaults({}, options.parse);

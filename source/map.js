@@ -1,6 +1,5 @@
 var map = [];
 
-var tileSize = 16;
 var numMapTiles = roomSize * 3;
 
 
