@@ -21,10 +21,16 @@ function handleXMovement(entity) {
 
 function handleJump(entity) {
 	if (entity.jumping && (entity.yDirection !== JUMPING && entity.jumpsUsed < entity.maxJumps)) {
-		entity.yDirection = JUMPING;
-		entity.yAccel = -entity.jumpForce;
-		entity.jumpStart = entity.y;
-		entity.jumpsUsed++;
+		if (entity.maxJumps > 1 && entity.jumpsUsed === 0 && entity.yDirection === FALLING) {
+			entity.jumpsUsed++;
+		}
+		if ((entity.jumpsUsed === 0 && entity.yDirection === IDLE) || entity.jumpsUsed > 0 || entity.maxJumps > 1) {
+			entity.yDirection = JUMPING;
+			entity.yAccel = -entity.jumpForce;
+			entity.jumpStart = entity.y;
+			entity.jumpsUsed++;
+		}
+
 	}
 	if (entity.yDirection === IDLE || !entity.jumping || entity.jumpStart - entity.y > entity.jumpHeight) {
 		entity.yDirection = FALLING;
