@@ -13,5 +13,6 @@ module.exports = {
 	allowFlipY:2,
 	allowRotate:4,
 	usableRooms:9,
-	roomSize:10
+	roomSize:10,
+	miniMapSize:16
 };

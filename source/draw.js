@@ -156,7 +156,7 @@ function parseVerticalLines(mapX1, mapY1, mapX2, mapY2, type) {
 				var canvasY2 = canvasY + rectSize;
 				var canvasX2 = ((x + 1) * tileSize) - viewPortX;
 				var startX = canvasX;
-				if(type === mapRight) {
+				if (type === mapRight) {
 					startX = canvasX2
 				}
 				if (hasFloor) {
@@ -240,4 +240,131 @@ var longestTime = 0;
 function drawLine(startX, startY, endX, endY) {
 	borderContext.moveTo(startX, startY);
 	borderContext.lineTo(endX, endY);
+}
+
+
+function drawWorld() {
+	var room = null;
+	playerCanvas.width = world.width * miniMapSize;
+	playerCanvas.height = world.height * miniMapSize;
+	playerContext.clearRect(0, 0, playerCanvas.width, playerCanvas.height);
+	for (var i = 0; i < world.rooms.length; i++) {
+		room = world.rooms[i];
+		playerContext.lineWidth = 2;
+		playerContext.strokeStyle = "#555";
+		playerContext.fillStyle = room.mapColor;
+		playerContext.rect(room.mapX * miniMapSize, room.mapY * miniMapSize, room.mapW * miniMapSize, room.mapH * miniMapSize);
+		playerContext.fill();
+		playerContext.stroke();
+		// drawRectangle(room);
+		drawDoors(room);
+	}
+	for (var i = 0; i < world.rooms.length; i++) {
+		room = world.rooms[i];
+		drawIcons(room);
+	}
+}
+
+var lockColors = []
+
+function drawIcons(room) {
+	var door = null;
+	for (var i = 0; i < room.doors.length; i++) {
+		door = room.doors[i];
+		if (door.doorType > 0) {
+			switch (door.dir) {
+				case "N":
+					// this.iconStamp.frame = 32 + door.doorType;
+					// stamp(this.iconStamp, this.miniMapSize * door.mapX, this.miniMapSize * door.mapY - 4);
+					drawCircle(miniMapSize * door.mapX, miniMapSize * door.mapY - 4, "#FF0000");
+					continue;
+				case "S":
+					// iconStamp.frame = 32 + door.doorType;
+					// stamp(iconStamp, miniMapSize * door.mapX, miniMapSize * door.mapY + 4);
+					drawCircle(miniMapSize * door.mapX, miniMapSize * door.mapY + 4, "#00FF00");
+					continue;
+				case "W":
+					// iconStamp.frame = 32 + door.doorType;
+					// stamp(iconStamp, miniMapSize * door.mapX - 4, miniMapSize * door.mapY);
+					drawCircle(miniMapSize * door.mapX - 4, miniMapSize * door.mapY, "#0000FF");
+					continue;
+				case "E":
+					// iconStamp.frame = 32 + door.doorType;
+					// stamp(iconStamp, miniMapSize * door.mapX + 4, miniMapSize * door.mapY);
+					drawCircle(miniMapSize * door.mapX + 4, miniMapSize * door.mapY, "#000000");
+					continue;
+				default:
+					continue;
+			}
+		}
+	}
+	// this.iconStamp.frame = 16 + room.specialType;
+	// stamp(this.iconStamp, this.miniMapSize * (room.mapX + room.mapW / 2) - 4, this.miniMapSize * (room.mapY + room.mapH / 2) - 4);
+	if (room.specialType > 0) {
+		drawCircle(this.miniMapSize * (room.mapX + room.mapW / 2) - 4, this.miniMapSize * (room.mapY + room.mapH / 2) - 4, "rgba(0,0,0,0)", "#FFF");
+	}
+}
+
+function drawCircle(centerX, centerY, color, border) {
+	var radius = 3;
+
+	playerContext.beginPath();
+	playerContext.arc(centerX + (radius * 1.5), centerY + (radius * 1.5), radius, 0, 2 * Math.PI, false);
+	playerContext.fillStyle = color;
+	playerContext.fill();
+	if (border) {
+		playerContext.lineWidth = 2;
+		playerContext.strokeStyle = border;
+		playerContext.stroke();
+	}
+}
+
+function drawDoors(room) {
+	var door = null;
+	var color = room.mapColor;
+	// var color = "#FF0000";
+	playerContext.lineWidth = 2;
+	playerContext.strokeStyle = color;
+	var i = 4;
+	for (var e = 0; e < room.doors.length; e++) {
+		door = room.doors[e];
+		switch (door.dir) {
+			case "N":
+				drawLine2(miniMapSize * door.mapX + i, miniMapSize * door.mapY, miniMapSize * door.mapX + miniMapSize - i, miniMapSize * door.mapY, color);
+				continue;
+			case "S":
+				drawLine2(miniMapSize * door.mapX + i, miniMapSize * (door.mapY + 1), miniMapSize * door.mapX + miniMapSize - i, miniMapSize * (door.mapY + 1), color);
+				continue;
+			case "W":
+				drawLine2(miniMapSize * door.mapX, miniMapSize * door.mapY + i, miniMapSize * door.mapX, miniMapSize * door.mapY + miniMapSize - i, color);
+				continue;
+			case "E":
+				drawLine2(miniMapSize * (door.mapX + 1), miniMapSize * door.mapY + i, miniMapSize * (door.mapX + 1), miniMapSize * door.mapY + miniMapSize - i, color);
+				continue;
+			default:
+				continue;
+		}
+	}
+}
+
+function drawLine2(startX, startY, endX, endY, color) {
+	playerContext.beginPath();
+	playerContext.moveTo(startX, startY);
+	playerContext.lineTo(endX, endY);
+	playerContext.stroke();
+	playerContext.closePath();
+}
+
+function drawFrontiers() {
+	var frontier = null;
+	var i = 0;
+	playerContext.fillStyle = "rgba(255,255,255,0.3)";
+	// var frontiers = world.frontiers;
+	var frontiers = getFrontiersForAllRooms();
+	while (i < frontiers.length) {
+		frontier = frontiers[i];
+		playerContext.fillRect(frontier.x * miniMapSize, frontier.y * miniMapSize, miniMapSize, miniMapSize);
+		drawRectangle(Room(frontier.x, frontier.y, 1, 1, null));
+		i++;
+	}
 }

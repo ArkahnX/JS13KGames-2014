@@ -3,7 +3,7 @@ var domtypes = ["getElementById", "querySelector", "querySelectorAll"];
 var getElementById = 0;
 var querySelector = 1;
 var querySelectorAll = 2;
-var runGameLoop = true;
+var runGameLoop = false;
 var frameEvent = new CustomEvent("frame");
 var currentTick = window.performance.now();
 var lastTick = window.performance.now();
@@ -127,8 +127,8 @@ function eachFrame(event) {
 	for (var i = 0; i < entities.length; i++) {
 		var entity = entities[i];
 		handleXMovement(entity);
-		entity.x = ~~ (0.5 + entity.x);
-		entity.y = ~~ (0.5 + entity.y);
+		entity.x = round(entity.x);
+		entity.y = round(entity.y);
 		testWalking(entity);
 		testJumping(entity);
 		handleJump(entity);
