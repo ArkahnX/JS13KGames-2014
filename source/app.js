@@ -245,49 +245,101 @@ function drawLine(startX, startY, endX, endY) {
 
 function drawWorld() {
 	var room = null;
-	playerCanvas.width = world.width * 10;
-	playerCanvas.height = world.height * 10;
+	playerCanvas.width = world.width * 16;
+	playerCanvas.height = world.height * 16;
 	playerContext.clearRect(0, 0, playerCanvas.width, playerCanvas.height);
 	for (var i = 0; i < world.rooms.length; i++) {
 		room = world.rooms[i];
+		playerContext.lineWidth = 2;
+		playerContext.strokeStyle = "#555";
 		playerContext.fillStyle = room.mapColor;
-		playerContext.fillRect(room.mapX * 10, room.mapY * 10, room.mapW * 10, room.mapH * 10);
-		drawRectangle(room);
+		playerContext.rect(room.mapX * 16, room.mapY * 16, room.mapW * 16, room.mapH * 16);
+		playerContext.fill();
+		playerContext.stroke();
+		// drawRectangle(room);
 		drawDoors(room);
+	}
+	for (var i = 0; i < world.rooms.length; i++) {
+		room = world.rooms[i];
+		drawIcons(room);
 	}
 }
 
-function drawRectangle(room) {
-	var color = "#555";
-	playerContext.lineWidth = 1;
-	playerContext.strokeStyle = color;
-	drawLine2(10 * room.mapX, 10 * room.mapY, 10 * room.mapX + 10 * room.mapW, 10 * room.mapY, color);
-	drawLine2(10 * room.mapX, 10 * room.mapY, 10 * room.mapX, 10 * room.mapY + 10 * room.mapH, color);
-	drawLine2(10 * room.mapX + 10 * room.mapW, 10 * room.mapY, 10 * room.mapX + 10 * room.mapW, 10 * room.mapY + 10 * room.mapH, color);
-	drawLine2(10 * room.mapX, 10 * room.mapY + 10 * room.mapH, 10 * room.mapX + 10 * room.mapW + 1, 10 * room.mapY + 10 * room.mapH, color);
+var lockColors = []
+
+function drawIcons(room) {
+	var door = null;
+	for (var i = 0; i < room.doors.length; i++) {
+		door = room.doors[i];
+		if (door.doorType > 0) {
+			switch (door.dir) {
+				case "N":
+					// this.iconStamp.frame = 32 + door.doorType;
+					// stamp(this.iconStamp, this.16 * door.mapX, this.16 * door.mapY - 4);
+					drawCircle(16 * door.mapX, 16 * door.mapY - 4, "#FF0000");
+					continue;
+				case "S":
+					// iconStamp.frame = 32 + door.doorType;
+					// stamp(iconStamp, 16 * door.mapX, 16 * door.mapY + 4);
+					drawCircle(16 * door.mapX, 16 * door.mapY + 4, "#00FF00");
+					continue;
+				case "W":
+					// iconStamp.frame = 32 + door.doorType;
+					// stamp(iconStamp, 16 * door.mapX - 4, 16 * door.mapY);
+					drawCircle(16 * door.mapX - 4, 16 * door.mapY, "#0000FF");
+					continue;
+				case "E":
+					// iconStamp.frame = 32 + door.doorType;
+					// stamp(iconStamp, 16 * door.mapX + 4, 16 * door.mapY);
+					drawCircle(16 * door.mapX + 4, 16 * door.mapY, "#000000");
+					continue;
+				default:
+					continue;
+			}
+		}
+	}
+	// this.iconStamp.frame = 16 + room.specialType;
+	// stamp(this.iconStamp, this.16 * (room.mapX + room.mapW / 2) - 4, this.16 * (room.mapY + room.mapH / 2) - 4);
+	if (room.specialType > 0) {
+		drawCircle(this.16 * (room.mapX + room.mapW / 2) - 4, this.16 * (room.mapY + room.mapH / 2) - 4, "rgba(0,0,0,0)", "#FFF");
+	}
+}
+
+function drawCircle(centerX, centerY, color, border) {
+	var radius = 3;
+
+	playerContext.beginPath();
+	playerContext.arc(centerX + (radius * 1.5), centerY + (radius * 1.5), radius, 0, 2 * Math.PI, false);
+	playerContext.fillStyle = color;
+	playerContext.fill();
+	if (border) {
+		playerContext.lineWidth = 2;
+		playerContext.strokeStyle = border;
+		playerContext.stroke();
+	}
 }
 
 function drawDoors(room) {
 	var door = null;
 	var color = room.mapColor;
 	// var color = "#FF0000";
-	playerContext.lineWidth = 1;
+	playerContext.lineWidth = 2;
 	playerContext.strokeStyle = color;
-	var i = 2;
+	var i = 4;
 	for (var e = 0; e < room.doors.length; e++) {
 		door = room.doors[e];
 		switch (door.dir) {
 			case "N":
-				drawLine2(10 * door.mapX + i, 10 * door.mapY, 10 * door.mapX + 10 - i, 10 * door.mapY, color);
+				drawLine2(16 * door.mapX + i, 16 * door.mapY, 16 * door.mapX + 16 - i, 16 * door.mapY, color);
 				continue;
 			case "S":
-				drawLine2(10 * door.mapX + i, 10 * (door.mapY + 1), 10 * door.mapX + 10 - i, 10 * (door.mapY + 1), color);
+				drawLine2(16 * door.mapX + i, 16 * (door.mapY + 1), 16 * door.mapX + 16 - i, 16 * (door.mapY + 1), color);
 				continue;
 			case "W":
-				drawLine2(10 * door.mapX, 10 * door.mapY + i, 10 * door.mapX, 10 * door.mapY + 10 - i, color);
+				drawLine2(16 * door.mapX, 16 * door.mapY + i, 16 * door.mapX, 16 * door.mapY + 16 - i, color);
 				continue;
 			case "E":
-				drawLine2(10 * (door.mapX + 1), 10 * door.mapY + i, 10 * (door.mapX + 1), 10 * door.mapY + 10 - i, color);
+				drawLine2(16 * (door.mapX + 1), 16 * door.mapY + i, 16 * (door.mapX + 1), 16 * door.mapY + 16 - i, color);
 				continue;
 			default:
 				continue;
@@ -311,7 +363,7 @@ function drawFrontiers() {
 	var frontiers = getFrontiersForAllRooms();
 	while (i < frontiers.length) {
 		frontier = frontiers[i];
-		playerContext.fillRect(frontier.x * 10, frontier.y * 10, 10, 10);
+		playerContext.fillRect(frontier.x * 16, frontier.y * 16, 16, 16);
 		drawRectangle(Room(frontier.x, frontier.y, 1, 1, null));
 		i++;
 	}
@@ -444,8 +496,8 @@ function eachFrame(event) {
 	for (var i = 0; i < entities.length; i++) {
 		var entity = entities[i];
 		handleXMovement(entity);
-		entity.x = ~~ (0.5 + entity.x);
-		entity.y = ~~ (0.5 + entity.y);
+		entity.x = round(entity.x);
+		entity.y = round(entity.y);
 		testWalking(entity);
 		testJumping(entity);
 		handleJump(entity);
@@ -530,6 +582,10 @@ function indexOf(array, searchKey) {
 	} else {
 		return array.indexOf(searchKey);
 	}
+}
+
+function round(value) {
+	return ~~ (0.5 + value);
 }function handleKeyDown(event) {
 	for (var attr in keys) {
 		if (keys[attr] === event.keyCode) {
@@ -1764,12 +1820,12 @@ function create() {
 	currentRegionColorIndex = 0;
 	regionColors.length = 0;
 	for (var i = 0; i < 10; i++) {
-		regionColors.push(HSVtoRGB(((i * 36) + 164) % 360, 0.9, 0.5));
+		regionColors.push('#'+Math.floor(Math.random()*16777215).toString(16));
 	}
 	world.width = 80;
 	world.height = 48;
 	startAt(40, 24, nextRegion());
-	createRooms(2);
+	createRooms(9);
 }
 
 function nextRegion() {
@@ -1787,40 +1843,22 @@ function Region(color, maxWidth, maxHeight) {
 	};
 }
 
-/* accepts parameters
- * h  Object = {h:x, s:y, v:z}
- * OR
- * h, s, v
- */
-function HSVtoRGB(h, s, v) {
-	var r, g, b, i, f, p, q, t;
-	if (h && s === undefined && v === undefined) {
-		s = h.s, v = h.v, h = h.h;
-	}
-	i = Math.floor(h * 6);
-	f = h * 6 - i;
-	p = v * (1 - s);
-	q = v * (1 - f * s);
-	t = v * (1 - (1 - f) * s);
-	switch (i % 6) {
-		case 0:
-			r = v, g = t, b = p;
-			break;
-		case 1:
-			r = q, g = v, b = p;
-			break;
-		case 2:
-			r = p, g = v, b = t;
-			break;
-		case 3:
-			r = p, g = q, b = v;
-			break;
-		case 4:
-			r = t, g = p, b = v;
-			break;
-		case 5:
-			r = v, g = p, b = q;
-			break;
-	}
-	return "#" + ("0" + Math.floor(r * 255).toString(16)).slice(-2) + ("0" + Math.floor(g * 255).toString(16)).slice(-2) + ("0" + Math.floor(b * 255).toString(16)).slice(-2);
+function startWorld() {
+	create();
+	drawWorld();
+}
+
+function addWorld() {
+	createRoom();
+	drawWorld();
+}
+
+function addRegion() {
+	startNewRegion(nextRegion());
+}
+
+function doors() {
+	clearDoorTypes();
+	assignDoorTypes();
+	drawWorld();
 }

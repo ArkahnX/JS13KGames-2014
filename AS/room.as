@@ -13,7 +13,11 @@ package
          this.mapColor = 4.281545727E9;
          this.region = param5;
          this.specialType = 0;
+         this.isSecret = false;
+         this.name = "";
          this.doors = new Array();
+         this.architectureStyles = new Array();
+         this.artStyles = new Array();
       }
 
       public var mapX:int;
@@ -26,10 +30,20 @@ package
 
       public var mapColor:int;
 
+      public var localSeed:int;
+
       public var doors:Array;
 
       public var region:Region;
 
       public var specialType:int;
+
+      public var isSecret:Boolean;
+
+      public var name:String;
+
+      public var architectureStyles:Array;
+
+      public var artStyles:Array;
    }
 }
