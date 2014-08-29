@@ -27,7 +27,9 @@ var player = {
 	jumping: 0,
 	jumpsUsed: 0,
 	maxJumps: 1,
-	angle: 0
+	angle: 0,
+	health: 5,
+	maxHealth: 5
 }
 var dt = currentTick - lastTick;
 var entities = [player];
@@ -103,6 +105,16 @@ function DOMLoaded() {
 	resizeCanvas();
 	// createMap();
 	loop();
+	startWorld();
+	for (var r = 0; r < regionColors.length; r++) {
+		var rooms = random(10, 20);
+		for (var i = 0; i < rooms; i++) {
+			addRoomToWorld();
+		}
+		addRegion();
+	}
+	doors();
+	drawWorld();
 }
 
 function resizeCanvas() {
@@ -121,9 +133,6 @@ function resizeCanvas() {
 
 
 function eachFrame(event) {
-	playerContext.clearRect(0, 0, playerCanvas.width, playerCanvas.height);
-	borderContext.clearRect(0, 0, borderCanvas.width, borderCanvas.height);
-	tileContext.clearRect(0, 0, tileCanvas.width, tileCanvas.height);
 	for (var i = 0; i < entities.length; i++) {
 		var entity = entities[i];
 		handleXMovement(entity);
@@ -146,12 +155,20 @@ function eachFrame(event) {
 		// testHit(entity);
 	}
 	parseViewPort();
+	playerContext.clearRect(0, 0, playerCanvas.width, playerCanvas.height);
+	borderContext.clearRect(0, 0, borderCanvas.width, borderCanvas.height);
+	setStyle(tileContext, "tile", "fillStyle", '#000000');
+	tileContext.fillRect(0, 0, tileCanvas.width, tileCanvas.height);
+	// optimize
+	tileContext.clearRect(0 - viewPortX, 0 - viewPortY, realMapWidth, realMapHeight);
 	drawMap();
 	// drawRoom();
 	playerContext.fillStyle = "#000000";
 	for (var i = 0; i < entities.length; i++) {
 		var entity = entities[i];
-		setStyle(playerContext, "player", "fillStyle", '#000000');
+		var red = (15 - ((15) * (player.health / player.maxHealth))).toString(16);
+		// setStyle(playerContext, "player", "fillStyle", '#' + red + red + '0000');
+		playerContext.fillStyle = '#' + red + red + '0000';
 		playerContext.fillRect(entity.x - viewPortX, entity.y - viewPortY, entity.w, entity.h);
 	}
 }

@@ -2,7 +2,32 @@ var world;
 
 var chanceOfAddingDoor = 0.2;
 var currentColorIndex = 0;
-var regionColors = [];
+var regionColors = [{
+	background:"#BBBBBB",
+	border:"#A0A0A0",
+	other:"#CFCFCF",
+	lock:"#FFFFFF"
+},{
+	background:"#990000",
+	border:"#FF0000",
+	other:"#FF0000",
+	lock:"#FF6666"
+},{
+	background:"#009900",
+	border:"#00BB00",
+	other:"#00BB00",
+	lock:"#66FF66"
+},{
+	background:"#000099",
+	border:"#0000FF",
+	other:"#0000FF",
+	lock:"#6666FF"
+},{
+	background:"#9F9F9F",
+	border:"#555555",
+	other:"#555555",
+	lock:"#B0B0B0"
+}];
 
 function startAt(x, y, region) {
 	world.frontiers.length = 0;
@@ -267,7 +292,11 @@ function createRooms(numberOfRooms) {
 
 function createRoom() {
 	var frontier = getRandom(world.frontiers);
+	try {
 	addRoom(growRoom(frontier.x, frontier.y));
+} catch(e) {
+	console.log(world,frontier, e)
+}
 }
 
 function addRoom(room) {
@@ -277,6 +306,9 @@ function addRoom(room) {
 	var array = [];
 	array = removeFrontiers(array, room);
 	world.frontiers = addBorderingFrontiers(array, room);
+	if(world.frontiers.length === 0) {
+		console.log(array, room, addBorderingFrontiers(array, room))
+	}
 	room.mapColor = world.currentRegion.color;
 	world.rooms.push(room);
 	world.currentRegion.rooms.push(room);
@@ -420,7 +452,7 @@ function assignDoorTypes() {
 		region1 = array3.shift();
 		array2.push(region1);
 		room1 = getRandom(region1.rooms);
-		room1.specialType = i;
+		room1.specialType = i % regionColors.length;
 		for (var e = 0; e < region1.rooms.length; e++) {
 			room2 = region1.rooms[e];
 			for (var r = 0; r < room2.doors.length; r++) {
@@ -431,8 +463,8 @@ function assignDoorTypes() {
 						if (array.indexOf(region2) >= 0) {
 							array1.push(door);
 						} else {
-							door.doorType = i;
-							array, push(region2);
+							door.doorType = i % regionColors.length;
+							array.push(region2);
 							if (array2.indexOf(region2) === -1 && array3.indexOf(region2) === -1) {
 								array3.push(region2);
 							}
@@ -445,7 +477,8 @@ function assignDoorTypes() {
 	for (var t = 0; t < array1.length; t++) {
 		door = array1[t];
 		if (door.doorType <= 0) {
-			door.doorType = parseInt(Math.random() * i) + 1;
+			console.log(i % regionColors.length, world.regions[0].length)
+			door.doorType = parseInt(Math.random() * (i % regionColors.length)) + 1;
 		}
 	}
 }
@@ -465,14 +498,10 @@ function create() {
 
 	};
 	currentRegionColorIndex = 0;
-	regionColors.length = 0;
-	for (var i = 0; i < 10; i++) {
-		regionColors.push('#'+Math.floor(Math.random()*16777215).toString(16));
-	}
 	world.width = 80;
 	world.height = 48;
 	startAt(40, 24, nextRegion());
-	createRooms(9);
+	createRooms(2);
 }
 
 function nextRegion() {
@@ -495,7 +524,7 @@ function startWorld() {
 	drawWorld();
 }
 
-function addWorld() {
+function addRoomToWorld() {
 	createRoom();
 	drawWorld();
 }

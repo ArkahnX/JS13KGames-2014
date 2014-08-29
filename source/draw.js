@@ -251,11 +251,22 @@ function drawWorld() {
 	for (var i = 0; i < world.rooms.length; i++) {
 		room = world.rooms[i];
 		playerContext.lineWidth = 2;
-		playerContext.strokeStyle = "#555";
-		playerContext.fillStyle = room.mapColor;
+		playerContext.strokeStyle = room.region.color.border;
+		playerContext.fillStyle = room.region.color.background;
 		playerContext.rect(room.mapX * miniMapSize, room.mapY * miniMapSize, room.mapW * miniMapSize, room.mapH * miniMapSize);
 		playerContext.fill();
 		playerContext.stroke();
+		// drawRectangle(room);
+		drawDoors(room);
+	}
+	for (var i = 0; i < world.rooms.length; i++) {
+		room = world.rooms[i];
+		// playerContext.lineWidth = 2;
+		// playerContext.strokeStyle = world.currentRegion.color.border;
+		// playerContext.fillStyle = world.currentRegion.color.background;
+		// playerContext.rect(room.mapX * miniMapSize, room.mapY * miniMapSize, room.mapW * miniMapSize, room.mapH * miniMapSize);
+		// playerContext.fill();
+		// playerContext.stroke();
 		// drawRectangle(room);
 		drawDoors(room);
 	}
@@ -271,27 +282,28 @@ function drawIcons(room) {
 	var door = null;
 	for (var i = 0; i < room.doors.length; i++) {
 		door = room.doors[i];
+		var color = regionColors[door.doorType].lock;
 		if (door.doorType > 0) {
 			switch (door.dir) {
 				case "N":
 					// this.iconStamp.frame = 32 + door.doorType;
 					// stamp(this.iconStamp, this.miniMapSize * door.mapX, this.miniMapSize * door.mapY - 4);
-					drawCircle(miniMapSize * door.mapX, miniMapSize * door.mapY - 4, "#FF0000");
+					drawCircle(miniMapSize * door.mapX + 5, miniMapSize * door.mapY , color);
 					continue;
 				case "S":
 					// iconStamp.frame = 32 + door.doorType;
 					// stamp(iconStamp, miniMapSize * door.mapX, miniMapSize * door.mapY + 4);
-					drawCircle(miniMapSize * door.mapX, miniMapSize * door.mapY + 4, "#00FF00");
+					drawCircle(miniMapSize * door.mapX + 5, miniMapSize * door.mapY + 16, color);
 					continue;
 				case "W":
 					// iconStamp.frame = 32 + door.doorType;
 					// stamp(iconStamp, miniMapSize * door.mapX - 4, miniMapSize * door.mapY);
-					drawCircle(miniMapSize * door.mapX - 4, miniMapSize * door.mapY, "#0000FF");
+					drawCircle(miniMapSize * door.mapX -3, miniMapSize * door.mapY + 8, color);
 					continue;
 				case "E":
 					// iconStamp.frame = 32 + door.doorType;
 					// stamp(iconStamp, miniMapSize * door.mapX + 4, miniMapSize * door.mapY);
-					drawCircle(miniMapSize * door.mapX + 4, miniMapSize * door.mapY, "#000000");
+					drawCircle(miniMapSize * door.mapX + 13, miniMapSize * door.mapY + 8, color);
 					continue;
 				default:
 					continue;
@@ -300,8 +312,9 @@ function drawIcons(room) {
 	}
 	// this.iconStamp.frame = 16 + room.specialType;
 	// stamp(this.iconStamp, this.miniMapSize * (room.mapX + room.mapW / 2) - 4, this.miniMapSize * (room.mapY + room.mapH / 2) - 4);
+	var color = regionColors[room.specialType].lock;
 	if (room.specialType > 0) {
-		drawCircle(this.miniMapSize * (room.mapX + room.mapW / 2) - 4, this.miniMapSize * (room.mapY + room.mapH / 2) - 4, "rgba(0,0,0,0)", "#FFF");
+		drawCircle(miniMapSize * (room.mapX + room.mapW / 2) - 3, miniMapSize * (room.mapY + room.mapH / 2) , "rgba(0,0,0,0)", color);
 	}
 }
 
@@ -309,7 +322,7 @@ function drawCircle(centerX, centerY, color, border) {
 	var radius = 3;
 
 	playerContext.beginPath();
-	playerContext.arc(centerX + (radius * 1.5), centerY + (radius * 1.5), radius, 0, 2 * Math.PI, false);
+	playerContext.arc(centerX + radius, centerY, radius, 0, 2 * Math.PI, false);
 	playerContext.fillStyle = color;
 	playerContext.fill();
 	if (border) {
@@ -321,7 +334,7 @@ function drawCircle(centerX, centerY, color, border) {
 
 function drawDoors(room) {
 	var door = null;
-	var color = room.mapColor;
+	var color = room.region.color.background;
 	// var color = "#FF0000";
 	playerContext.lineWidth = 2;
 	playerContext.strokeStyle = color;

@@ -1,6 +1,8 @@
 var currentMapTiles = 0;
 var mapWidth = 0;
 var mapHeight = 0;
+var realMapHeight = 0;
+var realMapWidth = 0;
 var width = currentMapTiles;
 var height = currentMapTiles;
 var roomList = [];
@@ -98,6 +100,8 @@ function BigRoom(width, height, flipX, flipY, rotate, RoomType, doors, paths, ro
 	currentMap = map;
 	mapHeight = topSize * roomSize;
 	mapWidth = topSize * roomSize;
+	realMapHeight = height * roomSize * tileSize;
+	realMapWidth = width * roomSize * tileSize;
 	return {
 		map: map,
 		doors: doors,
