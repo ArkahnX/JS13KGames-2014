@@ -14,5 +14,6 @@ module.exports = {
 	allowRotate:4,
 	usableRooms:9,
 	roomSize:10,
-	miniMapSize:16
+	miniMapSize:16,
+	segmentsPerRoom:3,
 };

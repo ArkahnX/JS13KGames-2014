@@ -14,3 +14,4 @@ var allowRotate = 4;
 var usableRooms = 9;
 var roomSize = 10
 var miniMapSize = 16;
+var segmentsPerRoom = 1;

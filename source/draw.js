@@ -380,7 +380,7 @@ function drawLine2(startX, startY, endX, endY, color) {
 function drawPlayer() {
 	minimapContext.fillStyle = "rgba(200,200,255,0.6)";
 	minimapContext.strokeStyle = "rgba(200,200,255,0.8)";
-	minimapContext.rect((currentRoom.mapX * miniMapSize) + (currentRoom.startPositionX * miniMapSize) - miniViewPortX, (currentRoom.mapY * miniMapSize) + (currentRoom.startPositionY * miniMapSize) - miniViewPortY, miniMapSize, miniMapSize);
+	minimapContext.rect((currentRoom.mapX * miniMapSize) + (modulus(modulus(modulus(player.x), roomSize), segmentsPerRoom) * miniMapSize) - miniViewPortX, (currentRoom.mapY * miniMapSize) + (modulus(modulus(modulus(player.y), roomSize), segmentsPerRoom) * miniMapSize) - miniViewPortY, miniMapSize, miniMapSize);
 	minimapContext.fill();
 	minimapContext.stroke();
 }

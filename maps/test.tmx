@@ -48,9 +48,9 @@
    eJxjZGBgYGTADRjRMLHqcKkl1Sx8gBx3EaMGmzpsamiBASP4ADg=
   </data>
  </layer>
- <layer name="9" width="10" height="10" visible="0">
+ <layer name="9" width="10" height="10">
   <data encoding="base64" compression="zlib">
-   eJxjZGBgYIRibIARDeMChOSpBYi1Z7C4h5jwQ5YHABLsABc=
+   eJxjZGBgYIRibIARDeMDhOSpAYhxBynqKAWE7CEm/JDlARGkABY=
   </data>
  </layer>
  <layer name="10" width="10" height="10" visible="0">
@@ -68,7 +68,7 @@
    eJxjZGBgYIRidMCIhgkBStQRI4bLPfRwHz51MMyEhtHliVEHACDEADc=
   </data>
  </layer>
- <layer name="13" width="10" height="10">
+ <layer name="13" width="10" height="10" visible="0">
   <data encoding="base64" compression="zlib">
    eJxjZGBgYIRiJjTMiAMTUkcI0FodLvcMtPtwqUWWBwA2WAA0
   </data>

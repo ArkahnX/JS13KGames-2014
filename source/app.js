@@ -245,15 +245,16 @@ function drawLine(startX, startY, endX, endY) {
 
 function drawWorld() {
 	var room = null;
-	minimapCanvas.width = world.width * 16;
-	minimapCanvas.height = world.height * 16;
+	minimapCanvas.width = 300;
+	minimapCanvas.height = 300;
 	minimapContext.clearRect(0, 0, minimapCanvas.width, minimapCanvas.height);
+	parseMinimapViewport();
 	for (var i = 0; i < world.rooms.length; i++) {
 		room = world.rooms[i];
 		minimapContext.lineWidth = 2;
 		minimapContext.strokeStyle = room.region.color.border;
 		minimapContext.fillStyle = room.region.color.background;
-		minimapContext.rect(room.mapX * 16, room.mapY * 16, room.mapW * 16, room.mapH * 16);
+		minimapContext.rect((room.mapX * 16) - miniViewPortX, (room.mapY * 16) - miniViewPortY, room.mapW * 16, room.mapH * 16);
 		minimapContext.fill();
 		minimapContext.stroke();
 		// drawRectangle(room);
@@ -270,6 +271,7 @@ function drawWorld() {
 		// drawRectangle(room);
 		drawDoors(room);
 	}
+	drawPlayer();
 	for (var i = 0; i < world.rooms.length; i++) {
 		room = world.rooms[i];
 		drawIcons(room);
@@ -322,7 +324,7 @@ function drawCircle(centerX, centerY, color, border) {
 	var radius = 3;
 
 	minimapContext.beginPath();
-	minimapContext.arc(centerX + radius, centerY, radius, 0, 2 * Math.PI, false);
+	minimapContext.arc(centerX + radius - miniViewPortX, centerY - miniViewPortY, radius, 0, 2 * Math.PI, false);
 	minimapContext.fillStyle = color;
 	minimapContext.fill();
 	if (border) {
@@ -343,22 +345,22 @@ function drawDoors(room) {
 		switch (door.dir) {
 			case "N":
 				var color = "#FF0000";
-	minimapContext.strokeStyle = color;
+				minimapContext.strokeStyle = color;
 				drawLine2(16 * door.mapX + i, 16 * door.mapY + 2, 16 * door.mapX + 16 - i, 16 * door.mapY + 2, color);
 				continue;
 			case "S":
 				var color = "#00FF00";
-	minimapContext.strokeStyle = color;
+				minimapContext.strokeStyle = color;
 				drawLine2(16 * door.mapX + i, 16 * (door.mapY + 1), 16 * door.mapX + 16 - i, 16 * (door.mapY + 1), color);
 				continue;
 			case "W":
 				var color = "#0000FF";
-	minimapContext.strokeStyle = color;
-				drawLine2(16 * door.mapX+2, 16 * door.mapY + i, 16 * door.mapX+2, 16 * door.mapY + 16 - i, color);
+				minimapContext.strokeStyle = color;
+				drawLine2(16 * door.mapX + 2, 16 * door.mapY + i, 16 * door.mapX + 2, 16 * door.mapY + 16 - i, color);
 				continue;
 			case "E":
 				var color = "#FFFF00";
-	minimapContext.strokeStyle = color;
+				minimapContext.strokeStyle = color;
 				drawLine2(16 * (door.mapX + 1), 16 * door.mapY + i, 16 * (door.mapX + 1), 16 * door.mapY + 16 - i, color);
 				continue;
 			default:
@@ -369,24 +371,18 @@ function drawDoors(room) {
 
 function drawLine2(startX, startY, endX, endY, color) {
 	minimapContext.beginPath();
-	minimapContext.moveTo(startX, startY);
-	minimapContext.lineTo(endX, endY);
+	minimapContext.moveTo(startX - miniViewPortX, startY - miniViewPortY);
+	minimapContext.lineTo(endX - miniViewPortX, endY - miniViewPortY);
 	minimapContext.stroke();
 	minimapContext.closePath();
 }
 
-function drawFrontiers() {
-	var frontier = null;
-	var i = 0;
-	minimapContext.fillStyle = "rgba(255,255,255,0.3)";
-	// var frontiers = world.frontiers;
-	var frontiers = getFrontiersForAllRooms();
-	while (i < frontiers.length) {
-		frontier = frontiers[i];
-		minimapContext.fillRect(frontier.x * 16, frontier.y * 16, 16, 16);
-		drawRectangle(Room(frontier.x, frontier.y, 1, 1, null));
-		i++;
-	}
+function drawPlayer() {
+	minimapContext.fillStyle = "rgba(200,200,255,0.6)";
+	minimapContext.strokeStyle = "rgba(200,200,255,0.8)";
+	minimapContext.rect((currentRoom.mapX * 16) + (currentRoom.startPositionX * 16) - miniViewPortX, (currentRoom.mapY * 16) + (currentRoom.startPositionY * 16) - miniViewPortY, 16, 16);
+	minimapContext.fill();
+	minimapContext.stroke();
 }var styles = {
 	player: {},
 	border: {},
@@ -1186,7 +1182,7 @@ var player = {
 	jumpStart: 0,
 	jumping: 0,
 	jumpsUsed: 0,
-	maxJumps: 3,
+	maxJumps: 1,
 	angle: 0,
 	health: 5,
 	maxHealth: 5
@@ -1266,17 +1262,16 @@ function DOMLoaded() {
 	minimapContext = minimapCanvas.getContext("2d");
 	resizeCanvas();
 	// createMap();
-	loop();
 	startWorld();
-	// for (var r = 0; r < regionColors.length; r++) {
-	// 	var rooms = random(10, 20);
-	// 	for (var i = 0; i < rooms; i++) {
-	// 		addRoomToWorld();
-	// 	}
-	// 	addRegion();
-	// }
-	// doors();
-	drawWorld();
+	for (var r = 0; r < regionColors.length; r++) {
+		var rooms = random(10, 20);
+		for (var i = 0; i < rooms; i++) {
+			addRoomToWorld();
+		}
+		addRegion();
+	}
+	doors();
+	loop();
 }
 
 function resizeCanvas() {
@@ -1300,6 +1295,411 @@ function eachFrame(event) {
 		handleXMovement(entity);
 		entity.x = round(entity.x);
 		entity.y = round(entity.y);
+		testDoors();
+		testWalking(entity);
+		testJumping(entity);
+		handleJump(entity);
+		testFalling(entity);
+		// drawImg(entity);
+		// Physics.
+		// if (map[(((entity.x - entity.x % 16) / 16) * width) + (entity.y / 16)] === 1) {
+		// 	context.fillStyle = "#FF0000";
+		// } else {
+		// 	context.fillStyle = "#FFFFFF";
+		// }
+		// context.fillRect((entity.x - entity.x % 16) / 16, entity.y, entity.w, entity.h);
+		// context.fillStyle = "#000000";
+		// context.fillRect(entity.x-viewPortX, entity.y-viewPortY, entity.w, entity.h);
+		// testHit(entity);
+	}
+	parseViewPort();
+	playerContext.clearRect(0, 0, playerCanvas.width, playerCanvas.height);
+	borderContext.clearRect(0, 0, borderCanvas.width, borderCanvas.height);
+	setStyle(tileContext, "tile", "fillStyle", '#000000');
+	tileContext.fillRect(0, 0, tileCanvas.width, tileCanvas.height);
+	// optimize
+	tileContext.clearRect(0 - viewPortX, 0 - viewPortY, realMapWidth, realMapHeight);
+	drawMap();
+
+	// drawRoom();
+	playerContext.fillStyle = "#000000";
+	for (var i = 0; i < entities.length; i++) {
+		var entity = entities[i];
+		var red = (15 - ((15) * (player.health / player.maxHealth))).toString(16);
+		// setStyle(playerContext, "player", "fillStyle", '#' + red + red + '0000');
+		playerContext.fillStyle = '#' + red + red + '0000';
+		playerContext.fillRect(entity.x - viewPortX, entity.y - viewPortY, entity.w, entity.h);
+	}
+}
+
+
+
+function loop() {
+	currentTick = window.performance.now();
+	dt = currentTick - lastTick;
+	lastTick = currentTick;
+	document.dispatchEvent(frameEvent);
+	if (runGameLoop) {
+		requestAnimationFrame(loop);
+	}
+}
+
+// canvas.addEventListener("mousedown")
+listen("keydown", handleKeyDown);
+listen("keyup", handleKeyUp);
+listen("resize", resizeCanvas);
+listen("DOMContentLoaded", DOMLoaded);
+listen("frame", eachFrame);
+window.addEventListener("resize", trigger);
+document.addEventListener("DOMContentLoaded", trigger);
+document.addEventListener("mousedown", trigger);
+document.addEventListener("mouseup", trigger);
+document.addEventListener("keydown", trigger);
+document.addEventListener("keyup", trigger);
+document.addEventListener("frame", trigger);var playerCanvas, tileCanvas, borderCanvas, playerContext, tileContext, borderContext, minimapContext, minimapCanvas;
+var domtypes = ["getElementById", "querySelector", "querySelectorAll"];
+var getElementById = 0;
+var querySelector = 1;
+var querySelectorAll = 2;
+var runGameLoop = true;
+var frameEvent = new CustomEvent("frame");
+var currentTick = window.performance.now();
+var lastTick = window.performance.now();
+var events = {};
+var keymap = {};
+
+var player = {
+	x: 151,
+	y: 16 * 3,
+	w: 16,
+	h: 16 * 2,
+	img: null,
+	xDirection: 0,
+	yDirection: 1,
+	xAccel: 0,
+	yAccel: 0,
+	maxAccel: 5,
+	jumpForce: 7,
+	jumpHeight: 50,
+	jumpStart: 0,
+	jumping: 0,
+	jumpsUsed: 0,
+	maxJumps: 1,
+	angle: 0,
+	health: 5,
+	maxHealth: 5
+}
+var dt = currentTick - lastTick;
+var entities = [player];
+var keys = {
+	a: 65,
+	w: 87,
+	s: 83,
+	d: 68,
+	space: 32,
+	shift: 16,
+	ctrl: 17,
+	alt: 18,
+	tab: 9,
+	debug: 192
+};
+
+function listen(eventName, fn) {
+	if (!events[eventName]) {
+		events[eventName] = [];
+	}
+	events[eventName].push(fn);
+}
+
+function entity(x, y, w, h, img, moveable, jumpable) {
+	var entity = {
+		x: x,
+		y: y,
+		w: w,
+		h: h,
+		angle: 0,
+		img: img
+	};
+	if (moveable) {
+		entity.xDirection = 0;
+		entity.yDirection = 0;
+		entity.xAccel = 0;
+		entity.yAccel = 1;
+		entity.maxAccel = 5;
+	}
+	if (moveable) {
+		entity.jumpForce = 7;
+		entity.jumpHeight = 50;
+		entity.jumpStart = 0;
+		entity.jumping = 0;
+		entity.jumpsUsed = 0;
+		entity.maxJumps = 3;
+	}
+	return (entity);
+}
+
+function trigger(event) {
+	var eventName = event.type;
+	if (events[eventName] && events[eventName].length > 0) {
+		for (var i = 0; i < events[eventName].length; i++) {
+			events[eventName][i](event);
+		}
+	}
+}
+
+function getByType(type, id) {
+	return document[domtypes[type]](id);
+}
+
+
+
+function DOMLoaded() {
+	playerCanvas = getByType(getElementById, "player");
+	borderCanvas = getByType(getElementById, "border");
+	tileCanvas = getByType(getElementById, "tile");
+	minimapCanvas = getByType(getElementById, "minimap");
+	playerContext = playerCanvas.getContext("2d");
+	borderContext = borderCanvas.getContext("2d");
+	tileContext = tileCanvas.getContext("2d");
+	minimapContext = minimapCanvas.getContext("2d");
+	resizeCanvas();
+	// createMap();
+	startWorld();
+	for (var r = 0; r < regionColors.length; r++) {
+		var rooms = random(10, 20);
+		for (var i = 0; i < rooms; i++) {
+			addRoomToWorld();
+		}
+		addRegion();
+	}
+	doors();
+	drawWorld();
+	loop();
+}
+
+function resizeCanvas() {
+	if (window.innerWidth > 300) {
+		borderCanvas.width = playerCanvas.width = tileCanvas.width = minimapCanvas.width = 300;
+	} else {
+		borderCanvas.width = playerCanvas.width = tileCanvas.width = minimapCanvas.width = window.innerWidth;
+	}
+	if (window.innerHeight > 300) {
+		borderCanvas.height = playerCanvas.height = tileCanvas.height = minimapCanvas.width = 300;
+	} else {
+		borderCanvas.height = playerCanvas.height = tileCanvas.height = minimapCanvas.width = window.innerHeight;
+	}
+}
+
+
+
+function eachFrame(event) {
+	for (var i = 0; i < entities.length; i++) {
+		var entity = entities[i];
+		handleXMovement(entity);
+		entity.x = round(entity.x);
+		entity.y = round(entity.y);
+		testDoors()
+		testWalking(entity);
+		testJumping(entity);
+		handleJump(entity);
+		testFalling(entity);
+		// drawImg(entity);
+		// Physics.
+		// if (map[(((entity.x - entity.x % 16) / 16) * width) + (entity.y / 16)] === 1) {
+		// 	context.fillStyle = "#FF0000";
+		// } else {
+		// 	context.fillStyle = "#FFFFFF";
+		// }
+		// context.fillRect((entity.x - entity.x % 16) / 16, entity.y, entity.w, entity.h);
+		// context.fillStyle = "#000000";
+		// context.fillRect(entity.x-viewPortX, entity.y-viewPortY, entity.w, entity.h);
+		// testHit(entity);
+	}
+	parseViewPort();
+	playerContext.clearRect(0, 0, playerCanvas.width, playerCanvas.height);
+	borderContext.clearRect(0, 0, borderCanvas.width, borderCanvas.height);
+	setStyle(tileContext, "tile", "fillStyle", '#000000');
+	tileContext.fillRect(0, 0, tileCanvas.width, tileCanvas.height);
+	// optimize
+	tileContext.clearRect(0 - viewPortX, 0 - viewPortY, realMapWidth, realMapHeight);
+	drawMap();
+	// drawRoom();
+	playerContext.fillStyle = "#000000";
+	for (var i = 0; i < entities.length; i++) {
+		var entity = entities[i];
+		var red = (15 - ((15) * (player.health / player.maxHealth))).toString(16);
+		// setStyle(playerContext, "player", "fillStyle", '#' + red + red + '0000');
+		playerContext.fillStyle = '#' + red + red + '0000';
+		playerContext.fillRect(entity.x - viewPortX, entity.y - viewPortY, entity.w, entity.h);
+	}
+}
+
+
+
+function loop() {
+	currentTick = window.performance.now();
+	dt = currentTick - lastTick;
+	lastTick = currentTick;
+	document.dispatchEvent(frameEvent);
+	if (runGameLoop) {
+		requestAnimationFrame(loop);
+	}
+}
+
+// canvas.addEventListener("mousedown")
+listen("keydown", handleKeyDown);
+listen("keyup", handleKeyUp);
+listen("resize", resizeCanvas);
+listen("DOMContentLoaded", DOMLoaded);
+listen("frame", eachFrame);
+window.addEventListener("resize", trigger);
+document.addEventListener("DOMContentLoaded", trigger);
+document.addEventListener("mousedown", trigger);
+document.addEventListener("mouseup", trigger);
+document.addEventListener("keydown", trigger);
+document.addEventListener("keyup", trigger);
+document.addEventListener("frame", trigger);var playerCanvas, tileCanvas, borderCanvas, playerContext, tileContext, borderContext, minimapContext, minimapCanvas;
+var domtypes = ["getElementById", "querySelector", "querySelectorAll"];
+var getElementById = 0;
+var querySelector = 1;
+var querySelectorAll = 2;
+var runGameLoop = true;
+var frameEvent = new CustomEvent("frame");
+var currentTick = window.performance.now();
+var lastTick = window.performance.now();
+var events = {};
+var keymap = {};
+
+var player = {
+	x: 151,
+	y: 16 * 3,
+	w: 16,
+	h: 16 * 2,
+	img: null,
+	xDirection: 0,
+	yDirection: 1,
+	xAccel: 0,
+	yAccel: 0,
+	maxAccel: 5,
+	jumpForce: 7,
+	jumpHeight: 50,
+	jumpStart: 0,
+	jumping: 0,
+	jumpsUsed: 0,
+	maxJumps: 1,
+	angle: 0,
+	health: 5,
+	maxHealth: 5
+}
+var dt = currentTick - lastTick;
+var entities = [player];
+var keys = {
+	a: 65,
+	w: 87,
+	s: 83,
+	d: 68,
+	space: 32,
+	shift: 16,
+	ctrl: 17,
+	alt: 18,
+	tab: 9,
+	debug: 192
+};
+
+function listen(eventName, fn) {
+	if (!events[eventName]) {
+		events[eventName] = [];
+	}
+	events[eventName].push(fn);
+}
+
+function entity(x, y, w, h, img, moveable, jumpable) {
+	var entity = {
+		x: x,
+		y: y,
+		w: w,
+		h: h,
+		angle: 0,
+		img: img
+	};
+	if (moveable) {
+		entity.xDirection = 0;
+		entity.yDirection = 0;
+		entity.xAccel = 0;
+		entity.yAccel = 1;
+		entity.maxAccel = 5;
+	}
+	if (moveable) {
+		entity.jumpForce = 7;
+		entity.jumpHeight = 50;
+		entity.jumpStart = 0;
+		entity.jumping = 0;
+		entity.jumpsUsed = 0;
+		entity.maxJumps = 3;
+	}
+	return (entity);
+}
+
+function trigger(event) {
+	var eventName = event.type;
+	if (events[eventName] && events[eventName].length > 0) {
+		for (var i = 0; i < events[eventName].length; i++) {
+			events[eventName][i](event);
+		}
+	}
+}
+
+function getByType(type, id) {
+	return document[domtypes[type]](id);
+}
+
+
+
+function DOMLoaded() {
+	playerCanvas = getByType(getElementById, "player");
+	borderCanvas = getByType(getElementById, "border");
+	tileCanvas = getByType(getElementById, "tile");
+	minimapCanvas = getByType(getElementById, "minimap");
+	playerContext = playerCanvas.getContext("2d");
+	borderContext = borderCanvas.getContext("2d");
+	tileContext = tileCanvas.getContext("2d");
+	minimapContext = minimapCanvas.getContext("2d");
+	resizeCanvas();
+	// createMap();
+	startWorld();
+	for (var r = 0; r < regionColors.length; r++) {
+		var rooms = random(10, 20);
+		for (var i = 0; i < rooms; i++) {
+			addRoomToWorld();
+		}
+		addRegion();
+	}
+	doors();
+	loop();
+}
+
+function resizeCanvas() {
+	if (window.innerWidth > 300) {
+		borderCanvas.width = playerCanvas.width = tileCanvas.width = minimapCanvas.width = 300;
+	} else {
+		borderCanvas.width = playerCanvas.width = tileCanvas.width = minimapCanvas.width = window.innerWidth;
+	}
+	if (window.innerHeight > 300) {
+		borderCanvas.height = playerCanvas.height = tileCanvas.height = minimapCanvas.width = 300;
+	} else {
+		borderCanvas.height = playerCanvas.height = tileCanvas.height = minimapCanvas.width = window.innerHeight;
+	}
+}
+
+
+
+function eachFrame(event) {
+	for (var i = 0; i < entities.length; i++) {
+		var entity = entities[i];
+		handleXMovement(entity);
+		entity.x = round(entity.x);
+		entity.y = round(entity.y);
+		testDoors();
 		testWalking(entity);
 		testJumping(entity);
 		handleJump(entity);
@@ -1446,6 +1846,8 @@ var numMapTiles = 10 * 3;
 
 var viewPortX = 0;
 var viewPortY = 0;
+var miniViewPortX = 0;
+var miniViewPortY = 0;
 
 // var room1 = [32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 0, 0, 0, 0, 0, 0, 0, 0, 0, 32, 0, 0, 0, 0, 0, 0, 0, 0, 0, 32, 0, 0, 0, 0, 0, 0, 0, 0, 32, 32, 0, 0, 0, 0, 0, 0, 0, 32, 32, 32, 0, 0, 0, 0, 0, 32, 32, 32, 32, 32, 0, 0, 0, 32, 32, 32, 32, 0, 32, 32, 0, 32, 32, 32, 32, 32, 0, 0, 32, 32, 32, 32, 32, 32, 32, 0, 0, 0, 32, 32, 32, 32, 32, 0, 0, 0, 0, 0, 0, 32];
 // var room2 = [1, 1, 1, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 1, 1, 1];
@@ -1785,6 +2187,302 @@ function testWalking(entity) {
 		}
 	}
 }var currentMapTiles = 0;
+
+var realMapHeight = 0;
+var realMapWidth = 0;
+var width = currentMapTiles;
+var height = currentMapTiles;
+var roomList = [];
+var bigRoomList = [];
+var blankArray = [];
+for (var i = 0; i < 10 * 10; i++) {
+	blankArray[i] = 0;
+}
+
+
+
+var room1 = [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1];
+var room2 = [1, 1, 1, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 1, 1, 1, 1];
+var room3 = [1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 0, 0, 0, 0, 1, 1, 1, 0, 0, 0, 1, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1];
+var room4 = [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 0, 0, 0, 0, 0, 1, 1, 1];
+var room5 = [1, 1, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1];
+var room6 = [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 1, 1, 0, 0, 0, 1, 1, 1, 0, 0, 0, 1, 1, 1, 0, 1, 1, 1, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 1];
+var room7 = [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 1, 1, 0, 0, 0, 1, 1, 0, 0, 1, 1, 0, 0, 0, 1, 1, 1, 0, 1, 1, 0, 0, 0, 0, 1, 1, 1, 0, 1, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 1, 1, 1, 1, 1, 0, 0, 0, 0, 1, 1, 1, 1, 1];
+var room8 = [1, 1, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 1, 1, 1, 0, 0, 0, 0, 0, 0, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1];
+var room9 = [1, 1, 1, 0, 0, 0, 0, 0, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 0, 0, 0, 0, 0, 1, 1, 1];
+var room10 = [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 1, 2, 2, 0, 0, 0, 0, 0, 0, 0, 1, 2, 2, 0, 0, 0, 0, 0, 0, 0, 1, 2, 2, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1];
+var room11 = [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 2, 2, 1, 1, 0, 0, 0, 0, 0, 0, 2, 2, 1, 1, 0, 0, 0, 0, 0, 0, 2, 2, 1, 1, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1];
+var room12 = [1, 1, 1, 0, 0, 0, 0, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 1, 1, 0, 0, 0, 1, 1, 0, 0, 1, 1, 1, 1, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 2, 2, 2, 2, 1, 1, 1, 1, 1, 1, 2, 2, 2, 2, 1, 1, 1];
+var room13 = [1, 1, 1, 2, 2, 2, 2, 1, 1, 1, 1, 1, 1, 2, 2, 2, 2, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 1, 1, 1, 1, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 0, 0, 0, 0, 0, 1, 1, 1];
+
+function Room(flipX, flipY, rotate, RoomType, doors, paths, array) {
+	return {
+		map: array,
+		doors: doors,
+		paths: paths,
+		options: (flipX * 1) | (flipY * 2) | (rotate * 4),
+		type: RoomType
+	};
+}
+
+function cloneRoom(room) {
+	return {
+		map: room.map.slice(0),
+		doors: room.doors,
+		paths: room.paths,
+		options: room.options,
+		type: room.type
+	};
+}
+
+roomList.push(Room(0, 0, 0, 0, 0, 1 | 2 | 4 | 8, blankArray));
+roomList.push(Room(0, 0, 0, 1, 0, 1 | 0 | 4 | 0, room1));
+roomList.push(Room(0, 0, 0, 2, 0, 0 | 2 | 0 | 8, room2));
+roomList.push(Room(0, 0, 0, 3, 0, 1 | 2 | 0 | 8, room3));
+roomList.push(Room(0, 0, 0, 4, 0, 1 | 0 | 4 | 8, room4));
+roomList.push(Room(0, 0, 0, 5, 0, 0 | 2 | 4 | 0, room5));
+roomList.push(Room(0, 0, 0, 6, 0, 0 | 0 | 4 | 8, room6));
+roomList.push(Room(0, 0, 0, 7, 0, 1 | 0 | 0 | 8, room7));
+roomList.push(Room(0, 0, 0, 8, 0, 1 | 2 | 0 | 0, room8));
+roomList.push(Room(0, 0, 0, 9, 0, 1 | 2 | 4 | 8, room9));
+roomList.push(Room(0, 0, 0, 10, 1, 0 | 2 | 4 | 8, room10));
+roomList.push(Room(0, 0, 0, 11, 4, 1 | 2 | 0 | 8, room11));
+roomList.push(Room(0, 0, 0, 12, 8, 1 | 2 | 4 | 0, room12));
+roomList.push(Room(0, 0, 0, 13, 2, 1 | 0 | 4 | 8, room13));
+
+function BigRoom(width, height, flipX, flipY, rotate, RoomType, doors, paths, roomCreator) {
+	var array = [];
+	var map = [];
+	var topSize = Math.max(width, height);
+	for (var i = 0; i < topSize * topSize; i++) {
+		array[i] = 0;
+		// array[i] = random(0,9);
+	}
+	array = roomCreator(array, width, height, topSize);
+	var room;
+	var rooms = [];
+	var currentX = -1;
+	var currentY = 0;
+	for (var y = 0; y < topSize * 10; y++) {
+		for (var x = 0; x < topSize * 10; x++) {
+			var arrayIndex = coordinate(Math.floor(x / 10), Math.floor(y / 10), topSize);
+			var roomId = Math.floor(x / 10) + "-" + Math.floor(y / 10);
+			if (x % 10 === 0 || y % 10 === 0) {
+				var rotation = null;
+				if (!rooms[roomId]) {
+					rotation = random(0, 3);
+					room = cloneRoom(roomList[array[arrayIndex]]);
+					if (room.options & 4) {
+						rooms[roomId] = rotate(room, 10, 10, rotation);
+					} else {
+						rooms[roomId] = room;
+					}
+				}
+				room = rooms[roomId];
+			}
+			map[coordinate(x, y, topSize * 10)] = room.map[coordinate(x % 10, y % 10, 10)];
+		}
+	}
+	// currentMapTiles = topSize * 10;
+	// currentMap = map;
+	realMapHeight = height * 10 * 16;
+	realMapWidth = width * 10 * 16;
+	return {
+		map: map,
+		doors: doors,
+		paths: paths,
+		width: width,
+		height: height,
+		size: topSize,
+		tiles: topSize * 10,
+		options: (flipX * 1) | (flipY * 2) | (rotate * 4),
+		type: RoomType
+	};
+}
+
+
+
+function setRoom(startX, startY, currentX, currentY, arraySize, array, validRooms, roomSelection, roomsX, roomsY) {
+	roomSelection.length = 0;
+	for (var e = 0; e < roomList.length; e++) {
+		validRooms[e] = e;
+	}
+	var aboveRoom = array[coordinate(currentX, currentY - 1, arraySize)];
+	var leftRoom = array[coordinate(currentX - 1, currentY, arraySize)];
+	var rightRoom = array[coordinate(currentX + 1, currentY, arraySize)];
+	var belowRoom = array[coordinate(currentX, currentY + 1, arraySize)];
+	if (currentY - 1 < 0) {
+		aboveRoom = -1;
+	}
+	if (currentX - 1 < 0) {
+		leftRoom = -1;
+	}
+	if (currentY + 1 > roomsY - 1) {
+		belowRoom = -1;
+	}
+	if (currentX + 1 > roomsX - 1) {
+		rightRoom = -1;
+	}
+	if (aboveRoom === 4 || aboveRoom === 2 || aboveRoom === 6 || aboveRoom === 7 || aboveRoom === 9 || aboveRoom === 13) {
+		console.warn("Room for Above")
+		for (var i = 0; i < validRooms.length; i++) {
+			validRooms[i] = -1;
+		}
+		validRooms[2] = 2;
+		validRooms[3] = 3;
+		validRooms[5] = 5;
+		validRooms[8] = 8;
+		validRooms[9] = 9;
+		if (leftRoom !== -1) {
+			if (leftRoom === 1 || leftRoom === 3 || leftRoom === 4 || leftRoom === 5 || leftRoom === 6 || leftRoom === 9 || leftRoom === 10) {
+				console.warn("Room for Above and Left")
+				validRooms[2] = -1;
+				validRooms[5] = -1;
+				validRooms[3] = 3;
+				validRooms[8] = 8;
+				validRooms[9] = 9;
+				if (rightRoom !== -1) {
+					if (rightRoom === 1 || rightRoom === 3 || rightRoom === 4 || rightRoom === 7 || rightRoom === 8 || rightRoom === 9 || rightRoom === 11) {
+						validRooms[8] = -1;
+					}
+				}
+			}
+		}
+		if (rightRoom !== -1) {
+			if (rightRoom === 1 || rightRoom === 3 || rightRoom === 4 || rightRoom === 7 || rightRoom === 8 || rightRoom === 9 || rightRoom === 11) {
+				console.warn("Room for Above and Left")
+				validRooms[2] = -1;
+				validRooms[8] = -1;
+				validRooms[3] = 3;
+				validRooms[5] = 5;
+				validRooms[9] = 9;
+				if (leftRoom !== -1) {
+					if (leftRoom === 1 || leftRoom === 3 || leftRoom === 4 || leftRoom === 5 || leftRoom === 6 || leftRoom === 9 || leftRoom === 10) {
+						validRooms[5] = -1;
+					}
+				}
+			}
+		}
+	}
+	if (currentX === 0) {
+		console.warn("Left of Map")
+		validRooms[7] = -1;
+		validRooms[8] = -1;
+		validRooms[1] = -1;
+	}
+	if (currentX === roomsX - 1) {
+		console.warn("Right of Map")
+		validRooms[5] = -1;
+		validRooms[6] = -1;
+		validRooms[1] = -1;
+	}
+	if (currentY === 0) {
+		console.warn("Top of Map")
+		validRooms[3] = -1;
+		validRooms[5] = -1;
+		validRooms[8] = -1;
+		validRooms[2] = -1;
+	}
+	if (currentY === roomsY - 1) {
+		console.warn("Bottom of Map")
+		validRooms[4] = -1;
+		validRooms[6] = -1;
+		validRooms[7] = -1;
+		validRooms[2] = -1;
+	}
+	if (currentX === startX && currentY === startY) {
+		console.warn("Room for Start")
+		for (var i = 0; i < validRooms.length; i++) {
+			validRooms[i] = -1;
+		}
+		validRooms[10] = 10;
+		validRooms[11] = 11;
+		validRooms[12] = 12;
+		validRooms[13] = 13;
+		if (leftRoom === -1) {
+			validRooms[11] = -1;
+		}
+		if (aboveRoom === -1) {
+			validRooms[12] = -1;
+		}
+		if (rightRoom === -1) {
+			validRooms[10] = -1;
+		}
+		if (belowRoom === -1) {
+			validRooms[13] = -1;
+		}
+	} else {
+		validRooms[10] = -1;
+		validRooms[11] = -1;
+		validRooms[12] = -1;
+		validRooms[13] = -1;
+	}
+	validRooms[9] = 9;
+	for (var i = 0; i < validRooms.length; i++) {
+		if (validRooms[i] !== -1) {
+			roomSelection.push(validRooms[i]);
+		}
+	}
+	var selectedRoom = roomSelection[random(0, roomSelection.length - 1)];
+	if (selectedRoom === 11) {
+		if ([1, 3, 4, 5, 6, 9].indexOf(leftRoom) === -1) {
+			setRoom(startX, startY, currentX - 1, currentY, arraySize, array, validRooms, roomSelection, roomsX, roomsY);
+		}
+	}
+	if (selectedRoom === 12) {
+		if ([2, 4, 6, 7, 9].indexOf(aboveRoom) === -1) {
+			setRoom(startX, startY, currentX, currentY - 1, arraySize, array, validRooms, roomSelection, roomsX, roomsY);
+		}
+	}
+	array[coordinate(currentX, currentY, arraySize)] = selectedRoom;
+}
+
+bigRoomList.push(BigRoom(4, 1, 0, 0, 0, 0, 0, 1 | 2 | 4 | 8, function(array, roomsX, roomsY, arraySize) {
+	var startX = random(0, roomsX - 1);
+	var startY = random(0, roomsY - 1);
+	var startDirection = random(0, 3);
+	var currentX = 0;
+	var currentY = 0;
+	var validRooms = [];
+	var roomSelection = [];
+	for (var i = 0; i < arraySize * arraySize; i++) {
+		setRoom(startX, startY, currentX, currentY, arraySize, array, validRooms, roomSelection, roomsX, roomsY);
+		currentX++;
+		if (currentX > roomsX - 1) {
+			currentX = 0;
+			currentY++;
+		}
+		if (currentY > roomsY - 1) {
+			i = arraySize * arraySize;
+		}
+	}
+	return array;
+}));
+
+function playerSizedRoom(room) {
+	room.map = BigRoom(room.mapW * 3, room.mapH * 3, 0, 0, 0, 0, 0, 1 | 2 | 4 | 8, function(array, roomsX, roomsY, arraySize) {
+		var startX = random(0, roomsX - 1);
+		var startY = random(0, roomsY - 1);
+		var startDirection = random(0, 3);
+		var currentX = 0;
+		var currentY = 0;
+		var validRooms = [];
+		var roomSelection = [];
+		for (var i = 0; i < arraySize * arraySize; i++) {
+			// setRoom(startX, startY, currentX, currentY, arraySize, array, validRooms, roomSelection, roomsX, roomsY);
+			array[coordinate(currentX, currentY, arraySize)] = 9;
+			currentX++;
+			if (currentX > roomsX - 1) {
+				currentX = 0;
+				currentY++;
+			}
+			if (currentY > roomsY - 1) {
+				i = arraySize * arraySize;
+			}
+		}
+		return array;
+	});
+}var currentMapTiles = 0;
 var mapWidth = 0;
 var mapHeight = 0;
 var realMapHeight = 0;
@@ -1882,8 +2580,8 @@ function BigRoom(width, height, flipX, flipY, rotate, RoomType, doors, paths, ro
 			map[coordinate(x, y, topSize * 10)] = room.map[coordinate(x % 10, y % 10, 10)];
 		}
 	}
-	currentMapTiles = topSize * 10;
-	currentMap = map;
+	// currentMapTiles = topSize * 10;
+	// currentMap = map;
 	mapHeight = topSize * 10;
 	mapWidth = topSize * 10;
 	realMapHeight = height * 10 * 16;
@@ -1895,9 +2593,16 @@ function BigRoom(width, height, flipX, flipY, rotate, RoomType, doors, paths, ro
 		width: width,
 		height: height,
 		size: topSize,
+		tiles:topSize * 10,
 		options: (flipX * 1) | (flipY * 2) | (rotate * 4),
 		type: RoomType
 	};
+}
+
+function enterRoom(room) {
+	if(!room)
+	currentMapTiles = room.map.tiles;
+	currentMap = room.map.map;
 }
 
 function setRoom(startX, startY, currentX, currentY, arraySize, array, validRooms, roomSelection, roomsX, roomsY) {
@@ -2035,7 +2740,7 @@ function setRoom(startX, startY, currentX, currentY, arraySize, array, validRoom
 	array[coordinate(currentX, currentY, arraySize)] = selectedRoom;
 }
 
-bigRoomList.push(BigRoom(4, 4, 0, 0, 0, 0, 0, 1 | 2 | 4 | 8, function(array, roomsX, roomsY, arraySize) {
+bigRoomList.push(BigRoom(4, 1, 0, 0, 0, 0, 0, 1 | 2 | 4 | 8, function(array, roomsX, roomsY, arraySize) {
 	var startX = random(0, roomsX - 1);
 	var startY = random(0, roomsY - 1);
 	var startDirection = random(0, 3);
@@ -2054,74 +2759,899 @@ bigRoomList.push(BigRoom(4, 4, 0, 0, 0, 0, 0, 1 | 2 | 4 | 8, function(array, roo
 			i = arraySize * arraySize;
 		}
 	}
-	// var currentX = startX;
-	// var currentY = startY;
-	// if (startDirection === 0) { // door is in the left wall
-	// 	array[coordinate(startX, startY, arraySize)] = 10;
-	// }
-	// if (startDirection === 1) { // door is in the top wall
-	// 	array[coordinate(startX, startY, arraySize)] = 13;
-
-	// }
-	// if (startDirection === 2) { // door is in the right wall
-	// 	array[coordinate(startX, startY, arraySize)] = 11;
-	// }
-	// if (startDirection === 3) { // door is in the bottom wall
-	// 	array[coordinate(startX, startY, arraySize)] = 12;
-	// }
-	// var path = true;
-	// var visited = [startX + "-" + startY];
-	// var previousX = startX;
-	// var previousY = startY;
-	// var previousRoom = roomList[array[coordinate(startX, startY, arraySize)]];
-	// var attempts = 0;
-	// while (path && attempts < 4) {
-	// 	var direction = random(1, 5);
-	// 	if (direction === 2 || direction === 1) {
-	// 		currentX++;
-	// 	}
-	// 	if (direction === 4 || direction === 3) {
-	// 		currentX--;
-	// 	}
-	// 	if (direction === 5) {
-	// 		currentY++;
-	// 	}
-	// 	if (currentX > roomsX - 1) {
-	// 		currentY++;
-	// 		currentX = roomsX - 1;
-	// 	}
-	// 	if (currentX < 0) {
-	// 		currentY++;
-	// 		currentX = 0;
-	// 	}
-	// 	if (currentY > roomsY - 1) {
-	// 		currentY = roomsY - 1;
-	// 	}
-	// 	if (currentY < 0) {
-	// 		currentY = 0;
-	// 	}
-	// 	if (visited.indexOf(currentX + "-" + currentY) === -1) {
-	// 		console.log()
-	// 		array[coordinate(currentX, currentY, arraySize)] = 9;
-	// 		previousRoom = roomList[array[coordinate(currentX, currentY, arraySize)]];
-	// 		previousX = currentX;
-	// 		previousY = currentY;
-	// 		visited.push(currentX + "-" + currentY);
-	// 	} else {
-	// 		attempts++;
-	// 	}
-
-	// }
-
-	// for (var x = 0; x < roomsX; x++) {
-	// 	for (var y = 0; y < roomsY; y++) {
-	// 		if (x === 0 && y === 0) {
-
-	// 		}
-	// 	}
-	// }
 	return array;
-}));function parseViewPort() {
+}));
+
+function playerSizedRoom(room) {
+	room.map = BigRoom(room.mapW * 3, room.mapH * 3, 0, 0, 0, 0, 0, 1 | 2 | 4 | 8, function(array, roomsX, roomsY, arraySize) {
+	var startX = random(0, roomsX - 1);
+	var startY = random(0, roomsY - 1);
+	var startDirection = random(0, 3);
+	var currentX = 0;
+	var currentY = 0;
+	var validRooms = [];
+	var roomSelection = [];
+	for (var i = 0; i < arraySize * arraySize; i++) {
+		setRoom(startX, startY, currentX, currentY, arraySize, array, validRooms, roomSelection, roomsX, roomsY);
+		currentX++;
+		if (currentX > roomsX - 1) {
+			currentX = 0;
+			currentY++;
+		}
+		if (currentY > roomsY - 1) {
+			i = arraySize * arraySize;
+		}
+	}
+	return array;
+});
+}var currentMapTiles = 0;
+var mapWidth = 0;
+var mapHeight = 0;
+var realMapHeight = 0;
+var realMapWidth = 0;
+var width = currentMapTiles;
+var height = currentMapTiles;
+var roomList = [];
+var bigRoomList = [];
+var blankArray = [];
+for (var i = 0; i < 10 * 10; i++) {
+	blankArray[i] = 0;
+}
+var currentMap = null;
+
+
+var room1 = [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1];
+var room2 = [1, 1, 1, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 1, 1, 1, 1];
+var room3 = [1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 0, 0, 0, 0, 1, 1, 1, 0, 0, 0, 1, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1];
+var room4 = [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 0, 0, 0, 0, 0, 1, 1, 1];
+var room5 = [1, 1, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1];
+var room6 = [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 1, 1, 0, 0, 0, 1, 1, 1, 0, 0, 0, 1, 1, 1, 0, 1, 1, 1, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 1];
+var room7 = [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 1, 1, 0, 0, 0, 1, 1, 0, 0, 1, 1, 0, 0, 0, 1, 1, 1, 0, 1, 1, 0, 0, 0, 0, 1, 1, 1, 0, 1, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 1, 1, 1, 1, 1, 0, 0, 0, 0, 1, 1, 1, 1, 1];
+var room8 = [1, 1, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 1, 1, 1, 0, 0, 0, 0, 0, 0, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1];
+var room9 = [1, 1, 1, 0, 0, 0, 0, 0, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 0, 0, 0, 0, 0, 1, 1, 1];
+var room10 = [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 1, 2, 2, 0, 0, 0, 0, 0, 0, 0, 1, 2, 2, 0, 0, 0, 0, 0, 0, 0, 1, 2, 2, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1];
+var room11 = [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 2, 2, 1, 1, 0, 0, 0, 0, 0, 0, 2, 2, 1, 1, 0, 0, 0, 0, 0, 0, 2, 2, 1, 1, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1];
+var room12 = [1, 1, 1, 0, 0, 0, 0, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 1, 1, 0, 0, 0, 1, 1, 0, 0, 1, 1, 1, 1, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 2, 2, 2, 2, 1, 1, 1, 1, 1, 1, 2, 2, 2, 2, 1, 1, 1];
+var room13 = [1, 1, 1, 2, 2, 2, 2, 1, 1, 1, 1, 1, 1, 2, 2, 2, 2, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 1, 1, 1, 1, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 0, 0, 0, 0, 0, 1, 1, 1];
+
+function Room(flipX, flipY, rotate, RoomType, doors, paths, array) {
+	return {
+		map: array,
+		doors: doors,
+		paths: paths,
+		options: (flipX * 1) | (flipY * 2) | (rotate * 4),
+		type: RoomType
+	};
+}
+
+function cloneRoom(room) {
+	return {
+		map: room.map.slice(0),
+		doors: room.doors,
+		paths: room.paths,
+		options: room.options,
+		type: room.type
+	};
+}
+
+roomList.push(Room(0, 0, 0, 0, 0, 1 | 2 | 4 | 8, blankArray));
+roomList.push(Room(0, 0, 0, 1, 0, 1 | 0 | 4 | 0, room1));
+roomList.push(Room(0, 0, 0, 2, 0, 0 | 2 | 0 | 8, room2));
+roomList.push(Room(0, 0, 0, 3, 0, 1 | 2 | 0 | 8, room3));
+roomList.push(Room(0, 0, 0, 4, 0, 1 | 0 | 4 | 8, room4));
+roomList.push(Room(0, 0, 0, 5, 0, 0 | 2 | 4 | 0, room5));
+roomList.push(Room(0, 0, 0, 6, 0, 0 | 0 | 4 | 8, room6));
+roomList.push(Room(0, 0, 0, 7, 0, 1 | 0 | 0 | 8, room7));
+roomList.push(Room(0, 0, 0, 8, 0, 1 | 2 | 0 | 0, room8));
+roomList.push(Room(0, 0, 0, 9, 0, 1 | 2 | 4 | 8, room9));
+roomList.push(Room(0, 0, 0, 10, 1, 0 | 2 | 4 | 8, room10));
+roomList.push(Room(0, 0, 0, 11, 4, 1 | 2 | 0 | 8, room11));
+roomList.push(Room(0, 0, 0, 12, 8, 1 | 2 | 4 | 0, room12));
+roomList.push(Room(0, 0, 0, 13, 2, 1 | 0 | 4 | 8, room13));
+
+function BigRoom(width, height, flipX, flipY, rotate, RoomType, doors, paths, roomCreator) {
+	var array = [];
+	var map = [];
+	var topSize = Math.max(width, height);
+	for (var i = 0; i < topSize * topSize; i++) {
+		array[i] = 0;
+		// array[i] = random(0,9);
+	}
+	array = roomCreator(array, width, height, topSize);
+	var room;
+	var rooms = [];
+	var currentX = -1;
+	var currentY = 0;
+	for (var y = 0; y < topSize * 10; y++) {
+		for (var x = 0; x < topSize * 10; x++) {
+			var arrayIndex = coordinate(Math.floor(x / 10), Math.floor(y / 10), topSize);
+			var roomId = Math.floor(x / 10) + "-" + Math.floor(y / 10);
+			if (x % 10 === 0 || y % 10 === 0) {
+				var rotation = null;
+				if (!rooms[roomId]) {
+					rotation = random(0, 3);
+					room = cloneRoom(roomList[array[arrayIndex]]);
+					if (room.options & 4) {
+						rooms[roomId] = rotate(room, 10, 10, rotation);
+					} else {
+						rooms[roomId] = room;
+					}
+				}
+				room = rooms[roomId];
+			}
+			map[coordinate(x, y, topSize * 10)] = room.map[coordinate(x % 10, y % 10, 10)];
+		}
+	}
+	// currentMapTiles = topSize * 10;
+	// currentMap = map;
+	mapHeight = topSize * 10;
+	mapWidth = topSize * 10;
+	realMapHeight = height * 10 * 16;
+	realMapWidth = width * 10 * 16;
+	return {
+		map: map,
+		doors: doors,
+		paths: paths,
+		width: width,
+		height: height,
+		size: topSize,
+		tiles:topSize * 10,
+		options: (flipX * 1) | (flipY * 2) | (rotate * 4),
+		type: RoomType
+	};
+}
+
+function enterRoom(room) {
+	if(room.map.length === 0) {
+		playerSizedRoom(room);
+	}
+	currentMapTiles = room.map.tiles;
+	currentMap = room.map.map;
+}
+
+function setRoom(startX, startY, currentX, currentY, arraySize, array, validRooms, roomSelection, roomsX, roomsY) {
+	roomSelection.length = 0;
+	for (var e = 0; e < roomList.length; e++) {
+		validRooms[e] = e;
+	}
+	var aboveRoom = array[coordinate(currentX, currentY - 1, arraySize)];
+	var leftRoom = array[coordinate(currentX - 1, currentY, arraySize)];
+	var rightRoom = array[coordinate(currentX + 1, currentY, arraySize)];
+	var belowRoom = array[coordinate(currentX, currentY + 1, arraySize)];
+	if (currentY - 1 < 0) {
+		aboveRoom = -1;
+	}
+	if (currentX - 1 < 0) {
+		leftRoom = -1;
+	}
+	if (currentY + 1 > roomsY - 1) {
+		belowRoom = -1;
+	}
+	if (currentX + 1 > roomsX - 1) {
+		rightRoom = -1;
+	}
+	if (aboveRoom === 4 || aboveRoom === 2 || aboveRoom === 6 || aboveRoom === 7 || aboveRoom === 9 || aboveRoom === 13) {
+		console.warn("Room for Above")
+		for (var i = 0; i < validRooms.length; i++) {
+			validRooms[i] = -1;
+		}
+		validRooms[2] = 2;
+		validRooms[3] = 3;
+		validRooms[5] = 5;
+		validRooms[8] = 8;
+		validRooms[9] = 9;
+		if (leftRoom !== -1) {
+			if (leftRoom === 1 || leftRoom === 3 || leftRoom === 4 || leftRoom === 5 || leftRoom === 6 || leftRoom === 9 || leftRoom === 10) {
+				console.warn("Room for Above and Left")
+				validRooms[2] = -1;
+				validRooms[5] = -1;
+				validRooms[3] = 3;
+				validRooms[8] = 8;
+				validRooms[9] = 9;
+				if (rightRoom !== -1) {
+					if (rightRoom === 1 || rightRoom === 3 || rightRoom === 4 || rightRoom === 7 || rightRoom === 8 || rightRoom === 9 || rightRoom === 11) {
+						validRooms[8] = -1;
+					}
+				}
+			}
+		}
+		if (rightRoom !== -1) {
+			if (rightRoom === 1 || rightRoom === 3 || rightRoom === 4 || rightRoom === 7 || rightRoom === 8 || rightRoom === 9 || rightRoom === 11) {
+				console.warn("Room for Above and Left")
+				validRooms[2] = -1;
+				validRooms[8] = -1;
+				validRooms[3] = 3;
+				validRooms[5] = 5;
+				validRooms[9] = 9;
+				if (leftRoom !== -1) {
+					if (leftRoom === 1 || leftRoom === 3 || leftRoom === 4 || leftRoom === 5 || leftRoom === 6 || leftRoom === 9 || leftRoom === 10) {
+						validRooms[5] = -1;
+					}
+				}
+			}
+		}
+	}
+	if (currentX === 0) {
+		console.warn("Left of Map")
+		validRooms[7] = -1;
+		validRooms[8] = -1;
+		validRooms[1] = -1;
+	}
+	if (currentX === roomsX - 1) {
+		console.warn("Right of Map")
+		validRooms[5] = -1;
+		validRooms[6] = -1;
+		validRooms[1] = -1;
+	}
+	if (currentY === 0) {
+		console.warn("Top of Map")
+		validRooms[3] = -1;
+		validRooms[5] = -1;
+		validRooms[8] = -1;
+		validRooms[2] = -1;
+	}
+	if (currentY === roomsY - 1) {
+		console.warn("Bottom of Map")
+		validRooms[4] = -1;
+		validRooms[6] = -1;
+		validRooms[7] = -1;
+		validRooms[2] = -1;
+	}
+	if (currentX === startX && currentY === startY) {
+		console.warn("Room for Start")
+		for (var i = 0; i < validRooms.length; i++) {
+			validRooms[i] = -1;
+		}
+		validRooms[10] = 10;
+		validRooms[11] = 11;
+		validRooms[12] = 12;
+		validRooms[13] = 13;
+		if (leftRoom === -1) {
+			validRooms[11] = -1;
+		}
+		if (aboveRoom === -1) {
+			validRooms[12] = -1;
+		}
+		if (rightRoom === -1) {
+			validRooms[10] = -1;
+		}
+		if (belowRoom === -1) {
+			validRooms[13] = -1;
+		}
+	} else {
+		validRooms[10] = -1;
+		validRooms[11] = -1;
+		validRooms[12] = -1;
+		validRooms[13] = -1;
+	}
+	validRooms[9] = 9;
+	for (var i = 0; i < validRooms.length; i++) {
+		if (validRooms[i] !== -1) {
+			roomSelection.push(validRooms[i]);
+		}
+	}
+	var selectedRoom = roomSelection[random(0, roomSelection.length - 1)];
+	if (selectedRoom === 11) {
+		if ([1, 3, 4, 5, 6, 9].indexOf(leftRoom) === -1) {
+			setRoom(startX, startY, currentX - 1, currentY, arraySize, array, validRooms, roomSelection, roomsX, roomsY);
+		}
+	}
+	if (selectedRoom === 12) {
+		if ([2, 4, 6, 7, 9].indexOf(aboveRoom) === -1) {
+			setRoom(startX, startY, currentX, currentY - 1, arraySize, array, validRooms, roomSelection, roomsX, roomsY);
+		}
+	}
+	array[coordinate(currentX, currentY, arraySize)] = selectedRoom;
+}
+
+bigRoomList.push(BigRoom(4, 1, 0, 0, 0, 0, 0, 1 | 2 | 4 | 8, function(array, roomsX, roomsY, arraySize) {
+	var startX = random(0, roomsX - 1);
+	var startY = random(0, roomsY - 1);
+	var startDirection = random(0, 3);
+	var currentX = 0;
+	var currentY = 0;
+	var validRooms = [];
+	var roomSelection = [];
+	for (var i = 0; i < arraySize * arraySize; i++) {
+		setRoom(startX, startY, currentX, currentY, arraySize, array, validRooms, roomSelection, roomsX, roomsY);
+		currentX++;
+		if (currentX > roomsX - 1) {
+			currentX = 0;
+			currentY++;
+		}
+		if (currentY > roomsY - 1) {
+			i = arraySize * arraySize;
+		}
+	}
+	return array;
+}));
+
+function playerSizedRoom(room) {
+	room.map = BigRoom(room.mapW * 3, room.mapH * 3, 0, 0, 0, 0, 0, 1 | 2 | 4 | 8, function(array, roomsX, roomsY, arraySize) {
+	var startX = random(0, roomsX - 1);
+	var startY = random(0, roomsY - 1);
+	var startDirection = random(0, 3);
+	var currentX = 0;
+	var currentY = 0;
+	var validRooms = [];
+	var roomSelection = [];
+	for (var i = 0; i < arraySize * arraySize; i++) {
+		setRoom(startX, startY, currentX, currentY, arraySize, array, validRooms, roomSelection, roomsX, roomsY);
+		currentX++;
+		if (currentX > roomsX - 1) {
+			currentX = 0;
+			currentY++;
+		}
+		if (currentY > roomsY - 1) {
+			i = arraySize * arraySize;
+		}
+	}
+	return array;
+});
+}var currentMap = null;
+var mapWidth = 0;
+var mapHeight = 0;
+
+function movePlayer(room, direction, position) {
+	enterRoom(room);
+	for (var i = 0; i < room.doors.length; i++) {
+		var match = false;
+		var door = room.doors[i];
+		if (door.dir === direction) {
+			if (door.dir === "N" || door.dir === "S") {
+				match = position === door.mapX;
+			}
+			if (door.dir === "E" || door.dir === "W") {
+				match = position === door.mapY;
+			}
+			if (match) {
+				var translatedX = ((door.mapX - currentRoom.mapX) * 3);
+				var translatedY = ((door.mapY - currentRoom.mapY) * 3);
+				if (door.dir === "N") {
+					translatedX++;
+				}
+				if (door.dir === "E") {
+					translatedY++;
+					translatedX += 3;
+				}
+				if (door.dir === "S") {
+					translatedX++;
+					translatedY += 3;
+				}
+				if (door.dir === "W") {
+					translatedY++;
+				}
+				console.log(player.x, player.y)
+				player.x = (translatedX * 10 * 16) + (10 / 2 * 16);
+				player.y = (translatedY * 10 * 16) + (10 / 2 * 16);
+				console.log(player.x, player.y)
+			}
+		}
+	}
+}
+
+function testDoors() {
+	for (var i = 0; i < currentRoom.doors.length; i++) {
+		var door = currentRoom.doors[i];
+		var translatedX = ((door.mapX - currentRoom.mapX) * 3);
+		var translatedY = ((door.mapY - currentRoom.mapY) * 3);
+		var playerX = modulus(modulus(player.x), 10);
+		var playerX2 = modulus(modulus(player.x + player.w), 10);
+		var playerY = modulus(modulus(player.y), 10);
+		var playerY2 = modulus(modulus(player.y + player.h), 10);
+		var roomWidth = currentRoom.mapW * 10 * 16 * 3;
+		var roomHeight = currentRoom.mapH * 10 * 16 * 3;
+		if (door.dir === "N") {
+			translatedX++;
+		}
+		if (door.dir === "E") {
+			translatedY++;
+			translatedX += 3;
+		}
+		if (door.dir === "S") {
+			translatedX++;
+			translatedY += 3;
+		}
+		if (door.dir === "W") {
+			translatedY++;
+		}
+		if (player.x < 0 && door.dir === "W" && translatedX === playerX && translatedY === playerY) {
+			console.log("Collision with left door");
+			movePlayer(door.room2, "E", door.mapY);
+		}
+		if (player.y < 0 && door.dir === "N" && translatedX === playerX && translatedY === playerY) {
+			console.log("Collision with top door");
+			movePlayer(door.room2, "S", door.mapX);
+		}
+		if (player.x + player.w >= roomWidth && door.dir === "E" && translatedX === playerX2 && translatedY === playerY) {
+			console.log("Collision with right door");
+			movePlayer(door.room2, "W", door.mapY);
+		}
+		if (player.y + player.h >= roomHeight && door.dir === "S" && translatedX === playerX && translatedY === playerY2) {
+			console.log("Collision with bottom door");
+			movePlayer(door.room2, "N", door.mapX);
+		}
+	}
+}
+
+function enterRoom(room) {
+	console.log(room)
+	if (room.map === null) {
+		playerSizedRoom(room);
+	}
+	currentRoom = room;
+	currentMapTiles = room.map.tiles;
+	currentMap = room.map.map;
+	mapHeight = room.map.height * 10;
+	mapWidth = room.map.width * 10;
+}function movePlayer() {
+
+}
+
+function testDoors() {
+	for (var i = 0; i < currentRoom.doors.length; i++) {
+		var door = currentRoom.doors[i];
+		var translatedX = ((door.mapX - currentRoom.mapX) * 3);
+		var translatedY = ((door.mapY - currentRoom.mapY) * 3);
+		var playerX = modulus(modulus(player.x), 10);
+		var playerX2 = modulus(modulus(player.x + player.w), 10);
+		var playerY = modulus(modulus(player.y), 10);
+		var playerY2 = modulus(modulus(player.y + player.h), 10);
+		if(door.dir === "N") {
+			translatedX + 1;
+		}
+		if(door.dir === "E") {
+			translatedY + 1;
+		}
+		if(door.dir === "S") {
+			translatedX + 1;
+		}
+		if(door.dir === "W") {
+			translatedY + 1;
+		}
+		if (player.x < 0 && door.dir === "W" && translatedX === playerX && translatedY === playerY) {
+			console.log("Collision with left door");
+		}
+		if(player.x < 0 && door.dir === "W") {
+			console.log(translatedX, playerX, translatedY)
+		}
+		if (player.y < 0 && door.dir === "N" && translatedX === playerX && translatedY === playerY) {
+			console.log("Collision with top door");
+		}
+		if (player.x > currentRoom.mapW * 10 * 16 && door.dir === "E" && translatedX === playerX && translatedY === playerY) {
+			console.log("Collision with right door");
+		}
+		if (player.y > currentRoom.mapH * 10 * 16 && door.dir === "S" && translatedX === playerX && translatedY === playerY) {
+			console.log("Collision with bottom door");
+		}
+	}
+}function movePlayer() {
+
+}
+
+function testDoors() {
+	for (var i = 0; i < currentRoom.doors.length; i++) {
+		var door = currentRoom.doors[i];
+		var translatedX = ((door.mapX - currentRoom.mapX) * 3);
+		var translatedY = ((door.mapY - currentRoom.mapY) * 3);
+		var playerX = modulus(modulus(player.x), 10);
+		var playerX2 = modulus(modulus(player.x + player.w), 10);
+		var playerY = modulus(modulus(player.y), 10);
+		var playerY2 = modulus(modulus(player.y + player.h), 10);
+		if(door.dir === "N") {
+			translatedX++;
+		}
+		if(door.dir === "E") {
+			translatedY++;
+		}
+		if(door.dir === "S") {
+			translatedX++;
+		}
+		if(door.dir === "W") {
+			translatedY++;
+		}
+		if (player.x < 0 && door.dir === "W" && translatedX === playerX && translatedY === playerY) {
+			console.log("Collision with left door");
+		}
+		if(player.x > currentRoom.mapW * 10 * 16 && door.dir === "W") {
+			console.log(translatedX, playerX, translatedY, playerY)
+		}
+		if (player.y < 0 && door.dir === "N" && translatedX === playerX && translatedY === playerY) {
+			console.log("Collision with top door");
+		}
+		if (player.x > currentRoom.mapW * 10 * 16 && door.dir === "E" && translatedX === playerX && translatedY === playerY) {
+			console.log("Collision with right door");
+		}
+		if (player.y > currentRoom.mapH * 10 * 16 && door.dir === "S" && translatedX === playerX && translatedY === playerY) {
+			console.log("Collision with bottom door");
+		}
+	}
+}function movePlayer() {
+
+}
+
+function testDoors() {
+	for (var i = 0; i < currentRoom.doors.length; i++) {
+		var door = currentRoom.doors[i];
+		var translatedX = ((door.mapX - currentRoom.mapX) * 3);
+		var translatedY = ((door.mapY - currentRoom.mapY) * 3);
+		var playerX = modulus(modulus(player.x), 10);
+		var playerX2 = modulus(modulus(player.x + player.w), 10);
+		var playerY = modulus(modulus(player.y), 10);
+		var playerY2 = modulus(modulus(player.y + player.h), 10);
+		var roomWidth = currentRoom.mapW * 10 * 16 * 3
+		if(door.dir === "N") {
+			translatedX++;
+		}
+		if(door.dir === "E") {
+			translatedY++;
+		}
+		if(door.dir === "S") {
+			translatedX++;
+		}
+		if(door.dir === "W") {
+			translatedY++;
+		}
+		if (player.x < 0 && door.dir === "W" && translatedX === playerX && translatedY === playerY) {
+			console.log("Collision with left door");
+		}
+		if(player.x > currentRoom.mapW * 10 * 16 && door.dir === "E") {
+			console.log(translatedX, playerX, translatedY, playerY)
+		}
+		if (player.y < 0 && door.dir === "N" && translatedX === playerX && translatedY === playerY) {
+			console.log("Collision with top door");
+		}
+		if (player.x > currentRoom.mapW * 10 * 16 && door.dir === "E" && translatedX === playerX && translatedY === playerY) {
+			console.log("Collision with right door");
+		}
+		if (player.y > currentRoom.mapH * 10 * 16 && door.dir === "S" && translatedX === playerX && translatedY === playerY) {
+			console.log("Collision with bottom door");
+		}
+	}
+}function movePlayer() {
+
+}
+
+function testDoors() {
+	for (var i = 0; i < currentRoom.doors.length; i++) {
+		var door = currentRoom.doors[i];
+		var translatedX = ((door.mapX - currentRoom.mapX) * 3);
+		var translatedY = ((door.mapY - currentRoom.mapY) * 3);
+		var playerX = modulus(modulus(player.x), 10);
+		var playerX2 = modulus(modulus(player.x + player.w), 10);
+		var playerY = modulus(modulus(player.y), 10);
+		var playerY2 = modulus(modulus(player.y + player.h), 10);
+		var roomWidth = currentRoom.mapW * 10 * 16 * 3;
+		var roomHeight = currentRoom.mapH * 10 * 16 * 3;
+		if(door.dir === "N") {
+			translatedX++;
+		}
+		if(door.dir === "E") {
+			translatedY++;
+		}
+		if(door.dir === "S") {
+			translatedX++;
+		}
+		if(door.dir === "W") {
+			translatedY++;
+		}
+		if (player.x < 0 && door.dir === "W" && translatedX === playerX && translatedY === playerY) {
+			console.log("Collision with left door");
+		}
+		if(player.x >= roomWidth && door.dir === "E") {
+			console.log(translatedX, playerX, translatedY, playerY)
+		}
+		if (player.y < 0 && door.dir === "N" && translatedX === playerX && translatedY === playerY) {
+			console.log("Collision with top door");
+		}
+		if (player.x > roomWidth && door.dir === "E" && translatedX === playerX && translatedY === playerY) {
+			console.log("Collision with right door");
+		}
+		if (player.y > roomHeight && door.dir === "S" && translatedX === playerX && translatedY === playerY) {
+			console.log("Collision with bottom door");
+		}
+	}
+}function movePlayer() {
+
+}
+
+function testDoors() {
+	for (var i = 0; i < currentRoom.doors.length; i++) {
+		var door = currentRoom.doors[i];
+		var translatedX = ((door.mapX - currentRoom.mapX) * 3);
+		var translatedY = ((door.mapY - currentRoom.mapY) * 3);
+		var playerX = modulus(modulus(player.x), 10);
+		var playerX2 = modulus(modulus(player.x + player.w), 10);
+		var playerY = modulus(modulus(player.y), 10);
+		var playerY2 = modulus(modulus(player.y + player.h), 10);
+		var roomWidth = currentRoom.mapW * 10 * 16 * 3;
+		var roomHeight = currentRoom.mapH * 10 * 16 * 3;
+		if(door.dir === "N") {
+			translatedX++;
+		}
+		if(door.dir === "E") {
+			translatedY++;
+			translatedX += 3;
+		}
+		if(door.dir === "S") {
+			translatedX++;
+			translatedY += 3;
+		}
+		if(door.dir === "W") {
+			translatedY++;
+		}
+		if (player.x < 0 && door.dir === "W" && translatedX === playerX && translatedY === playerY) {
+			console.log("Collision with left door");
+		}
+		if(player.x + player.w > roomWidth && door.dir === "E") {
+			console.log(translatedX, playerX2, translatedY, playerY, door.mapX - currentRoom.mapX)
+		}
+		if (player.y < 0 && door.dir === "N" && translatedX === playerX && translatedY === playerY) {
+			console.log("Collision with top door");
+		}
+		if (player.x + player.w > roomWidth && door.dir === "E" && translatedX === playerX && translatedY === playerY) {
+			console.log("Collision with right door");
+		}
+		if (player.y + player.h > roomHeight && door.dir === "S" && translatedX === playerX && translatedY === playerY) {
+			console.log("Collision with bottom door");
+		}
+	}
+}function movePlayer() {
+
+}
+
+function testDoors() {
+	for (var i = 0; i < currentRoom.doors.length; i++) {
+		var door = currentRoom.doors[i];
+		var translatedX = ((door.mapX - currentRoom.mapX) * 3);
+		var translatedY = ((door.mapY - currentRoom.mapY) * 3);
+		var playerX = modulus(modulus(player.x), 10);
+		var playerX2 = modulus(modulus(player.x + player.w), 10);
+		var playerY = modulus(modulus(player.y), 10);
+		var playerY2 = modulus(modulus(player.y + player.h), 10);
+		var roomWidth = currentRoom.mapW * 10 * 16 * 3;
+		var roomHeight = currentRoom.mapH * 10 * 16 * 3;
+		if (door.dir === "N") {
+			translatedX++;
+		}
+		if (door.dir === "E") {
+			translatedY++;
+			translatedX += 3;
+		}
+		if (door.dir === "S") {
+			translatedX++;
+			translatedY += 3;
+		}
+		if (door.dir === "W") {
+			translatedY++;
+		}
+		if (player.x < 0 && door.dir === "W" && translatedX === playerX && translatedY === playerY) {
+			console.log("Collision with left door");
+		}
+		if (door.dir === "S") {
+			console.log(playerY,playerY2,  translatedY);
+		}
+		if (playerY2 === translatedY && door.dir === "S") {
+			console.log(translatedY, playerY2, translatedX, playerX)
+		}
+		if (player.y < 0 && door.dir === "N" && translatedX === playerX && translatedY === playerY) {
+			console.log("Collision with top door");
+		}
+		if (playerY2 === translatedY && door.dir === "E" && translatedX === playerX2 && translatedY === playerY) {
+			console.log("Collision with right door");
+		}
+		if (playerX2 === translatedX && door.dir === "S" && translatedX === playerX && translatedY === playerY2) {
+			console.log("Collision with bottom door");
+		}
+	}
+}function movePlayer() {
+
+}
+
+function testDoors() {
+	for (var i = 0; i < currentRoom.doors.length; i++) {
+		var door = currentRoom.doors[i];
+		var translatedX = ((door.mapX - currentRoom.mapX) * 3);
+		var translatedY = ((door.mapY - currentRoom.mapY) * 3);
+		var playerX = modulus(modulus(player.x), 10);
+		var playerX2 = modulus(modulus(player.x + player.w), 10);
+		var playerY = modulus(modulus(player.y), 10);
+		var playerY2 = modulus(modulus(player.y + player.h), 10);
+		var roomWidth = currentRoom.mapW * 10 * 16 * 3;
+		var roomHeight = currentRoom.mapH * 10 * 16 * 3;
+		if (door.dir === "N") {
+			translatedX++;
+		}
+		if (door.dir === "E") {
+			translatedY++;
+			translatedX += 3;
+		}
+		if (door.dir === "S") {
+			translatedX++;
+			translatedY += 3;
+		}
+		if (door.dir === "W") {
+			translatedY++;
+		}
+		if (player.x < 0 && door.dir === "W" && translatedX === playerX && translatedY === playerY) {
+			console.log("Collision with left door");
+		}
+		if (door.dir === "S") {
+			console.log(playerY,playerY2,  translatedY);
+		}
+		if (playerY2 === translatedY && door.dir === "S") {
+			console.log(translatedY, playerY2, translatedX, playerX)
+		}
+		if (player.y < 0 && door.dir === "N" && translatedX === playerX && translatedY === playerY) {
+			console.log("Collision with top door");
+		}
+		if (player.x + player.w >= roomWidth && door.dir === "E" && translatedX === playerX2 && translatedY === playerY) {
+			console.log("Collision with right door");
+		}
+		if (player.y + player.h >= roomHeight && door.dir === "S" && translatedX === playerX && translatedY === playerY2) {
+			console.log("Collision with bottom door");
+		}
+	}
+}var currentMap = null;
+
+function movePlayer(room, x, y) {
+	for (var i = 0; i < room.doors.length; i++) {
+		var door = room.doors[i];
+		if(door.mapX === x && door.mapY === y) {
+
+		}
+	}
+}
+
+function testDoors() {
+	for (var i = 0; i < currentRoom.doors.length; i++) {
+		var door = currentRoom.doors[i];
+		var translatedX = ((door.mapX - currentRoom.mapX) * 3);
+		var translatedY = ((door.mapY - currentRoom.mapY) * 3);
+		var playerX = modulus(modulus(player.x), 10);
+		var playerX2 = modulus(modulus(player.x + player.w), 10);
+		var playerY = modulus(modulus(player.y), 10);
+		var playerY2 = modulus(modulus(player.y + player.h), 10);
+		var roomWidth = currentRoom.mapW * 10 * 16 * 3;
+		var roomHeight = currentRoom.mapH * 10 * 16 * 3;
+		if (door.dir === "N") {
+			translatedX++;
+		}
+		if (door.dir === "E") {
+			translatedY++;
+			translatedX += 3;
+		}
+		if (door.dir === "S") {
+			translatedX++;
+			translatedY += 3;
+		}
+		if (door.dir === "W") {
+			translatedY++;
+		}
+		if (player.x < 0 && door.dir === "W" && translatedX === playerX && translatedY === playerY) {
+			console.log("Collision with left door");
+			movePlayer(door.room2, door.mapX, door.mapY);
+		}
+		if (player.y < 0 && door.dir === "N" && translatedX === playerX && translatedY === playerY) {
+			console.log("Collision with top door");
+			movePlayer(door.room2, door.mapX, door.mapY);
+		}
+		if (player.x + player.w >= roomWidth && door.dir === "E" && translatedX === playerX2 && translatedY === playerY) {
+			console.log("Collision with right door");
+			movePlayer(door.room2, door.mapX, door.mapY);
+		}
+		if (player.y + player.h >= roomHeight && door.dir === "S" && translatedX === playerX && translatedY === playerY2) {
+			console.log("Collision with bottom door");
+			movePlayer(door.room2, door.mapX, door.mapY);
+		}
+	}
+}
+
+function enterRoom(room) {
+	if (room.map === null) {
+		playerSizedRoom(room);
+	}
+	currentMapTiles = room.map.tiles;
+	currentMap = room.map.map;
+	mapHeight = room.map.height * 10;
+	mapWidth = room.map.width * 10;
+}var currentMap = null;
+var mapWidth = 0;
+var mapHeight = 0;
+
+function movePlayer(room, x, y) {
+	for (var i = 0; i < room.doors.length; i++) {
+		var door = room.doors[i];
+		if(door.dir === "N") {
+			y += 1;
+		}
+		if(door.dir === "E") {
+			x += 1;
+		}
+		if(door.dir === "S") {
+			y -= 1;
+		}
+		if(door.dir === "W") {
+			x -= 1;
+		}
+		console.log(door.mapX, door.mapY, x, y)
+		if (door.mapX === x && door.mapY === y) {
+			var translatedX = ((door.mapX - currentRoom.mapX) * 3);
+			var translatedY = ((door.mapY - currentRoom.mapY) * 3);
+			if (door.dir === "N") {
+				translatedX++;
+			}
+			if (door.dir === "E") {
+				translatedY++;
+				translatedX += 3;
+			}
+			if (door.dir === "S") {
+				translatedX++;
+				translatedY += 3;
+			}
+			if (door.dir === "W") {
+				translatedY++;
+			}
+			enterRoom(room);
+			player.x = (translatedX * 10 * 16) + (10 / 2 * 16);
+			player.y = (translatedY * 10 * 16) + (10 / 2 * 16);
+		}
+	}
+}
+
+function testDoors() {
+	for (var i = 0; i < currentRoom.doors.length; i++) {
+		var door = currentRoom.doors[i];
+		var translatedX = ((door.mapX - currentRoom.mapX) * 3);
+		var translatedY = ((door.mapY - currentRoom.mapY) * 3);
+		var playerX = modulus(modulus(player.x), 10);
+		var playerX2 = modulus(modulus(player.x + player.w), 10);
+		var playerY = modulus(modulus(player.y), 10);
+		var playerY2 = modulus(modulus(player.y + player.h), 10);
+		var roomWidth = currentRoom.mapW * 10 * 16 * 3;
+		var roomHeight = currentRoom.mapH * 10 * 16 * 3;
+		if (door.dir === "N") {
+			translatedX++;
+		}
+		if (door.dir === "E") {
+			translatedY++;
+			translatedX += 3;
+		}
+		if (door.dir === "S") {
+			translatedX++;
+			translatedY += 3;
+		}
+		if (door.dir === "W") {
+			translatedY++;
+		}
+		if (player.x < 0 && door.dir === "W" && translatedX === playerX && translatedY === playerY) {
+			console.log("Collision with left door");
+			movePlayer(door.room2, door.mapX, door.mapY);
+		}
+		if (player.y < 0 && door.dir === "N" && translatedX === playerX && translatedY === playerY) {
+			console.log("Collision with top door");
+			movePlayer(door.room2, door.mapX, door.mapY);
+		}
+		if (player.x + player.w >= roomWidth && door.dir === "E" && translatedX === playerX2 && translatedY === playerY) {
+			console.log("Collision with right door");
+			movePlayer(door.room2, door.mapX, door.mapY);
+		}
+		if (player.y + player.h >= roomHeight && door.dir === "S" && translatedX === playerX && translatedY === playerY2) {
+			console.log("Collision with bottom door");
+			movePlayer(door.room2, door.mapX, door.mapY);
+		}
+	}
+}
+
+function enterRoom(room) {
+	if (room.map === null) {
+		playerSizedRoom(room);
+	}
+	currentMapTiles = room.map.tiles;
+	currentMap = room.map.map;
+	mapHeight = room.map.height * 10;
+	mapWidth = room.map.width * 10;
+}function parseViewPort() {
 	var canvas = tileContext.canvas;
 	var deadZoneX = canvas.width / 2;
 	var deadZoneY = canvas.height / 2;
@@ -2164,6 +3694,53 @@ bigRoomList.push(BigRoom(4, 4, 0, 0, 0, 0, 0, 1 | 2 | 4 | 8, function(array, roo
 	// }
 	// if(viewPortY < (window.innerHeight-(height*16))/2) {
 	// viewPortY = (window.innerHeight-(height*16))/2;
+	// }
+}
+function parseMinimapViewport() {
+	var canvas = minimapContext.canvas;
+	var deadZoneX = canvas.width / 2;
+	var deadZoneY = canvas.height / 2;
+	var mapX = (currentRoom.mapX * 16);
+	var mapY = (currentRoom.mapY * 16);
+	if (mapX - miniViewPortX + deadZoneX > canvas.width) {
+		miniViewPortX = mapX - (canvas.width - deadZoneX);
+	} else if (mapX - deadZoneX < miniViewPortX) {
+		miniViewPortX = mapX - deadZoneX;
+	}
+	if (mapY - miniViewPortY + deadZoneY > canvas.height) {
+		miniViewPortY = mapY - (canvas.height - deadZoneY);
+	} else if (mapY - deadZoneY < miniViewPortY) {
+		miniViewPortY = mapY - deadZoneY;
+	}
+	// if (!(0 <= miniViewPortX &&
+	// 	width * 16 >= miniViewPortX + canvas.width &&
+	// 	0 <= miniViewPortY &&
+	// 	height * 16 >= miniViewPortY + canvas.height)) {
+	// 	if (miniViewPortX < 0) {
+	// 		miniViewPortX = 0;
+	// 	}
+	// 	if (miniViewPortY < 0) {
+	// 		miniViewPortY = 0;
+	// 	}
+	// 	if (miniViewPortX + canvas.width > width * 16) {
+	// 		miniViewPortX = (width / 2 * 16) - deadZoneX;
+	// 	}
+	// 	if (miniViewPortY + canvas.height > height * 16) {
+	// 	console.log(true)
+	// 		miniViewPortY = (height / 2 * 16) - deadZoneY;
+	// 	}
+	// }
+	miniViewPortY = ~~ (0.5 + miniViewPortY);
+	miniViewPortY = ~~ (0.5 + miniViewPortY);
+	// miniViewPortX = (window.innerWidth / 2) - (width*16) + player.x;
+	// miniViewPortX = player.x;
+	// miniViewPortY = (window.innerHeight / 2) - (height*16) + player.y;
+	// miniViewPortY = player.y;
+	// if(miniViewPortX < (window.innerWidth-(width*16))/2) {
+	// miniViewPortX = 0;
+	// }
+	// if(miniViewPortY < (window.innerHeight-(height*16))/2) {
+	// miniViewPortY = (window.innerHeight-(height*16))/2;
 	// }
 }var world, currentRoom;
 
@@ -2615,7 +4192,11 @@ function Room(x, y, width, height, region) {
 		mapColor: 4.281545727E9,
 		region: region,
 		specialType: 0,
-		doors: []
+		startPositionX:0,
+		startPositionY:0,
+		startRoom:false,
+		doors: [],
+		map:null
 	};
 }
 
@@ -2710,6 +4291,12 @@ function create() {
 	world.height = 48;
 	startAt(40, 24, nextRegion());
 	createRooms(1);
+	enterRoom(world.rooms[0]);
+	currentRoom.startRoom = true;
+	currentRoom.startPositionX = random(0,currentRoom.mapW-1);
+	currentRoom.startPositionY = random(0,currentRoom.mapH-1);
+	player.x = currentRoom.startPositionX * 10 * 16 + (10 / 2 * 16);
+	player.y = currentRoom.startPositionY * 10 * 16 + (10 / 2 * 16);
 }
 
 function nextRegion() {

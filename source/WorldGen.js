@@ -451,7 +451,8 @@ function Room(x, y, width, height, region) {
 		startPositionX:0,
 		startPositionY:0,
 		startRoom:false,
-		doors: []
+		doors: [],
+		map:null
 	};
 }
 
@@ -546,10 +547,12 @@ function create() {
 	world.height = 48;
 	startAt(40, 24, nextRegion());
 	createRooms(1);
-	currentRoom = world.rooms[0];
+	enterRoom(world.rooms[0]);
 	currentRoom.startRoom = true;
 	currentRoom.startPositionX = random(0,currentRoom.mapW-1);
 	currentRoom.startPositionY = random(0,currentRoom.mapH-1);
+	player.x = currentRoom.startPositionX * roomSize * tileSize + (roomSize / 2 * tileSize);
+	player.y = currentRoom.startPositionY * roomSize * tileSize + (roomSize / 2 * tileSize);
 }
 
 function nextRegion() {

@@ -26,7 +26,7 @@ var player = {
 	jumpStart: 0,
 	jumping: 0,
 	jumpsUsed: 0,
-	maxJumps: 3,
+	maxJumps: 1,
 	angle: 0,
 	health: 5,
 	maxHealth: 5
@@ -106,7 +106,6 @@ function DOMLoaded() {
 	minimapContext = minimapCanvas.getContext("2d");
 	resizeCanvas();
 	// createMap();
-	loop();
 	startWorld();
 	for (var r = 0; r < regionColors.length; r++) {
 		var rooms = random(10, 20);
@@ -116,7 +115,7 @@ function DOMLoaded() {
 		addRegion();
 	}
 	doors();
-	drawWorld();
+	loop();
 }
 
 function resizeCanvas() {
@@ -140,6 +139,7 @@ function eachFrame(event) {
 		handleXMovement(entity);
 		entity.x = round(entity.x);
 		entity.y = round(entity.y);
+		testDoors();
 		testWalking(entity);
 		testJumping(entity);
 		handleJump(entity);
@@ -164,6 +164,7 @@ function eachFrame(event) {
 	// optimize
 	tileContext.clearRect(0 - viewPortX, 0 - viewPortY, realMapWidth, realMapHeight);
 	drawMap();
+	drawWorld();
 	// drawRoom();
 	playerContext.fillStyle = "#000000";
 	for (var i = 0; i < entities.length; i++) {
