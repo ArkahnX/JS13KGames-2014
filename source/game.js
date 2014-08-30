@@ -30,6 +30,7 @@ var player = {
 	maxJumps: 1,
 	angle: 0,
 	health: 5,
+	doorCooldown:window.performance.now(),
 	maxHealth: 5
 }
 var dt = currentTick - lastTick;
@@ -140,11 +141,11 @@ function eachFrame(event) {
 		handleXMovement(entity);
 		entity.x = round(entity.x);
 		entity.y = round(entity.y);
-		testDoors();
 		testWalking(entity);
 		testJumping(entity);
 		handleJump(entity);
 		testFalling(entity);
+		testDoors();
 		// drawImg(entity);
 		// Physics.
 		// if (map[(((entity.x - entity.x % 16) / 16) * width) + (entity.y / 16)] === 1) {

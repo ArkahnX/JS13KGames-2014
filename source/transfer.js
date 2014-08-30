@@ -19,26 +19,26 @@ function movePlayer(room, direction, position) {
 				var translatedY = ((door.mapY - room.mapY) * segmentsPerRoom);
 				// console.log(player.x, player.y)
 				if (door.dir === "N") {
-					translatedX += Math.floor(segmentsPerRoom/2);
-					player.y = player.h;
-					player.x = (player.x % (roomSize  * tileSize)) + (translatedX * roomSize* tileSize);
+					translatedX += Math.floor(segmentsPerRoom / 2);
+					player.y = 0;
+					player.x = (player.x % (roomSize * tileSize)) + (translatedX * roomSize * tileSize);
 				}
 				if (door.dir === "E") {
-					translatedY += Math.floor(segmentsPerRoom/2);
+					translatedY += Math.floor(segmentsPerRoom / 2);
 					translatedX += segmentsPerRoom;
 					player.x = (room.mapW * roomSize * tileSize * segmentsPerRoom) - (player.w);
-					player.y = (player.y % (roomSize  * tileSize)) + (translatedY * roomSize* tileSize);
+					player.y = (player.y % (roomSize * tileSize)) + (translatedY * roomSize * tileSize);
 				}
 				if (door.dir === "S") {
-					translatedX += Math.floor(segmentsPerRoom/2);
+					translatedX += Math.floor(segmentsPerRoom / 2);
 					translatedY += segmentsPerRoom;
 					player.y = (room.mapH * roomSize * tileSize * segmentsPerRoom) - (player.h);
-					player.x = (player.x % (roomSize  * tileSize)) + (translatedX * roomSize* tileSize);
+					player.x = (player.x % (roomSize * tileSize)) + (translatedX * roomSize * tileSize);
 				}
 				if (door.dir === "W") {
-					translatedY += Math.floor(segmentsPerRoom/2);
+					translatedY += Math.floor(segmentsPerRoom / 2);
 					player.x = 0;
-					player.y = (player.y % (roomSize  * tileSize)) + (translatedY * roomSize* tileSize);
+					player.y = (player.y % (roomSize * tileSize)) + (translatedY * roomSize * tileSize);
 				}
 			}
 		}
@@ -57,34 +57,37 @@ function testDoors() {
 		var roomWidth = currentRoom.mapW * roomSize * tileSize * segmentsPerRoom;
 		var roomHeight = currentRoom.mapH * roomSize * tileSize * segmentsPerRoom;
 		if (door.dir === "N") {
-			translatedX += Math.floor(segmentsPerRoom/2);
+			translatedX += Math.floor(segmentsPerRoom / 2);
 		}
 		if (door.dir === "E") {
-			translatedY += Math.floor(segmentsPerRoom/2);
+			translatedY += Math.floor(segmentsPerRoom / 2);
 			translatedX += segmentsPerRoom;
 		}
 		if (door.dir === "S") {
-			translatedX += Math.floor(segmentsPerRoom/2);
+			translatedX += Math.floor(segmentsPerRoom / 2);
 			translatedY += segmentsPerRoom;
 		}
 		if (door.dir === "W") {
-			translatedY += Math.floor(segmentsPerRoom/2);
+			translatedY += Math.floor(segmentsPerRoom / 2);
 		}
-		if (player.x <= 0 && player.xDirection === LEFT && door.dir === "W" && translatedX === playerX && translatedY === playerY) {
-			console.log("Collision with left door");
-			movePlayer(door.room2, "E", door.mapY);
-		}
-		if (player.y <= 0 && player.yDirection === JUMPING && door.dir === "N" && translatedX === playerX && translatedY === playerY) {
-			console.log("Collision with top door");
-			movePlayer(door.room2, "S", door.mapX);
-		}
-		if (player.x + player.w >= roomWidth && player.xDirection === RIGHT && door.dir === "E" && translatedX === playerX2 && translatedY === playerY) {
-			console.log("Collision with right door");
-			movePlayer(door.room2, "W", door.mapY);
-		}
-		if (player.y + player.h >= roomHeight /*&& player.yDirection !== IDLE*/ && door.dir === "S" && translatedX === playerX && (translatedY === playerY2 || translatedY === playerY)) {
-			console.log("Collision with bottom door");
-			movePlayer(door.room2, "N", door.mapX);
+		if (window.performance.now() - player.doorCooldown > 400) {
+			if (player.x <= 0 && player.xDirection === LEFT && door.dir === "W" && translatedX === playerX && translatedY === playerY) {
+				console.log("Collision with left door");
+				movePlayer(door.room2, "E", door.mapY);
+			}
+			if (player.y <= 0 && player.yDirection === JUMPING && door.dir === "N" && translatedX === playerX && translatedY === playerY) {
+				console.log("Collision with top door");
+				movePlayer(door.room2, "S", door.mapX);
+			}
+			if (player.x + player.w >= roomWidth && player.xDirection === RIGHT && door.dir === "E" && translatedX === playerX2 && translatedY === playerY) {
+				console.log("Collision with right door");
+				movePlayer(door.room2, "W", door.mapY);
+			}
+			if (player.y + player.h >= roomHeight && player.yDirection !== IDLE && door.dir === "S" && translatedX === playerX && (translatedY === playerY2 || translatedY === playerY)) {
+			console.log(window.performance.now() - player.doorCooldown)
+				console.log("Collision with bottom door");
+				movePlayer(door.room2, "N", door.mapX);
+			}
 		}
 	}
 }
@@ -100,4 +103,5 @@ function enterRoom(room) {
 	mapWidth = room.map.width * roomSize;
 	realMapHeight = room.map.height * roomSize * tileSize;
 	realMapWidth = room.map.width * roomSize * tileSize;
+	player.doorCooldown = window.performance.now();
 }
