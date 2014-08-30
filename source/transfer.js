@@ -15,42 +15,31 @@ function movePlayer(room, direction, position) {
 				match = position === door.mapY;
 			}
 			if (match) {
-				var bufferY = 0;
-				var bufferX = 0;
 				var translatedX = ((door.mapX - room.mapX) * segmentsPerRoom);
 				var translatedY = ((door.mapY - room.mapY) * segmentsPerRoom);
 				// console.log(player.x, player.y)
 				if (door.dir === "N") {
 					translatedX += Math.floor(segmentsPerRoom/2);
-					bufferY = player.h*1.2;
 					player.y = player.h;
-					player.x = (player.x % (roomSize  * tileSize)) + (translatedX * tileSize);
+					player.x = (player.x % (roomSize  * tileSize)) + (translatedX * roomSize* tileSize);
 				}
 				if (door.dir === "E") {
-					console.log(translatedY, room.mapY, door.mapY)
 					translatedY += Math.floor(segmentsPerRoom/2);
 					translatedX += segmentsPerRoom;
-					bufferY = -player.w;
-					player.x = (room.mapW * roomSize * tileSize * segmentsPerRoom) - (player.w*2);
-					player.y = (player.y % (roomSize  * tileSize)) + (translatedY * tileSize);
+					player.x = (room.mapW * roomSize * tileSize * segmentsPerRoom) - (player.w);
+					player.y = (player.y % (roomSize  * tileSize)) + (translatedY * roomSize* tileSize);
 				}
 				if (door.dir === "S") {
 					translatedX += Math.floor(segmentsPerRoom/2);
 					translatedY += segmentsPerRoom;
-					bufferY = -player.h*1.2;
-					player.y = (room.mapH * roomSize * tileSize * segmentsPerRoom) - (player.h*2);
-					player.x = (player.x % (roomSize  * tileSize)) + (translatedX * tileSize);
+					player.y = (room.mapH * roomSize * tileSize * segmentsPerRoom) - (player.h);
+					player.x = (player.x % (roomSize  * tileSize)) + (translatedX * roomSize* tileSize);
 				}
 				if (door.dir === "W") {
 					translatedY += Math.floor(segmentsPerRoom/2);
-					console.log(room.mapY, door.mapY)
-					bufferY = player.w;
-					player.x = player.w;
-					player.y = (player.y % (roomSize  * tileSize)) + (translatedY * tileSize);
+					player.x = 0;
+					player.y = (player.y % (roomSize  * tileSize)) + (translatedY * roomSize* tileSize);
 				}
-				// player.x = (((door.mapX - room.mapX) * segmentsPerRoom) * roomSize * tileSize) + bufferX;
-				// player.y = (((door.mapY - room.mapY) * segmentsPerRoom) * roomSize * tileSize) + bufferY;
-				// console.log(player.x, player.y)
 			}
 		}
 	}
@@ -81,19 +70,19 @@ function testDoors() {
 		if (door.dir === "W") {
 			translatedY += Math.floor(segmentsPerRoom/2);
 		}
-		if (player.x < 0 && door.dir === "W" && translatedX === playerX && translatedY === playerY) {
+		if (player.x <= 0 && player.xDirection === LEFT && door.dir === "W" && translatedX === playerX && translatedY === playerY) {
 			console.log("Collision with left door");
 			movePlayer(door.room2, "E", door.mapY);
 		}
-		if (player.y < 0 && door.dir === "N" && translatedX === playerX && translatedY === playerY) {
+		if (player.y <= 0 && player.yDirection === JUMPING && door.dir === "N" && translatedX === playerX && translatedY === playerY) {
 			console.log("Collision with top door");
 			movePlayer(door.room2, "S", door.mapX);
 		}
-		if (player.x + player.w >= roomWidth && door.dir === "E" && translatedX === playerX2 && translatedY === playerY) {
+		if (player.x + player.w >= roomWidth && player.xDirection === RIGHT && door.dir === "E" && translatedX === playerX2 && translatedY === playerY) {
 			console.log("Collision with right door");
 			movePlayer(door.room2, "W", door.mapY);
 		}
-		if (player.y + player.h >= roomHeight && door.dir === "S" && translatedX === playerX && translatedY === playerY2) {
+		if (player.y + player.h >= roomHeight /*&& player.yDirection !== IDLE*/ && door.dir === "S" && translatedX === playerX && (translatedY === playerY2 || translatedY === playerY)) {
 			console.log("Collision with bottom door");
 			movePlayer(door.room2, "N", door.mapX);
 		}
@@ -109,4 +98,6 @@ function enterRoom(room) {
 	currentMap = room.map.map;
 	mapHeight = room.map.height * roomSize;
 	mapWidth = room.map.width * roomSize;
+	realMapHeight = room.map.height * roomSize * tileSize;
+	realMapWidth = room.map.width * roomSize * tileSize;
 }

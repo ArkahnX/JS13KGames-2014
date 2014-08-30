@@ -30,9 +30,10 @@ function handleJump(entity) {
 			entity.jumpStart = entity.y;
 			entity.jumpsUsed++;
 		}
+		entity.heightTraveled = 0;
 
 	}
-	if (entity.yDirection === IDLE || !entity.jumping || entity.jumpStart - entity.y > entity.jumpHeight) {
+	if (entity.yDirection === IDLE || !entity.jumping || entity.heightTraveled > entity.jumpHeight) {
 		entity.yDirection = FALLING;
 	}
 	if (entity.yDirection === FALLING) {
@@ -53,6 +54,8 @@ function handleJump(entity) {
 	if (entity.yAccel > entity.maxAccel) {
 		entity.yAccel = 10;
 	}
+	entity.heightTraveled -= entity.yAccel;
+	entity.heightTraveled = round(entity.heightTraveled);
 	entity.y = entity.y + entity.yAccel;
 }
 
@@ -73,6 +76,7 @@ function testFalling(entity) {
 		entity.yDirection = 0;
 		entity.jumpsUsed = 0;
 		entity.jumping = 0;
+		entity.heightTraveled = 0;
 	}
 }
 
@@ -92,6 +96,7 @@ function testJumping(entity) {
 		entity.yAccel = -1;
 		entity.yDirection = FALLING;
 		entity.jumping = 0;
+		entity.heightTraveled = 0;
 	}
 }
 

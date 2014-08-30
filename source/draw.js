@@ -1,23 +1,6 @@
-var styles = {
-	player: {},
-	border: {},
-	tile: {}
-};
-
 function drawImg(entity, x, y) {
 	if (entity.img !== null) {
 		context.drawImage(entity.img, entity.x || x, entity.y || y, entity.w, entity.h);
-	}
-}
-
-function setStyle(context, id, style, value) {
-	if (!styles[id][style]) {
-		context[style] = value;
-		styles[id][style] = value;
-	}
-	if (styles[id][style] !== value) {
-		context[style] = value;
-		styles[id][style] = value;
 	}
 }
 
@@ -44,9 +27,6 @@ function drawRoom() {
 }
 
 function drawMap() {
-	tileContext.fillStyle = "#FF9900";
-	setStyle(borderContext, "border", "strokeStyle", '#ff0000');
-	setStyle(borderContext, "border", "lineWidth", 2);
 	var startTime = window.performance.now();
 	var mapX1 = modulus(viewPortX) - 1;
 	var mapY1 = modulus(viewPortY) - 1;
@@ -109,7 +89,6 @@ function drawMap() {
 function drawRect(x, y, map, currentMapTiles, startX, rectWidth, hasFloor) {
 	var canvasX = startX;
 	var canvasY = (y * tileSize) - viewPortY;
-	// setStyle(tileContext, "tile", "fillStyle", '#FF9900');
 	if (hasFloor === 1) {
 		tileContext.fillRect(canvasX, canvasY - 5, rectWidth, 21);
 	} else {

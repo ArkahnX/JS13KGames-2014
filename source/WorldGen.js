@@ -322,6 +322,18 @@ function getRoom(x, y) {
 	return null;
 }
 
+function getDoor(room, x, y) {
+	var door = null;
+	var i = 0;
+	while (i < room.doors.length) {
+		door = world.rooms[i];
+		if (door.mapX === x && door.mapY === y) {
+			return door;
+		}
+	}
+	return null;
+}
+
 function createRooms(numberOfRooms) {
 	var i = 0;
 	var length = world.rooms.length;
@@ -332,12 +344,12 @@ function createRooms(numberOfRooms) {
 
 function createRoom() {
 	// if (world.frontiers.length > 0) {
-		var frontier = getRandom(world.frontiers);
-		try {
-			addRoom(growRoom(frontier.x, frontier.y));
-		} catch (e) {
-			console.log(world, frontier, e)
-		}
+	var frontier = getRandom(world.frontiers);
+	try {
+		addRoom(growRoom(frontier.x, frontier.y));
+	} catch (e) {
+		console.log(world, frontier, e)
+	}
 	// }
 }
 
@@ -448,11 +460,11 @@ function Room(x, y, width, height, region) {
 		mapColor: 4.281545727E9,
 		region: region,
 		specialType: 0,
-		startPositionX:0,
-		startPositionY:0,
-		startRoom:false,
+		startPositionX: 0,
+		startPositionY: 0,
+		startRoom: false,
 		doors: [],
-		map:null
+		map: null
 	};
 }
 
@@ -549,10 +561,10 @@ function create() {
 	createRooms(1);
 	enterRoom(world.rooms[0]);
 	currentRoom.startRoom = true;
-	currentRoom.startPositionX = random(0,currentRoom.mapW-1);
-	currentRoom.startPositionY = random(0,currentRoom.mapH-1);
+	currentRoom.startPositionX = random(0, (currentRoom.mapW * segmentsPerRoom) - 1);
+	currentRoom.startPositionY = random(0, (currentRoom.mapH * segmentsPerRoom) - 1);
 	player.x = currentRoom.startPositionX * roomSize * tileSize + (roomSize / 2 * tileSize);
-	player.y = currentRoom.startPositionY * roomSize * tileSize + (roomSize / 2 * tileSize);
+	player.y = currentRoom.startPositionY * roomSize * tileSize + (2*tileSize);
 }
 
 function nextRegion() {

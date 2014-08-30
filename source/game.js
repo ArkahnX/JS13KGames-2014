@@ -26,6 +26,7 @@ var player = {
 	jumpStart: 0,
 	jumping: 0,
 	jumpsUsed: 0,
+	heightTraveled:0,
 	maxJumps: 1,
 	angle: 0,
 	health: 5,
@@ -157,10 +158,13 @@ function eachFrame(event) {
 		// testHit(entity);
 	}
 	parseViewPort();
+	borderContext.strokeStyle = currentRoom.mapColor.border;
+	borderContext.lineWidth = 2;
 	playerContext.clearRect(0, 0, playerCanvas.width, playerCanvas.height);
 	borderContext.clearRect(0, 0, borderCanvas.width, borderCanvas.height);
-	setStyle(tileContext, "tile", "fillStyle", '#000000');
+	tileContext.fillStyle = currentRoom.mapColor.border;
 	tileContext.fillRect(0, 0, tileCanvas.width, tileCanvas.height);
+	tileContext.fillStyle = currentRoom.mapColor.background;
 	// optimize
 	tileContext.clearRect(0 - viewPortX, 0 - viewPortY, realMapWidth, realMapHeight);
 	drawMap();
@@ -170,7 +174,6 @@ function eachFrame(event) {
 	for (var i = 0; i < entities.length; i++) {
 		var entity = entities[i];
 		var red = (15 - ((15) * (player.health / player.maxHealth))).toString(16);
-		// setStyle(playerContext, "player", "fillStyle", '#' + red + red + '0000');
 		playerContext.fillStyle = '#' + red + red + '0000';
 		playerContext.fillRect(entity.x - viewPortX, entity.y - viewPortY, entity.w, entity.h);
 	}

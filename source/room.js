@@ -27,7 +27,7 @@ var room11 = [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 0, 0, 
 var room12 = [1, 1, 1, 0, 0, 0, 0, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 1, 1, 0, 0, 0, 1, 1, 0, 0, 1, 1, 1, 1, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 2, 2, 2, 2, 1, 1, 1, 1, 1, 1, 2, 2, 2, 2, 1, 1, 1];
 var room13 = [1, 1, 1, 2, 2, 2, 2, 1, 1, 1, 1, 1, 1, 2, 2, 2, 2, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 1, 1, 1, 1, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 0, 0, 0, 0, 0, 1, 1, 1];
 
-function Room(flipX, flipY, rotate, RoomType, doors, paths, array) {
+function smallRoom(flipX, flipY, rotate, RoomType, doors, paths, array) {
 	return {
 		map: array,
 		doors: doors,
@@ -47,22 +47,22 @@ function cloneRoom(room) {
 	};
 }
 
-roomList.push(Room(0, 0, 0, 0, 0, 1 | 2 | 4 | 8, blankArray));
-roomList.push(Room(0, 0, 0, 1, 0, 1 | 0 | 4 | 0, room1));
-roomList.push(Room(0, 0, 0, 2, 0, 0 | 2 | 0 | 8, room2));
-roomList.push(Room(0, 0, 0, 3, 0, 1 | 2 | 0 | 8, room3));
-roomList.push(Room(0, 0, 0, 4, 0, 1 | 0 | 4 | 8, room4));
-roomList.push(Room(0, 0, 0, 5, 0, 0 | 2 | 4 | 0, room5));
-roomList.push(Room(0, 0, 0, 6, 0, 0 | 0 | 4 | 8, room6));
-roomList.push(Room(0, 0, 0, 7, 0, 1 | 0 | 0 | 8, room7));
-roomList.push(Room(0, 0, 0, 8, 0, 1 | 2 | 0 | 0, room8));
-roomList.push(Room(0, 0, 0, 9, 0, 1 | 2 | 4 | 8, room9));
-roomList.push(Room(0, 0, 0, 10, 1, 0 | 2 | 4 | 8, room10));
-roomList.push(Room(0, 0, 0, 11, 4, 1 | 2 | 0 | 8, room11));
-roomList.push(Room(0, 0, 0, 12, 8, 1 | 2 | 4 | 0, room12));
-roomList.push(Room(0, 0, 0, 13, 2, 1 | 0 | 4 | 8, room13));
+roomList.push(smallRoom(0, 0, 0, 0, 0, 1 | 2 | 4 | 8, blankArray));
+roomList.push(smallRoom(0, 0, 0, 1, 0, 1 | 0 | 4 | 0, room1));
+roomList.push(smallRoom(0, 0, 0, 2, 0, 0 | 2 | 0 | 8, room2));
+roomList.push(smallRoom(0, 0, 0, 3, 0, 1 | 2 | 0 | 8, room3));
+roomList.push(smallRoom(0, 0, 0, 4, 0, 1 | 0 | 4 | 8, room4));
+roomList.push(smallRoom(0, 0, 0, 5, 0, 0 | 2 | 4 | 0, room5));
+roomList.push(smallRoom(0, 0, 0, 6, 0, 0 | 0 | 4 | 8, room6));
+roomList.push(smallRoom(0, 0, 0, 7, 0, 1 | 0 | 0 | 8, room7));
+roomList.push(smallRoom(0, 0, 0, 8, 0, 1 | 2 | 0 | 0, room8));
+roomList.push(smallRoom(0, 0, 0, 9, 0, 1 | 2 | 4 | 8, room9));
+roomList.push(smallRoom(0, 0, 0, 10, 1, 0 | 2 | 4 | 8, room10));
+roomList.push(smallRoom(0, 0, 0, 11, 4, 1 | 2 | 0 | 8, room11));
+roomList.push(smallRoom(0, 0, 0, 12, 8, 1 | 2 | 4 | 0, room12));
+roomList.push(smallRoom(0, 0, 0, 13, 2, 1 | 0 | 4 | 8, room13));
 
-function BigRoom(width, height, flipX, flipY, rotate, RoomType, doors, paths, roomCreator) {
+function BigRoom(width, height, flipX, flipY, rotate, RoomType, doors, paths, roomCreator, worldRoom) {
 	var array = [];
 	var map = [];
 	var topSize = Math.max(width, height);
@@ -92,13 +92,13 @@ function BigRoom(width, height, flipX, flipY, rotate, RoomType, doors, paths, ro
 				}
 				room = rooms[roomId];
 			}
-			map[coordinate(x, y, topSize * roomSize)] = room.map[coordinate(x % roomSize, y % roomSize, roomSize)];
+			var mapCoord = coordinate(x, y, topSize * roomSize);
+			var roomCoord = coordinate(x % roomSize, y % roomSize, roomSize);
+			map[mapCoord] = room.map[roomCoord];
 		}
 	}
 	// currentMapTiles = topSize * roomSize;
 	// currentMap = map;
-	realMapHeight = height * roomSize * tileSize;
-	realMapWidth = width * roomSize * tileSize;
 	return {
 		map: map,
 		doors: doors,
@@ -249,27 +249,27 @@ function setRoom(startX, startY, currentX, currentY, arraySize, array, validRoom
 	array[coordinate(currentX, currentY, arraySize)] = selectedRoom;
 }
 
-bigRoomList.push(BigRoom(4, 1, 0, 0, 0, 0, 0, 1 | 2 | 4 | 8, function(array, roomsX, roomsY, arraySize) {
-	var startX = random(0, roomsX - 1);
-	var startY = random(0, roomsY - 1);
-	var startDirection = random(0, 3);
-	var currentX = 0;
-	var currentY = 0;
-	var validRooms = [];
-	var roomSelection = [];
-	for (var i = 0; i < arraySize * arraySize; i++) {
-		setRoom(startX, startY, currentX, currentY, arraySize, array, validRooms, roomSelection, roomsX, roomsY);
-		currentX++;
-		if (currentX > roomsX - 1) {
-			currentX = 0;
-			currentY++;
-		}
-		if (currentY > roomsY - 1) {
-			i = arraySize * arraySize;
-		}
-	}
-	return array;
-}));
+// bigRoomList.push(BigRoom(4, 1, 0, 0, 0, 0, 0, 1 | 2 | 4 | 8, function(array, roomsX, roomsY, arraySize) {
+// 	var startX = random(0, roomsX - 1);
+// 	var startY = random(0, roomsY - 1);
+// 	var startDirection = random(0, 3);
+// 	var currentX = 0;
+// 	var currentY = 0;
+// 	var validRooms = [];
+// 	var roomSelection = [];
+// 	for (var i = 0; i < arraySize * arraySize; i++) {
+// 		setRoom(startX, startY, currentX, currentY, arraySize, array, validRooms, roomSelection, roomsX, roomsY);
+// 		currentX++;
+// 		if (currentX > roomsX - 1) {
+// 			currentX = 0;
+// 			currentY++;
+// 		}
+// 		if (currentY > roomsY - 1) {
+// 			i = arraySize * arraySize;
+// 		}
+// 	}
+// 	return array;
+// }));
 
 function playerSizedRoom(room) {
 	room.map = BigRoom(room.mapW * segmentsPerRoom, room.mapH * segmentsPerRoom, 0, 0, 0, 0, 0, 1 | 2 | 4 | 8, function(array, roomsX, roomsY, arraySize) {
@@ -293,5 +293,5 @@ function playerSizedRoom(room) {
 			}
 		}
 		return array;
-	});
+	}, room);
 }
