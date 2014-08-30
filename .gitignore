@@ -3,3 +3,4 @@ node_modules
 source/app.min.js
 source/app.js
 source/app.min.js
+*.tmp

@@ -245,17 +245,28 @@ function drawLine(startX, startY, endX, endY) {
 
 function drawWorld() {
 	var room = null;
-	playerCanvas.width = world.width * 16;
-	playerCanvas.height = world.height * 16;
-	playerContext.clearRect(0, 0, playerCanvas.width, playerCanvas.height);
+	minimapCanvas.width = world.width * 16;
+	minimapCanvas.height = world.height * 16;
+	minimapContext.clearRect(0, 0, minimapCanvas.width, minimapCanvas.height);
 	for (var i = 0; i < world.rooms.length; i++) {
 		room = world.rooms[i];
-		playerContext.lineWidth = 2;
-		playerContext.strokeStyle = "#555";
-		playerContext.fillStyle = room.mapColor;
-		playerContext.rect(room.mapX * 16, room.mapY * 16, room.mapW * 16, room.mapH * 16);
-		playerContext.fill();
-		playerContext.stroke();
+		minimapContext.lineWidth = 2;
+		minimapContext.strokeStyle = room.region.color.border;
+		minimapContext.fillStyle = room.region.color.background;
+		minimapContext.rect(room.mapX * 16, room.mapY * 16, room.mapW * 16, room.mapH * 16);
+		minimapContext.fill();
+		minimapContext.stroke();
+		// drawRectangle(room);
+		drawDoors(room);
+	}
+	for (var i = 0; i < world.rooms.length; i++) {
+		room = world.rooms[i];
+		// minimapContext.lineWidth = 2;
+		// minimapContext.strokeStyle = world.currentRegion.color.border;
+		// minimapContext.fillStyle = world.currentRegion.color.background;
+		// minimapContext.rect(room.mapX * 16, room.mapY * 16, room.mapW * 16, room.mapH * 16);
+		// minimapContext.fill();
+		// minimapContext.stroke();
 		// drawRectangle(room);
 		drawDoors(room);
 	}
@@ -271,27 +282,28 @@ function drawIcons(room) {
 	var door = null;
 	for (var i = 0; i < room.doors.length; i++) {
 		door = room.doors[i];
+		var color = regionColors[door.doorType].lock;
 		if (door.doorType > 0) {
 			switch (door.dir) {
 				case "N":
 					// this.iconStamp.frame = 32 + door.doorType;
 					// stamp(this.iconStamp, this.16 * door.mapX, this.16 * door.mapY - 4);
-					drawCircle(16 * door.mapX, 16 * door.mapY - 4, "#FF0000");
+					drawCircle(16 * door.mapX + 5, 16 * door.mapY, color);
 					continue;
 				case "S":
 					// iconStamp.frame = 32 + door.doorType;
 					// stamp(iconStamp, 16 * door.mapX, 16 * door.mapY + 4);
-					drawCircle(16 * door.mapX, 16 * door.mapY + 4, "#00FF00");
+					drawCircle(16 * door.mapX + 5, 16 * door.mapY + 16, color);
 					continue;
 				case "W":
 					// iconStamp.frame = 32 + door.doorType;
 					// stamp(iconStamp, 16 * door.mapX - 4, 16 * door.mapY);
-					drawCircle(16 * door.mapX - 4, 16 * door.mapY, "#0000FF");
+					drawCircle(16 * door.mapX - 3, 16 * door.mapY + 8, color);
 					continue;
 				case "E":
 					// iconStamp.frame = 32 + door.doorType;
 					// stamp(iconStamp, 16 * door.mapX + 4, 16 * door.mapY);
-					drawCircle(16 * door.mapX + 4, 16 * door.mapY, "#000000");
+					drawCircle(16 * door.mapX + 13, 16 * door.mapY + 8, color);
 					continue;
 				default:
 					continue;
@@ -300,8 +312,398 @@ function drawIcons(room) {
 	}
 	// this.iconStamp.frame = 16 + room.specialType;
 	// stamp(this.iconStamp, this.16 * (room.mapX + room.mapW / 2) - 4, this.16 * (room.mapY + room.mapH / 2) - 4);
+	var color = regionColors[room.specialType].lock;
 	if (room.specialType > 0) {
-		drawCircle(this.16 * (room.mapX + room.mapW / 2) - 4, this.16 * (room.mapY + room.mapH / 2) - 4, "rgba(0,0,0,0)", "#FFF");
+		drawCircle(16 * (room.mapX + room.mapW / 2) - 3, 16 * (room.mapY + room.mapH / 2), "rgba(0,0,0,0)", color);
+	}
+}
+
+function drawCircle(centerX, centerY, color, border) {
+	var radius = 3;
+
+	minimapContext.beginPath();
+	minimapContext.arc(centerX + radius, centerY, radius, 0, 2 * Math.PI, false);
+	minimapContext.fillStyle = color;
+	minimapContext.fill();
+	if (border) {
+		minimapContext.lineWidth = 2;
+		minimapContext.strokeStyle = border;
+		minimapContext.stroke();
+	}
+}
+
+function drawDoors(room) {
+	var door = null;
+	// var color = room.region.color.background;
+	minimapContext.lineWidth = 1;
+	// minimapContext.strokeStyle = color;
+	var i = 4;
+	for (var e = 0; e < room.doors.length; e++) {
+		door = room.doors[e];
+		switch (door.dir) {
+			case "N":
+				var color = "#FF0000";
+	minimapContext.strokeStyle = color;
+				drawLine2(16 * door.mapX + i, 16 * door.mapY + 2, 16 * door.mapX + 16 - i, 16 * door.mapY + 2, color);
+				continue;
+			case "S":
+				var color = "#00FF00";
+	minimapContext.strokeStyle = color;
+				drawLine2(16 * door.mapX + i, 16 * (door.mapY + 1), 16 * door.mapX + 16 - i, 16 * (door.mapY + 1), color);
+				continue;
+			case "W":
+				var color = "#0000FF";
+	minimapContext.strokeStyle = color;
+				drawLine2(16 * door.mapX+2, 16 * door.mapY + i, 16 * door.mapX+2, 16 * door.mapY + 16 - i, color);
+				continue;
+			case "E":
+				var color = "#FFFF00";
+	minimapContext.strokeStyle = color;
+				drawLine2(16 * (door.mapX + 1), 16 * door.mapY + i, 16 * (door.mapX + 1), 16 * door.mapY + 16 - i, color);
+				continue;
+			default:
+				continue;
+		}
+	}
+}
+
+function drawLine2(startX, startY, endX, endY, color) {
+	minimapContext.beginPath();
+	minimapContext.moveTo(startX, startY);
+	minimapContext.lineTo(endX, endY);
+	minimapContext.stroke();
+	minimapContext.closePath();
+}
+
+function drawFrontiers() {
+	var frontier = null;
+	var i = 0;
+	minimapContext.fillStyle = "rgba(255,255,255,0.3)";
+	// var frontiers = world.frontiers;
+	var frontiers = getFrontiersForAllRooms();
+	while (i < frontiers.length) {
+		frontier = frontiers[i];
+		minimapContext.fillRect(frontier.x * 16, frontier.y * 16, 16, 16);
+		drawRectangle(Room(frontier.x, frontier.y, 1, 1, null));
+		i++;
+	}
+}var styles = {
+	player: {},
+	border: {},
+	tile: {}
+};
+
+function drawImg(entity, x, y) {
+	if (entity.img !== null) {
+		context.drawImage(entity.img, entity.x || x, entity.y || y, entity.w, entity.h);
+	}
+}
+
+function setStyle(context, id, style, value) {
+	if (!styles[id][style]) {
+		context[style] = value;
+		styles[id][style] = value;
+	}
+	if (styles[id][style] !== value) {
+		context[style] = value;
+		styles[id][style] = value;
+	}
+}
+
+function drawRoom() {
+	var mapWidth = bigRoomList[0].width;
+	var mapHeight = bigRoomList[0].height;
+	var currentX = 0;
+	var currentY = 0;
+	var mapSize = bigRoomList[0].size * 10;
+	for (var y = 0; y < mapSize; y++) {
+		for (var x = 0; x < mapSize; x++) {
+			if (bigRoomList[0].map[coordinate(x, y, mapSize)] !== 0) {
+				drawRect(x, y, bigRoomList[0].map, mapSize, 1, 1);
+			}
+		}
+	}
+	for (var y = 0; y < mapSize; y++) {
+		for (var x = 0; x < mapSize; x++) {
+			if (bigRoomList[0].map[coordinate(x, y, mapSize)] !== 0) {
+				drawTile(x, y, bigRoomList[0].map, mapSize, 1, 1);
+			}
+		}
+	}
+}
+
+function drawMap() {
+	tileContext.fillStyle = "#FF9900";
+	setStyle(borderContext, "border", "strokeStyle", '#ff0000');
+	setStyle(borderContext, "border", "lineWidth", 2);
+	var startTime = window.performance.now();
+	var mapX1 = modulus(viewPortX) - 1;
+	var mapY1 = modulus(viewPortY) - 1;
+	var mapX2 = modulus(viewPortX) + modulus(playerCanvas.width) + 2;
+	var mapY2 = modulus(viewPortY) + modulus(playerCanvas.height) + 2;
+	if (mapX1 < 0) {
+		mapX1 = 0;
+	}
+	if (mapY1 < 0) {
+		mapY1 = 0;
+	}
+	if (mapX2 > currentMapTiles) {
+		mapX2 = currentMapTiles;
+	}
+	if (mapY2 > currentMapTiles) {
+		mapY2 = currentMapTiles;
+	}
+	for (var y = mapY1; y < mapY2; y++) {
+		var rectWidth = 0;
+		var startX = -currentMapTiles * 16 * 2;
+		var hasFloor = 0;
+		var topTile;
+		for (var x = mapX1; x < mapX2; x++) {
+			if (currentMap[coordinate(x, y, currentMapTiles)] !== 0) {
+				rectWidth += 1 * 16;
+				if (startX === -currentMapTiles * 16 * 2) {
+					startX = (x * 16) - viewPortX;
+				}
+				if (y - 1 < 0) {
+					topTile = -1;
+				} else {
+					topTile = currentMap[coordinate(x, y - 1, currentMapTiles)];
+				}
+				if (topTile === 0) {
+					hasFloor = 1;
+				}
+				// drawTile(x, y, currentMap, currentMapTiles, startX, rectWidth, hasFloor);
+			}
+			if (currentMap[coordinate(x, y, currentMapTiles)] === 0 || x === mapX2 - 1) {
+				drawRect(x, y, currentMap, currentMapTiles, startX, rectWidth, hasFloor);
+			}
+			if (currentMap[coordinate(x, y, currentMapTiles)] === 0 || x === mapX2 - 1) {
+				rectWidth = 0;
+				startX = -currentMapTiles * 16 * 2;
+				hasFloor = 0;
+			}
+		}
+	}
+
+	parseVerticalLines(mapX1, mapY1, mapX2, mapY2, 1);
+	parseVerticalLines(mapX1, mapY1, mapX2, mapY2, 4);
+	parseHorizontalLines(mapX1, mapY1, mapX2, mapY2, 2);
+	parseHorizontalLines(mapX1, mapY1, mapX2, mapY2, 8);
+	var time = window.performance.now() - startTime
+	if (time > longestTime) {
+		longestTime = time;
+	}
+}
+
+function drawRect(x, y, map, currentMapTiles, startX, rectWidth, hasFloor) {
+	var canvasX = startX;
+	var canvasY = (y * 16) - viewPortY;
+	// setStyle(tileContext, "tile", "fillStyle", '#FF9900');
+	if (hasFloor === 1) {
+		tileContext.fillRect(canvasX, canvasY - 5, rectWidth, 21);
+	} else {
+		tileContext.fillRect(canvasX, canvasY, rectWidth, 16);
+	}
+	// }
+}
+
+function parseVerticalLines(mapX1, mapY1, mapX2, mapY2, type) {
+	for (var x = mapX1; x < mapX2; x++) {
+		var rectSize = 0;
+		var startPosition = -currentMapTiles * 16 * 2;
+		var hasFloor = 0;
+		var mainTile = 0;
+		for (var y = mapY1; y < mapY2; y++) {
+			var topRightTile = currentMap[coordinate(x + 1, y - 1, currentMapTiles)];
+			var topTile = currentMap[coordinate(x, y - 1, currentMapTiles)];
+			var topLeftTile = currentMap[coordinate(x - 1, y - 1, currentMapTiles)];
+			if (type === 1) {
+				mainTile = currentMap[coordinate(x - 1, y, currentMapTiles)];
+				if (x - 1 < 0) {
+					mainTile = -1;
+				}
+			} else if (type === 4) {
+				mainTile = currentMap[coordinate(x + 1, y, currentMapTiles)];
+				if (x + 1 > currentMapTiles - 1) {
+					mainTile = -1;
+				}
+			}
+			if (currentMap[coordinate(x, y, currentMapTiles)] !== 0 && mainTile < 1) {
+				rectSize += 1 * 16;
+				if (startPosition === -currentMapTiles * 16 * 2) {
+					if (topTile === 0) {
+						hasFloor = 1;
+					}
+					startPosition = (y * 16) - viewPortY;
+				}
+				// drawTile(x, y, currentMap, currentMapTiles, startPosition, rectSize, hasFloor);
+			}
+			if (currentMap[coordinate(x, y, currentMapTiles)] === 0 || y === mapY2 - 1 || mainTile > 0) {
+				borderContext.beginPath();
+				var canvasY = startPosition;
+				var canvasX = (x * 16) - viewPortX;
+				var canvasY2 = canvasY + rectSize;
+				var canvasX2 = ((x + 1) * 16) - viewPortX;
+				var startX = canvasX;
+				if (type === 4) {
+					startX = canvasX2
+				}
+				if (hasFloor) {
+					canvasY = canvasY - 5;
+				}
+				if (((type === 4 && topRightTile === 0) || (type === 1 && topLeftTile === 0)) && mainTile > 0) {
+					drawLine(startX, canvasY, startX, canvasY2 + 3);
+				} else {
+					drawLine(startX, canvasY, startX, canvasY2);
+				}
+				borderContext.closePath();
+				borderContext.stroke();
+			}
+			if (currentMap[coordinate(x, y, currentMapTiles)] === 0 || y === mapY2 - 1 || mainTile > 0) {
+				rectSize = 0;
+				startPosition = -currentMapTiles * 16 * 2;
+				hasFloor = 0;
+			}
+		}
+	}
+}
+
+function parseHorizontalLines(mapX1, mapY1, mapX2, mapY2, type) {
+	for (var y = mapY1; y < mapY2; y++) {
+		var rectSize = 0;
+		var startPosition = -currentMapTiles * 16 * 2;
+		var hasFloor = 0;
+		var mainTile = 0;
+		for (var x = mapX1; x < mapX2; x++) {
+			if (type === 2) {
+				if (y - 1 < 0) {
+					mainTile = -1;
+				} else {
+					mainTile = currentMap[coordinate(x, y - 1, currentMapTiles)];
+					hasFloor = 1;
+				}
+			} else if (type === 8) {
+				mainTile = currentMap[coordinate(x, y + 1, currentMapTiles)];
+				if (y + 1 > currentMapTiles - 1) {
+					mainTile = -1;
+				}
+			}
+			if (currentMap[coordinate(x, y, currentMapTiles)] !== 0 && mainTile < 1) {
+				rectSize += 1 * 16;
+				if (startPosition === -currentMapTiles * 16 * 2) {
+					startPosition = (x * 16) - viewPortX;
+				}
+				// drawTile(x, y, currentMap, currentMapTiles, startPosition, rectSize, hasFloor);
+			}
+			if (currentMap[coordinate(x, y, currentMapTiles)] === 0 || x === mapX2 - 1 || mainTile > 0) {
+				borderContext.beginPath();
+				var canvasX = startPosition;
+				var canvasY = (y * 16) - viewPortY;
+				var canvasX2 = canvasX + rectSize;
+				var canvasY2 = ((y + 1) * 16) - viewPortY;
+				if (type === 2) {
+					if (hasFloor === 1) {
+						drawLine(canvasX, canvasY - 5, canvasX2, canvasY - 5);
+						drawLine(canvasX, canvasY + 3, canvasX2, canvasY + 3);
+					} else {
+						drawLine(canvasX, canvasY, canvasX2, canvasY);
+					}
+				} else if (type === 8) {
+					drawLine(canvasX, canvasY2, canvasX2, canvasY2);
+				}
+				borderContext.closePath();
+				borderContext.stroke();
+			}
+			if (currentMap[coordinate(x, y, currentMapTiles)] === 0 || x === mapX2 - 1 || mainTile > 0) {
+				rectSize = 0;
+				startPosition = -currentMapTiles * 16 * 2;
+				hasFloor = 0;
+			}
+		}
+	}
+}
+
+
+var longestTime = 0;
+
+function drawLine(startX, startY, endX, endY) {
+	borderContext.moveTo(startX, startY);
+	borderContext.lineTo(endX, endY);
+}
+
+
+function drawWorld() {
+	var room = null;
+	playerCanvas.width = world.width * 16;
+	playerCanvas.height = world.height * 16;
+	playerContext.clearRect(0, 0, playerCanvas.width, playerCanvas.height);
+	for (var i = 0; i < world.rooms.length; i++) {
+		room = world.rooms[i];
+		playerContext.lineWidth = 3;
+		playerContext.strokeStyle = room.region.color.border;
+		playerContext.fillStyle = room.region.color.background;
+		playerContext.rect(room.mapX * 16, room.mapY * 16, room.mapW * 16, room.mapH * 16);
+		playerContext.fill();
+		playerContext.stroke();
+		// drawRectangle(room);
+		drawDoors(room);
+	}
+	for (var i = 0; i < world.rooms.length; i++) {
+		room = world.rooms[i];
+		// playerContext.lineWidth = 2;
+		// playerContext.strokeStyle = world.currentRegion.color.border;
+		// playerContext.fillStyle = world.currentRegion.color.background;
+		// playerContext.rect(room.mapX * 16, room.mapY * 16, room.mapW * 16, room.mapH * 16);
+		// playerContext.fill();
+		// playerContext.stroke();
+		// drawRectangle(room);
+		drawDoors(room);
+	}
+	for (var i = 0; i < world.rooms.length; i++) {
+		room = world.rooms[i];
+		drawIcons(room);
+	}
+}
+
+var lockColors = []
+
+function drawIcons(room) {
+	var door = null;
+	for (var i = 0; i < room.doors.length; i++) {
+		door = room.doors[i];
+		var color = regionColors[door.doorType].lock;
+		if (door.doorType > 0) {
+			switch (door.dir) {
+				case "N":
+					// this.iconStamp.frame = 32 + door.doorType;
+					// stamp(this.iconStamp, this.16 * door.mapX, this.16 * door.mapY - 4);
+					drawCircle(16 * door.mapX + 5, 16 * door.mapY , color);
+					continue;
+				case "S":
+					// iconStamp.frame = 32 + door.doorType;
+					// stamp(iconStamp, 16 * door.mapX, 16 * door.mapY + 4);
+					drawCircle(16 * door.mapX + 5, 16 * door.mapY + 16, color);
+					continue;
+				case "W":
+					// iconStamp.frame = 32 + door.doorType;
+					// stamp(iconStamp, 16 * door.mapX - 4, 16 * door.mapY);
+					drawCircle(16 * door.mapX -3, 16 * door.mapY + 8, color);
+					continue;
+				case "E":
+					// iconStamp.frame = 32 + door.doorType;
+					// stamp(iconStamp, 16 * door.mapX + 4, 16 * door.mapY);
+					drawCircle(16 * door.mapX + 13, 16 * door.mapY + 8, color);
+					continue;
+				default:
+					continue;
+			}
+		}
+	}
+	// this.iconStamp.frame = 16 + room.specialType;
+	// stamp(this.iconStamp, this.16 * (room.mapX + room.mapW / 2) - 4, this.16 * (room.mapY + room.mapH / 2) - 4);
+	var color = regionColors[room.specialType].lock;
+	if (room.specialType > 0) {
+		drawCircle(16 * (room.mapX + room.mapW / 2) - 3, 16 * (room.mapY + room.mapH / 2) , "rgba(0,0,0,0)", color);
 	}
 }
 
@@ -309,7 +711,7 @@ function drawCircle(centerX, centerY, color, border) {
 	var radius = 3;
 
 	playerContext.beginPath();
-	playerContext.arc(centerX + (radius * 1.5), centerY + (radius * 1.5), radius, 0, 2 * Math.PI, false);
+	playerContext.arc(centerX + radius, centerY, radius, 0, 2 * Math.PI, false);
 	playerContext.fillStyle = color;
 	playerContext.fill();
 	if (border) {
@@ -321,16 +723,16 @@ function drawCircle(centerX, centerY, color, border) {
 
 function drawDoors(room) {
 	var door = null;
-	var color = room.mapColor;
+	var color = room.region.color.background;
 	// var color = "#FF0000";
-	playerContext.lineWidth = 2;
+	playerContext.lineWidth = 1;
 	playerContext.strokeStyle = color;
 	var i = 4;
 	for (var e = 0; e < room.doors.length; e++) {
 		door = room.doors[e];
 		switch (door.dir) {
 			case "N":
-				drawLine2(16 * door.mapX + i, 16 * door.mapY, 16 * door.mapX + 16 - i, 16 * door.mapY, color);
+				drawLine2(16 * door.mapX + i, 16 * door.mapY - 2, 16 * door.mapX + 16 - i, 16 * door.mapY - 2, color);
 				continue;
 			case "S":
 				drawLine2(16 * door.mapX + i, 16 * (door.mapY + 1), 16 * door.mapX + 16 - i, 16 * (door.mapY + 1), color);
@@ -367,12 +769,401 @@ function drawFrontiers() {
 		drawRectangle(Room(frontier.x, frontier.y, 1, 1, null));
 		i++;
 	}
-}var playerCanvas, tileCanvas, borderCanvas, playerContext, tileContext, borderContext, mapCanvas, mapContext;
+}var styles = {
+	player: {},
+	border: {},
+	tile: {}
+};
+
+function drawImg(entity, x, y) {
+	if (entity.img !== null) {
+		context.drawImage(entity.img, entity.x || x, entity.y || y, entity.w, entity.h);
+	}
+}
+
+function setStyle(context, id, style, value) {
+	if (!styles[id][style]) {
+		context[style] = value;
+		styles[id][style] = value;
+	}
+	if (styles[id][style] !== value) {
+		context[style] = value;
+		styles[id][style] = value;
+	}
+}
+
+function drawRoom() {
+	var mapWidth = bigRoomList[0].width;
+	var mapHeight = bigRoomList[0].height;
+	var currentX = 0;
+	var currentY = 0;
+	var mapSize = bigRoomList[0].size * 10;
+	for (var y = 0; y < mapSize; y++) {
+		for (var x = 0; x < mapSize; x++) {
+			if (bigRoomList[0].map[coordinate(x, y, mapSize)] !== 0) {
+				drawRect(x, y, bigRoomList[0].map, mapSize, 1, 1);
+			}
+		}
+	}
+	for (var y = 0; y < mapSize; y++) {
+		for (var x = 0; x < mapSize; x++) {
+			if (bigRoomList[0].map[coordinate(x, y, mapSize)] !== 0) {
+				drawTile(x, y, bigRoomList[0].map, mapSize, 1, 1);
+			}
+		}
+	}
+}
+
+function drawMap() {
+	tileContext.fillStyle = "#FF9900";
+	setStyle(borderContext, "border", "strokeStyle", '#ff0000');
+	setStyle(borderContext, "border", "lineWidth", 2);
+	var startTime = window.performance.now();
+	var mapX1 = modulus(viewPortX) - 1;
+	var mapY1 = modulus(viewPortY) - 1;
+	var mapX2 = modulus(viewPortX) + modulus(playerCanvas.width) + 2;
+	var mapY2 = modulus(viewPortY) + modulus(playerCanvas.height) + 2;
+	if (mapX1 < 0) {
+		mapX1 = 0;
+	}
+	if (mapY1 < 0) {
+		mapY1 = 0;
+	}
+	if (mapX2 > currentMapTiles) {
+		mapX2 = currentMapTiles;
+	}
+	if (mapY2 > currentMapTiles) {
+		mapY2 = currentMapTiles;
+	}
+	for (var y = mapY1; y < mapY2; y++) {
+		var rectWidth = 0;
+		var startX = -currentMapTiles * 16 * 2;
+		var hasFloor = 0;
+		var topTile;
+		for (var x = mapX1; x < mapX2; x++) {
+			if (currentMap[coordinate(x, y, currentMapTiles)] !== 0) {
+				rectWidth += 1 * 16;
+				if (startX === -currentMapTiles * 16 * 2) {
+					startX = (x * 16) - viewPortX;
+				}
+				if (y - 1 < 0) {
+					topTile = -1;
+				} else {
+					topTile = currentMap[coordinate(x, y - 1, currentMapTiles)];
+				}
+				if (topTile === 0) {
+					hasFloor = 1;
+				}
+				// drawTile(x, y, currentMap, currentMapTiles, startX, rectWidth, hasFloor);
+			}
+			if (currentMap[coordinate(x, y, currentMapTiles)] === 0 || x === mapX2 - 1) {
+				drawRect(x, y, currentMap, currentMapTiles, startX, rectWidth, hasFloor);
+			}
+			if (currentMap[coordinate(x, y, currentMapTiles)] === 0 || x === mapX2 - 1) {
+				rectWidth = 0;
+				startX = -currentMapTiles * 16 * 2;
+				hasFloor = 0;
+			}
+		}
+	}
+
+	parseVerticalLines(mapX1, mapY1, mapX2, mapY2, 1);
+	parseVerticalLines(mapX1, mapY1, mapX2, mapY2, 4);
+	parseHorizontalLines(mapX1, mapY1, mapX2, mapY2, 2);
+	parseHorizontalLines(mapX1, mapY1, mapX2, mapY2, 8);
+	var time = window.performance.now() - startTime
+	if (time > longestTime) {
+		longestTime = time;
+	}
+}
+
+function drawRect(x, y, map, currentMapTiles, startX, rectWidth, hasFloor) {
+	var canvasX = startX;
+	var canvasY = (y * 16) - viewPortY;
+	// setStyle(tileContext, "tile", "fillStyle", '#FF9900');
+	if (hasFloor === 1) {
+		tileContext.fillRect(canvasX, canvasY - 5, rectWidth, 21);
+	} else {
+		tileContext.fillRect(canvasX, canvasY, rectWidth, 16);
+	}
+	// }
+}
+
+function parseVerticalLines(mapX1, mapY1, mapX2, mapY2, type) {
+	for (var x = mapX1; x < mapX2; x++) {
+		var rectSize = 0;
+		var startPosition = -currentMapTiles * 16 * 2;
+		var hasFloor = 0;
+		var mainTile = 0;
+		for (var y = mapY1; y < mapY2; y++) {
+			var topRightTile = currentMap[coordinate(x + 1, y - 1, currentMapTiles)];
+			var topTile = currentMap[coordinate(x, y - 1, currentMapTiles)];
+			var topLeftTile = currentMap[coordinate(x - 1, y - 1, currentMapTiles)];
+			if (type === 1) {
+				mainTile = currentMap[coordinate(x - 1, y, currentMapTiles)];
+				if (x - 1 < 0) {
+					mainTile = -1;
+				}
+			} else if (type === 4) {
+				mainTile = currentMap[coordinate(x + 1, y, currentMapTiles)];
+				if (x + 1 > currentMapTiles - 1) {
+					mainTile = -1;
+				}
+			}
+			if (currentMap[coordinate(x, y, currentMapTiles)] !== 0 && mainTile < 1) {
+				rectSize += 1 * 16;
+				if (startPosition === -currentMapTiles * 16 * 2) {
+					if (topTile === 0) {
+						hasFloor = 1;
+					}
+					startPosition = (y * 16) - viewPortY;
+				}
+				// drawTile(x, y, currentMap, currentMapTiles, startPosition, rectSize, hasFloor);
+			}
+			if (currentMap[coordinate(x, y, currentMapTiles)] === 0 || y === mapY2 - 1 || mainTile > 0) {
+				borderContext.beginPath();
+				var canvasY = startPosition;
+				var canvasX = (x * 16) - viewPortX;
+				var canvasY2 = canvasY + rectSize;
+				var canvasX2 = ((x + 1) * 16) - viewPortX;
+				var startX = canvasX;
+				if (type === 4) {
+					startX = canvasX2
+				}
+				if (hasFloor) {
+					canvasY = canvasY - 5;
+				}
+				if (((type === 4 && topRightTile === 0) || (type === 1 && topLeftTile === 0)) && mainTile > 0) {
+					drawLine(startX, canvasY, startX, canvasY2 + 3);
+				} else {
+					drawLine(startX, canvasY, startX, canvasY2);
+				}
+				borderContext.closePath();
+				borderContext.stroke();
+			}
+			if (currentMap[coordinate(x, y, currentMapTiles)] === 0 || y === mapY2 - 1 || mainTile > 0) {
+				rectSize = 0;
+				startPosition = -currentMapTiles * 16 * 2;
+				hasFloor = 0;
+			}
+		}
+	}
+}
+
+function parseHorizontalLines(mapX1, mapY1, mapX2, mapY2, type) {
+	for (var y = mapY1; y < mapY2; y++) {
+		var rectSize = 0;
+		var startPosition = -currentMapTiles * 16 * 2;
+		var hasFloor = 0;
+		var mainTile = 0;
+		for (var x = mapX1; x < mapX2; x++) {
+			if (type === 2) {
+				if (y - 1 < 0) {
+					mainTile = -1;
+				} else {
+					mainTile = currentMap[coordinate(x, y - 1, currentMapTiles)];
+					hasFloor = 1;
+				}
+			} else if (type === 8) {
+				mainTile = currentMap[coordinate(x, y + 1, currentMapTiles)];
+				if (y + 1 > currentMapTiles - 1) {
+					mainTile = -1;
+				}
+			}
+			if (currentMap[coordinate(x, y, currentMapTiles)] !== 0 && mainTile < 1) {
+				rectSize += 1 * 16;
+				if (startPosition === -currentMapTiles * 16 * 2) {
+					startPosition = (x * 16) - viewPortX;
+				}
+				// drawTile(x, y, currentMap, currentMapTiles, startPosition, rectSize, hasFloor);
+			}
+			if (currentMap[coordinate(x, y, currentMapTiles)] === 0 || x === mapX2 - 1 || mainTile > 0) {
+				borderContext.beginPath();
+				var canvasX = startPosition;
+				var canvasY = (y * 16) - viewPortY;
+				var canvasX2 = canvasX + rectSize;
+				var canvasY2 = ((y + 1) * 16) - viewPortY;
+				if (type === 2) {
+					if (hasFloor === 1) {
+						drawLine(canvasX, canvasY - 5, canvasX2, canvasY - 5);
+						drawLine(canvasX, canvasY + 3, canvasX2, canvasY + 3);
+					} else {
+						drawLine(canvasX, canvasY, canvasX2, canvasY);
+					}
+				} else if (type === 8) {
+					drawLine(canvasX, canvasY2, canvasX2, canvasY2);
+				}
+				borderContext.closePath();
+				borderContext.stroke();
+			}
+			if (currentMap[coordinate(x, y, currentMapTiles)] === 0 || x === mapX2 - 1 || mainTile > 0) {
+				rectSize = 0;
+				startPosition = -currentMapTiles * 16 * 2;
+				hasFloor = 0;
+			}
+		}
+	}
+}
+
+
+var longestTime = 0;
+
+function drawLine(startX, startY, endX, endY) {
+	borderContext.moveTo(startX, startY);
+	borderContext.lineTo(endX, endY);
+}
+
+
+function drawWorld() {
+	var room = null;
+	playerCanvas.width = world.width * 16;
+	playerCanvas.height = world.height * 16;
+	playerContext.clearRect(0, 0, playerCanvas.width, playerCanvas.height);
+	for (var i = 0; i < world.rooms.length; i++) {
+		room = world.rooms[i];
+		playerContext.lineWidth = 3;
+		playerContext.strokeStyle = room.region.color.border;
+		playerContext.fillStyle = room.region.color.background;
+		playerContext.rect(room.mapX * 16, room.mapY * 16, room.mapW * 16, room.mapH * 16);
+		playerContext.fill();
+		playerContext.stroke();
+		// drawRectangle(room);
+		drawDoors(room);
+	}
+	for (var i = 0; i < world.rooms.length; i++) {
+		room = world.rooms[i];
+		// playerContext.lineWidth = 2;
+		// playerContext.strokeStyle = world.currentRegion.color.border;
+		// playerContext.fillStyle = world.currentRegion.color.background;
+		// playerContext.rect(room.mapX * 16, room.mapY * 16, room.mapW * 16, room.mapH * 16);
+		// playerContext.fill();
+		// playerContext.stroke();
+		// drawRectangle(room);
+		drawDoors(room);
+	}
+	for (var i = 0; i < world.rooms.length; i++) {
+		room = world.rooms[i];
+		drawIcons(room);
+	}
+}
+
+var lockColors = []
+
+function drawIcons(room) {
+	var door = null;
+	for (var i = 0; i < room.doors.length; i++) {
+		door = room.doors[i];
+		var color = regionColors[door.doorType].lock;
+		if (door.doorType > 0) {
+			switch (door.dir) {
+				case "N":
+					// this.iconStamp.frame = 32 + door.doorType;
+					// stamp(this.iconStamp, this.16 * door.mapX, this.16 * door.mapY - 4);
+					drawCircle(16 * door.mapX + 5, 16 * door.mapY, color);
+					continue;
+				case "S":
+					// iconStamp.frame = 32 + door.doorType;
+					// stamp(iconStamp, 16 * door.mapX, 16 * door.mapY + 4);
+					drawCircle(16 * door.mapX + 5, 16 * door.mapY + 16, color);
+					continue;
+				case "W":
+					// iconStamp.frame = 32 + door.doorType;
+					// stamp(iconStamp, 16 * door.mapX - 4, 16 * door.mapY);
+					drawCircle(16 * door.mapX - 3, 16 * door.mapY + 8, color);
+					continue;
+				case "E":
+					// iconStamp.frame = 32 + door.doorType;
+					// stamp(iconStamp, 16 * door.mapX + 4, 16 * door.mapY);
+					drawCircle(16 * door.mapX + 13, 16 * door.mapY + 8, color);
+					continue;
+				default:
+					continue;
+			}
+		}
+	}
+	// this.iconStamp.frame = 16 + room.specialType;
+	// stamp(this.iconStamp, this.16 * (room.mapX + room.mapW / 2) - 4, this.16 * (room.mapY + room.mapH / 2) - 4);
+	var color = regionColors[room.specialType].lock;
+	if (room.specialType > 0) {
+		drawCircle(16 * (room.mapX + room.mapW / 2) - 3, 16 * (room.mapY + room.mapH / 2), "rgba(0,0,0,0)", color);
+	}
+}
+
+function drawCircle(centerX, centerY, color, border) {
+	var radius = 3;
+
+	playerContext.beginPath();
+	playerContext.arc(centerX + radius, centerY, radius, 0, 2 * Math.PI, false);
+	playerContext.fillStyle = color;
+	playerContext.fill();
+	if (border) {
+		playerContext.lineWidth = 2;
+		playerContext.strokeStyle = border;
+		playerContext.stroke();
+	}
+}
+
+function drawDoors(room) {
+	var door = null;
+	// var color = room.region.color.background;
+	playerContext.lineWidth = 1;
+	// playerContext.strokeStyle = color;
+	var i = 4;
+	for (var e = 0; e < room.doors.length; e++) {
+		door = room.doors[e];
+		switch (door.dir) {
+			case "N":
+				var color = "#FF0000";
+	playerContext.strokeStyle = color;
+				drawLine2(16 * door.mapX + i, 16 * door.mapY + 2, 16 * door.mapX + 16 - i, 16 * door.mapY + 2, color);
+				continue;
+			case "S":
+				var color = "#00FF00";
+	playerContext.strokeStyle = color;
+				drawLine2(16 * door.mapX + i, 16 * (door.mapY + 1), 16 * door.mapX + 16 - i, 16 * (door.mapY + 1), color);
+				continue;
+			case "W":
+				var color = "#0000FF";
+	playerContext.strokeStyle = color;
+				drawLine2(16 * door.mapX+2, 16 * door.mapY + i, 16 * door.mapX+2, 16 * door.mapY + 16 - i, color);
+				continue;
+			case "E":
+				var color = "#000000";
+	playerContext.strokeStyle = color;
+				drawLine2(16 * (door.mapX + 1), 16 * door.mapY + i, 16 * (door.mapX + 1), 16 * door.mapY + 16 - i, color);
+				continue;
+			default:
+				continue;
+		}
+	}
+}
+
+function drawLine2(startX, startY, endX, endY, color) {
+	playerContext.beginPath();
+	playerContext.moveTo(startX, startY);
+	playerContext.lineTo(endX, endY);
+	playerContext.stroke();
+	playerContext.closePath();
+}
+
+function drawFrontiers() {
+	var frontier = null;
+	var i = 0;
+	playerContext.fillStyle = "rgba(255,255,255,0.3)";
+	// var frontiers = world.frontiers;
+	var frontiers = getFrontiersForAllRooms();
+	while (i < frontiers.length) {
+		frontier = frontiers[i];
+		playerContext.fillRect(frontier.x * 16, frontier.y * 16, 16, 16);
+		drawRectangle(Room(frontier.x, frontier.y, 1, 1, null));
+		i++;
+	}
+}var playerCanvas, tileCanvas, borderCanvas, playerContext, tileContext, borderContext, minimapContext, minimapCanvas;
 var domtypes = ["getElementById", "querySelector", "querySelectorAll"];
 var getElementById = 0;
 var querySelector = 1;
 var querySelectorAll = 2;
-var runGameLoop = false;
+var runGameLoop = true;
 var frameEvent = new CustomEvent("frame");
 var currentTick = window.performance.now();
 var lastTick = window.performance.now();
@@ -383,7 +1174,7 @@ var player = {
 	x: 151,
 	y: 16 * 3,
 	w: 16,
-	h: 32,
+	h: 16 * 2,
 	img: null,
 	xDirection: 0,
 	yDirection: 1,
@@ -395,8 +1186,10 @@ var player = {
 	jumpStart: 0,
 	jumping: 0,
 	jumpsUsed: 0,
-	maxJumps: 1,
-	angle: 0
+	maxJumps: 3,
+	angle: 0,
+	health: 5,
+	maxHealth: 5
 }
 var dt = currentTick - lastTick;
 var entities = [player];
@@ -466,33 +1259,42 @@ function DOMLoaded() {
 	playerCanvas = getByType(getElementById, "player");
 	borderCanvas = getByType(getElementById, "border");
 	tileCanvas = getByType(getElementById, "tile");
+	minimapCanvas = getByType(getElementById, "minimap");
 	playerContext = playerCanvas.getContext("2d");
 	borderContext = borderCanvas.getContext("2d");
 	tileContext = tileCanvas.getContext("2d");
+	minimapContext = minimapCanvas.getContext("2d");
 	resizeCanvas();
 	// createMap();
 	loop();
+	startWorld();
+	// for (var r = 0; r < regionColors.length; r++) {
+	// 	var rooms = random(10, 20);
+	// 	for (var i = 0; i < rooms; i++) {
+	// 		addRoomToWorld();
+	// 	}
+	// 	addRegion();
+	// }
+	// doors();
+	drawWorld();
 }
 
 function resizeCanvas() {
 	if (window.innerWidth > 300) {
-		borderCanvas.width = playerCanvas.width = tileCanvas.width = 300;
+		borderCanvas.width = playerCanvas.width = tileCanvas.width = minimapCanvas.width = 300;
 	} else {
-		borderCanvas.width = playerCanvas.width = tileCanvas.width = window.innerWidth;
+		borderCanvas.width = playerCanvas.width = tileCanvas.width = minimapCanvas.width = window.innerWidth;
 	}
 	if (window.innerHeight > 300) {
-		borderCanvas.height = playerCanvas.height = tileCanvas.height = 300;
+		borderCanvas.height = playerCanvas.height = tileCanvas.height = minimapCanvas.width = 300;
 	} else {
-		borderCanvas.height = playerCanvas.height = tileCanvas.height = window.innerHeight;
+		borderCanvas.height = playerCanvas.height = tileCanvas.height = minimapCanvas.width = window.innerHeight;
 	}
 }
 
 
 
 function eachFrame(event) {
-	playerContext.clearRect(0, 0, playerCanvas.width, playerCanvas.height);
-	borderContext.clearRect(0, 0, borderCanvas.width, borderCanvas.height);
-	tileContext.clearRect(0, 0, tileCanvas.width, tileCanvas.height);
 	for (var i = 0; i < entities.length; i++) {
 		var entity = entities[i];
 		handleXMovement(entity);
@@ -515,12 +1317,20 @@ function eachFrame(event) {
 		// testHit(entity);
 	}
 	parseViewPort();
+	playerContext.clearRect(0, 0, playerCanvas.width, playerCanvas.height);
+	borderContext.clearRect(0, 0, borderCanvas.width, borderCanvas.height);
+	setStyle(tileContext, "tile", "fillStyle", '#000000');
+	tileContext.fillRect(0, 0, tileCanvas.width, tileCanvas.height);
+	// optimize
+	tileContext.clearRect(0 - viewPortX, 0 - viewPortY, realMapWidth, realMapHeight);
 	drawMap();
 	// drawRoom();
 	playerContext.fillStyle = "#000000";
 	for (var i = 0; i < entities.length; i++) {
 		var entity = entities[i];
-		setStyle(playerContext, "player", "fillStyle", '#000000');
+		var red = (15 - ((15) * (player.health / player.maxHealth))).toString(16);
+		// setStyle(playerContext, "player", "fillStyle", '#' + red + red + '0000');
+		playerContext.fillStyle = '#' + red + red + '0000';
 		playerContext.fillRect(entity.x - viewPortX, entity.y - viewPortY, entity.w, entity.h);
 	}
 }
@@ -977,6 +1787,8 @@ function testWalking(entity) {
 }var currentMapTiles = 0;
 var mapWidth = 0;
 var mapHeight = 0;
+var realMapHeight = 0;
+var realMapWidth = 0;
 var width = currentMapTiles;
 var height = currentMapTiles;
 var roomList = [];
@@ -1074,6 +1886,8 @@ function BigRoom(width, height, flipX, flipY, rotate, RoomType, doors, paths, ro
 	currentMap = map;
 	mapHeight = topSize * 10;
 	mapWidth = topSize * 10;
+	realMapHeight = height * 10 * 16;
+	realMapWidth = width * 10 * 16;
 	return {
 		map: map,
 		doors: doors,
@@ -1351,11 +2165,36 @@ bigRoomList.push(BigRoom(4, 4, 0, 0, 0, 0, 0, 1 | 2 | 4 | 8, function(array, roo
 	// if(viewPortY < (window.innerHeight-(height*16))/2) {
 	// viewPortY = (window.innerHeight-(height*16))/2;
 	// }
-}var world;
+}var world, currentRoom;
 
 var chanceOfAddingDoor = 0.2;
 var currentColorIndex = 0;
-var regionColors = [];
+var regionColors = [{
+	background: "#BBBBBB",
+	border: "#A0A0A0",
+	other: "#CFCFCF",
+	lock: "#FFFFFF"
+}, {
+	background: "#990000",
+	border: "#FF0000",
+	other: "#FF0000",
+	lock: "#FF6666"
+}, {
+	background: "#009900",
+	border: "#00BB00",
+	other: "#00BB00",
+	lock: "#66FF66"
+}, {
+	background: "#000099",
+	border: "#0000FF",
+	other: "#0000FF",
+	lock: "#6666FF"
+}, {
+	background: "#9F9F9F",
+	border: "#555555",
+	other: "#555555",
+	lock: "#B0B0B0"
+}];
 
 function startAt(x, y, region) {
 	world.frontiers.length = 0;
@@ -1368,7 +2207,23 @@ function startAt(x, y, region) {
 }
 
 function startNewRegion(region) {
-	var frontier = getRandom(getFrontiersForAllRooms());
+	var trapped = true;
+	var frontiers = getFrontiersForAllRooms();
+	var test = [];
+	while (trapped) {
+		var emptySides = 0;
+		var frontier = getRandom(frontiers);
+		test.length = 0;
+		test.push(getRoom(frontier.x - 1, frontier.y), getRoom(frontier.x + 1, frontier.y), getRoom(frontier.x, frontier.y - 1), getRoom(frontier.x, frontier.y + 1));
+		for (var i = 0; i < 4; i++) {
+			if (test[i] === null) {
+				emptySides++;
+			}
+		}
+		if (emptySides > 2) {
+			trapped = false;
+		}
+	}
 	startAt(frontier.x, frontier.y, region);
 }
 
@@ -1491,11 +2346,17 @@ function addDoorsAlongNorthWall(room) {
 	var i = 0;
 	for (var e = 0; e < array.length; e++) {
 		object = array[e];
-		if (!(Math.random() > chanceOfAddingDoor || indexOf(room.doors, object) >= 0)) {
+		var hasDoor = false;
+		for (var t = 0; t < room.doors.length; t++) {
+			if (room.doors[t].room2 === object.other) {
+				hasDoor = true;
+			}
+		}
+		if (!(Math.random() > chanceOfAddingDoor || indexOf(room.doors, object) >= 0) && !hasDoor) {
 			door = Door(object.x, object.y, "N", room, object.other);
 			room.doors.push(door);
-			object.other.doors.push(door);
-			// object.other.doors.push(Door(object.other.mapX, object.other.mapY, "S", object.other, room));
+			// object.other.doors.push(door);
+			object.other.doors.push(Door(object.x, object.y - 1, "S", object.other, room));
 			i++;
 		}
 	}
@@ -1522,11 +2383,17 @@ function addDoorsAlongSouthWall(room) {
 	var i = 0;
 	for (var e = 0; e < array.length; e++) {
 		object = array[e];
-		if (!(Math.random() > chanceOfAddingDoor || indexOf(room.doors, object) >= 0)) {
+		var hasDoor = false;
+		for (var t = 0; t < room.doors.length; t++) {
+			if (room.doors[t].room2 === object.other) {
+				hasDoor = true;
+			}
+		}
+		if (!(Math.random() > chanceOfAddingDoor || indexOf(room.doors, object) >= 0) && !hasDoor) {
 			door = Door(object.x, object.y, "S", room, object.other);
 			room.doors.push(door);
-			object.other.doors.push(door);
-			// object.other.doors.push(Door(object.other.mapX, object.other.mapY, "N", object.other, room));
+			// object.other.doors.push(door);
+			object.other.doors.push(Door(object.x, object.y + 1, "N", object.other, room));
 			i++;
 		}
 	}
@@ -1553,11 +2420,17 @@ function addDoorsAlongWestWall(room) {
 	var i = 0;
 	for (var e = 0; e < array.length; e++) {
 		object = array[e];
-		if (!(Math.random() > chanceOfAddingDoor || indexOf(room.doors, object) >= 0)) {
+		var hasDoor = false;
+		for (var t = 0; t < room.doors.length; t++) {
+			if (room.doors[t].room2 === object.other) {
+				hasDoor = true;
+			}
+		}
+		if (!(Math.random() > chanceOfAddingDoor || indexOf(room.doors, object) >= 0) && !hasDoor) {
 			door = Door(object.x, object.y, "W", room, object.other);
 			room.doors.push(door);
-			object.other.doors.push(door);
-			// object.other.doors.push(Door(object.other.mapX, object.other.mapY, "E", object.other, room));
+			// object.other.doors.push(door);
+			object.other.doors.push(Door(object.x - 1, object.y, "E", object.other, room));
 			i++;
 		}
 	}
@@ -1584,11 +2457,17 @@ function addDoorsAlongEastWall(room) {
 	var i = 0;
 	for (var e = 0; e < array.length; e++) {
 		object = array[e];
-		if (!(Math.random() > chanceOfAddingDoor || indexOf(room.doors, object) >= 0)) {
+		var hasDoor = false;
+		for (var t = 0; t < room.doors.length; t++) {
+			if (room.doors[t].room2 === object.other) {
+				hasDoor = true;
+			}
+		}
+		if (!(Math.random() > chanceOfAddingDoor || indexOf(room.doors, object) >= 0) && !hasDoor) {
 			door = Door(object.x, object.y, "E", room, object.other);
 			room.doors.push(door);
-			object.other.doors.push(door);
-			// object.other.doors.push(Door(object.other.mapX, object.other.mapY, "W", object.other, room));
+			// object.other.doors.push(door);
+			object.other.doors.push(Door(object.x + 1, object.y, "W", object.other, room));
 			i++;
 		}
 	}
@@ -1619,8 +2498,14 @@ function createRooms(numberOfRooms) {
 }
 
 function createRoom() {
-	var frontier = getRandom(world.frontiers);
-	addRoom(growRoom(frontier.x, frontier.y));
+	// if (world.frontiers.length > 0) {
+		var frontier = getRandom(world.frontiers);
+		try {
+			addRoom(growRoom(frontier.x, frontier.y));
+		} catch (e) {
+			console.log(world, frontier, e)
+		}
+	// }
 }
 
 function addRoom(room) {
@@ -1630,6 +2515,9 @@ function addRoom(room) {
 	var array = [];
 	array = removeFrontiers(array, room);
 	world.frontiers = addBorderingFrontiers(array, room);
+	if (world.frontiers.length === 0) {
+		console.log(array, room, addBorderingFrontiers(array, room))
+	}
 	room.mapColor = world.currentRegion.color;
 	world.rooms.push(room);
 	world.currentRegion.rooms.push(room);
@@ -1773,7 +2661,7 @@ function assignDoorTypes() {
 		region1 = array3.shift();
 		array2.push(region1);
 		room1 = getRandom(region1.rooms);
-		room1.specialType = i;
+		room1.specialType = i % regionColors.length;
 		for (var e = 0; e < region1.rooms.length; e++) {
 			room2 = region1.rooms[e];
 			for (var r = 0; r < room2.doors.length; r++) {
@@ -1784,8 +2672,8 @@ function assignDoorTypes() {
 						if (array.indexOf(region2) >= 0) {
 							array1.push(door);
 						} else {
-							door.doorType = i;
-							array, push(region2);
+							door.doorType = i % regionColors.length;
+							array.push(region2);
 							if (array2.indexOf(region2) === -1 && array3.indexOf(region2) === -1) {
 								array3.push(region2);
 							}
@@ -1798,7 +2686,7 @@ function assignDoorTypes() {
 	for (var t = 0; t < array1.length; t++) {
 		door = array1[t];
 		if (door.doorType <= 0) {
-			door.doorType = parseInt(Math.random() * i) + 1;
+			door.doorType = parseInt(Math.random() * (i % regionColors.length)) + 1;
 		}
 	}
 }
@@ -1818,14 +2706,10 @@ function create() {
 
 	};
 	currentRegionColorIndex = 0;
-	regionColors.length = 0;
-	for (var i = 0; i < 10; i++) {
-		regionColors.push('#'+Math.floor(Math.random()*16777215).toString(16));
-	}
 	world.width = 80;
 	world.height = 48;
 	startAt(40, 24, nextRegion());
-	createRooms(9);
+	createRooms(1);
 }
 
 function nextRegion() {
@@ -1848,7 +2732,1712 @@ function startWorld() {
 	drawWorld();
 }
 
-function addWorld() {
+function addRoomToWorld() {
+	createRoom();
+	drawWorld();
+}
+
+function addRegion() {
+	startNewRegion(nextRegion());
+}
+
+function doors() {
+	clearDoorTypes();
+	assignDoorTypes();
+	drawWorld();
+}var world;
+
+var chanceOfAddingDoor = 0.2;
+var currentColorIndex = 0;
+var regionColors = [{
+	background:"#BBBBBB",
+	border:"#A0A0A0",
+	other:"#CFCFCF",
+	lock:"#FFFFFF"
+},{
+	background:"#990000",
+	border:"#FF0000",
+	other:"#FF0000",
+	lock:"#FF6666"
+},{
+	background:"#009900",
+	border:"#00BB00",
+	other:"#00BB00",
+	lock:"#66FF66"
+},{
+	background:"#000099",
+	border:"#0000FF",
+	other:"#0000FF",
+	lock:"#6666FF"
+},{
+	background:"#9F9F9F",
+	border:"#555555",
+	other:"#555555",
+	lock:"#B0B0B0"
+}];
+
+function startAt(x, y, region) {
+	world.frontiers.length = 0;
+	world.frontiers.push({
+		x: x,
+		y: y
+	});
+	world.currentRegion = region;
+	world.regions.push(region);
+}
+
+function startNewRegion(region) {
+	var frontier = getRandom(getFrontiersForAllRooms());
+	startAt(frontier.x, frontier.y, region);
+}
+
+function getRandom(array) {
+	var index = random(0, array.length - 1);
+	return array[index];
+}
+
+function getFrontiersForAllRooms() {
+	var results = [];
+	for (var i = 0; i < world.rooms.length; i++) {
+		results = addBorderingFrontiers(results, world.rooms[i]);
+	}
+	return results;
+}
+
+function addBorderingFrontiers(array, room) {
+	var roomX = room.mapX;
+	while (roomX < room.mapX + room.mapW) {
+		if (canPlaceRoom(roomX, room.mapY - 1, 1, 1)) {
+			array.push({
+				x: roomX,
+				y: room.mapY - 1
+			});
+		}
+		if (canPlaceRoom(roomX, room.mapY + room.mapH, 1, 1)) {
+			array.push({
+				x: roomX,
+				y: room.mapY + room.mapH
+			});
+		}
+		roomX++;
+	}
+	var roomY = room.mapX;
+	while (roomY < room.mapY + room.mapH) {
+		if (canPlaceRoom(roomY, room.mapX - 1, 1, 1)) {
+			array.push({
+				x: roomY,
+				y: room.mapX - 1
+			});
+		}
+		if (canPlaceRoom(roomY, room.mapX + room.mapW, 1, 1)) {
+			array.push({
+				x: roomY,
+				y: room.mapX + room.mapW
+			});
+		}
+		roomY++;
+	}
+	return array;
+}
+
+function canPlaceRoom(x, y, width, height) {
+	return (isInBounds(x, y, width, height)) && !isInAnyRoom(x, y, width, height);
+}
+
+function isInBounds(x, y, width, height) {
+	return x > 0 && y > 0 && x + width < world.width && y + height < world.height;
+}
+
+function isInAnyRoom(x, y, width, height) {
+	var room = null;
+	var i = 0;
+	while (i < world.rooms.length) {
+		room = world.rooms[i];
+		if (room.mapX > x + width - 1 || room.mapX + room.mapW - 1 < x || room.mapY > y + height - 1 || room.mapY + room.mapH - 1 < y) {
+			i++;
+			continue;
+		}
+		return true;
+	}
+	return false;
+}
+
+function addDoors(room) {
+	var doors = 0;
+	var door = null;
+	var stop = false;
+	var times = 100;
+	while (world.rooms.length > 1 && !stop) {
+		doors = 0;
+		doors = doors + addDoorsAlongNorthWall(room);
+		doors = doors + addDoorsAlongSouthWall(room);
+		doors = doors + addDoorsAlongWestWall(room);
+		doors = doors + addDoorsAlongEastWall(room);
+		if (room.region.rooms.length === 1 && doors > 0) {
+			stop = true;
+		}
+		for (var i = 0; i < room.doors.length; i++) {
+			door = room.doors[i];
+			if (other(door, room).region === room.region) {
+				stop = true;
+			}
+		}
+		times--;
+		if (times === 0) {
+			stop = true;
+		}
+		// console.log(times, stop)
+	}
+}
+
+function addDoorsAlongNorthWall(room) {
+	var object = null;
+	var thisRoom = null;
+	var door = null;
+	var array = [];
+	var mapX = room.mapX;
+	while (mapX < room.mapX + room.mapW) {
+		thisRoom = getRoom(mapX, room.mapY - 1);
+		if (thisRoom !== null) {
+			array.push({
+				x: mapX,
+				y: room.mapY,
+				other: thisRoom
+			});
+		}
+		mapX++;
+	}
+	var i = 0;
+	for (var e = 0; e < array.length; e++) {
+		object = array[e];
+		var hasDoor = false;
+		for(var t=0;t<room.doors.length;t++) {
+			if(room.doors[t].x === object.x && room.doors[t].y === object.y) {
+				hasDoor = true;
+			}
+		}
+		if (!(Math.random() > chanceOfAddingDoor || indexOf(room.doors, object) >= 0) && !hasDoor) {
+			door = Door(object.x, object.y, "N", room, object.other);
+			room.doors.push(door);
+			// object.other.doors.push(door);
+			object.other.doors.push(Door(object.x, object.y-1, "S", object.other, room));
+			i++;
+		}
+	}
+	return i;
+}
+
+function addDoorsAlongSouthWall(room) {
+	var object = null;
+	var thisRoom = null;
+	var door = null;
+	var array = [];
+	var mapX = room.mapX;
+	while (mapX < room.mapX + room.mapW) {
+		thisRoom = getRoom(mapX, room.mapY + room.mapH);
+		if (thisRoom !== null) {
+			array.push({
+				x: mapX,
+				y: room.mapY + room.mapH - 1,
+				other: thisRoom
+			});
+		}
+		mapX++;
+	}
+	var i = 0;
+	for (var e = 0; e < array.length; e++) {
+		object = array[e];
+		var hasDoor = false;
+		for(var t=0;t<room.doors.length;t++) {
+			if(room.doors[t].x === object.x && room.doors[t].y === object.y) {
+				hasDoor = true;
+			}
+		}
+		if (!(Math.random() > chanceOfAddingDoor || indexOf(room.doors, object) >= 0) && !hasDoor) {
+			door = Door(object.x, object.y, "S", room, object.other);
+			room.doors.push(door);
+			// object.other.doors.push(door);
+			object.other.doors.push(Door(object.x, object.y+1, "N", object.other, room));
+			i++;
+		}
+	}
+	return i;
+}
+
+function addDoorsAlongWestWall(room) {
+	var object = null;
+	var thisRoom = null;
+	var door = null;
+	var array = [];
+	var mapY = room.mapY;
+	while (mapY < room.mapY + room.mapH) {
+		thisRoom = getRoom(room.mapX - 1, mapY);
+		if (thisRoom !== null) {
+			array.push({
+				x: room.mapX,
+				y: mapY,
+				other: thisRoom
+			});
+		}
+		mapY++;
+	}
+	var i = 0;
+	for (var e = 0; e < array.length; e++) {
+		object = array[e];
+		var hasDoor = false;
+		for(var t=0;t<room.doors.length;t++) {
+			if(room.doors[t].x === object.x && room.doors[t].y === object.y) {
+				hasDoor = true;
+			}
+		}
+		if (!(Math.random() > chanceOfAddingDoor || indexOf(room.doors, object) >= 0) && !hasDoor) {
+			door = Door(object.x, object.y, "W", room, object.other);
+			room.doors.push(door);
+			// object.other.doors.push(door);
+			object.other.doors.push(Door(object.x-1, object.y, "E", object.other, room));
+			i++;
+		}
+	}
+	return i;
+}
+
+function addDoorsAlongEastWall(room) {
+	var object = null;
+	var thisRoom = null;
+	var door = null;
+	var array = [];
+	var mapY = room.mapY;
+	while (mapY < room.mapY + room.mapH) {
+		thisRoom = getRoom(room.mapX + room.mapW, mapY);
+		if (thisRoom !== null) {
+			array.push({
+				x: room.mapX + room.mapW - 1,
+				y: mapY,
+				other: thisRoom
+			});
+		}
+		mapY++;
+	}
+	var i = 0;
+	for (var e = 0; e < array.length; e++) {
+		object = array[e];
+		var hasDoor = false;
+		for(var t=0;t<room.doors.length;t++) {
+			if(room.doors[t].x === object.x && room.doors[t].y === object.y) {
+				hasDoor = true;
+			}
+		}
+		if (!(Math.random() > chanceOfAddingDoor || indexOf(room.doors, object) >= 0) && !hasDoor) {
+			door = Door(object.x, object.y, "E", room, object.other);
+			room.doors.push(door);
+			// object.other.doors.push(door);
+			object.other.doors.push(Door(object.x+1, object.y, "W", object.other, room));
+			i++;
+		}
+	}
+	return i;
+}
+
+
+function getRoom(x, y) {
+	var room = null;
+	var i = 0;
+	while (i < world.rooms.length) {
+		room = world.rooms[i];
+		if (room.mapX > x || room.mapX + room.mapW - 1 < x || room.mapY > y || room.mapY + room.mapH - 1 < y) {
+			i++;
+			continue;
+		}
+		return room;
+	}
+	return null;
+}
+
+function createRooms(numberOfRooms) {
+	var i = 0;
+	var length = world.rooms.length;
+	while (i++ < numberOfRooms * 10 && world.rooms.length < length + numberOfRooms) {
+		createRoom();
+	}
+}
+
+function createRoom() {
+	var frontier = getRandom(world.frontiers);
+	try {
+	addRoom(growRoom(frontier.x, frontier.y));
+} catch(e) {
+	console.log(world,frontier, e)
+}
+}
+
+function addRoom(room) {
+	if (room === null || !canPlaceRoom(room.mapX, room.mapY, room.mapW, room.mapH)) {
+		return false;
+	}
+	var array = [];
+	array = removeFrontiers(array, room);
+	world.frontiers = addBorderingFrontiers(array, room);
+	if(world.frontiers.length === 0) {
+		console.log(array, room, addBorderingFrontiers(array, room))
+	}
+	room.mapColor = world.currentRegion.color;
+	world.rooms.push(room);
+	world.currentRegion.rooms.push(room);
+	addDoors(room);
+}
+
+function addBorderingFrontiers(array, room) {
+	var mapX = room.mapX;
+	while (mapX < room.mapX + room.mapW) {
+		if (canPlaceRoom(mapX, room.mapY - 1, 1, 1)) {
+			array.push({
+				"x": mapX,
+				"y": room.mapY - 1
+			});
+		}
+		if (canPlaceRoom(mapX, room.mapY + room.mapH, 1, 1)) {
+			array.push({
+				"x": mapX,
+				"y": room.mapY + room.mapH
+			});
+		}
+		mapX++;
+	}
+	var mapY = room.mapY;
+	while (mapY < room.mapY + room.mapH) {
+		if (canPlaceRoom(room.mapX - 1, mapY, 1, 1)) {
+			array.push({
+				"x": room.mapX - 1,
+				"y": mapY
+			});
+		}
+		if (canPlaceRoom(room.mapX + room.mapW, mapY, 1, 1)) {
+			array.push({
+				"x": room.mapX + room.mapW,
+				"y": mapY
+			});
+		}
+		mapY++;
+	}
+	return array;
+}
+
+function removeFrontiers(array, room) {
+	for (var i = 0; i < world.frontiers.length; i++) {
+		if (!(world.frontiers[i].x >= room.mapX - 1 && world.frontiers[i].x <= room.mapX + room.mapW && world.frontiers[i].y >= room.mapY && world.frontiers[i].y <= room.mapY + room.mapH - 1)) {
+			if (!(world.frontiers[i].x >= room.mapX && world.frontiers[i].x <= room.mapX + room.mapW - 1 && world.frontiers[i].y >= room.mapY - 1 && world.frontiers[i].y <= room.mapY + room.mapH)) {
+				array.push(world.frontiers[i]);
+			}
+		}
+	}
+	return array;
+}
+
+function growRoom(x, y) {
+	var var1 = 0;
+	var width = 1;
+	var height = 1;
+	while (var1++ < 25 && (width < world.currentRegion.maxW || height < world.currentRegion.maxH) && Math.random() < 0.9) {
+		switch (parseInt(Math.random() * 4)) {
+			case 0:
+				if (height < world.currentRegion.maxH && (canPlaceRoom(x, y - 1, width, height + 1))) {
+					y--;
+					height++;
+				}
+				continue;
+			case 1:
+				if (height < world.currentRegion.maxH && (canPlaceRoom(x, y, width, height + 1))) {
+					height++;
+				}
+				continue;
+			case 2:
+				if (width < world.currentRegion.maxW && (canPlaceRoom(x - 1, y, width + 1, height))) {
+					x--;
+					width++;
+				}
+				continue;
+			case 3:
+				if (width < world.currentRegion.maxW && (canPlaceRoom(x, y, width + 1, height))) {
+					width++;
+				}
+				continue;
+			default:
+				continue;
+		}
+	}
+	return Room(x, y, width, height, world.currentRegion);
+}
+
+function Room(x, y, width, height, region) {
+	return {
+		mapX: x,
+		mapY: y,
+		mapW: width,
+		mapH: height,
+		mapColor: 4.281545727E9,
+		region: region,
+		specialType: 0,
+		doors: []
+	};
+}
+
+function Door(x, y, direction, room1, room2) {
+	return {
+		mapX: x,
+		mapY: y,
+		doorType: 0,
+		dir: direction,
+		room1: room1,
+		room2: room2
+	};
+}
+
+function clearDoorTypes() {
+	var room = null;
+	var door = null;
+	for (var i = 0; i < world.rooms.length; i++) {
+		room = world.rooms[i];
+		room.specialType = 0;
+		for (var e = 0; e < room.doors.length; e++) {
+			door = room.doors[e];
+			door.doorType = 0;
+		}
+	}
+}
+
+function assignDoorTypes() {
+	var door = null;
+	var array = [];
+	var region1 = null;
+	var region2 = null;
+	var room1 = null;
+	var room2 = null;
+	var array1 = [];
+	var array2 = [];
+	var array3 = [];
+	array3.push(world.regions[0]);
+	var i = 0;
+	while (array3.length > 0) {
+		i++;
+		array.length = 0;
+		region1 = array3.shift();
+		array2.push(region1);
+		room1 = getRandom(region1.rooms);
+		room1.specialType = i % regionColors.length;
+		for (var e = 0; e < region1.rooms.length; e++) {
+			room2 = region1.rooms[e];
+			for (var r = 0; r < room2.doors.length; r++) {
+				door = room2.doors[r];
+				region2 = other(door, room2).region;
+				if (region2 !== region1) {
+					if (door.doorType <= 0) {
+						if (array.indexOf(region2) >= 0) {
+							array1.push(door);
+						} else {
+							door.doorType = i % regionColors.length;
+							array.push(region2);
+							if (array2.indexOf(region2) === -1 && array3.indexOf(region2) === -1) {
+								array3.push(region2);
+							}
+						}
+					}
+				}
+			}
+		}
+	}
+	for (var t = 0; t < array1.length; t++) {
+		door = array1[t];
+		if (door.doorType <= 0) {
+			door.doorType = parseInt(Math.random() * (i % regionColors.length)) + 1;
+		}
+	}
+}
+
+function other(door, room) {
+	return door.room1 === room ? door.room2 : door.room1;
+}
+
+function create() {
+	world = {
+		width: 0,
+		height: 0,
+		rooms: [],
+		frontiers: [],
+		regions: [],
+		currentRegion: 0,
+
+	};
+	currentRegionColorIndex = 0;
+	world.width = 80;
+	world.height = 48;
+	startAt(40, 24, nextRegion());
+	createRooms(2);
+}
+
+function nextRegion() {
+	var region = Region(regionColors[currentRegionColorIndex], parseInt(Math.random() * 3) + parseInt(Math.random() * 3) + 1, parseInt(Math.random() * 3) + parseInt(Math.random() * 3) + 1);
+	currentRegionColorIndex = (currentRegionColorIndex + 1) % regionColors.length;
+	return region;
+}
+
+function Region(color, maxWidth, maxHeight) {
+	return {
+		color: color,
+		maxW: maxWidth,
+		maxH: maxHeight,
+		rooms: []
+	};
+}
+
+function startWorld() {
+	create();
+	drawWorld();
+}
+
+function addRoomToWorld() {
+	createRoom();
+	drawWorld();
+}
+
+function addRegion() {
+	startNewRegion(nextRegion());
+}
+
+function doors() {
+	clearDoorTypes();
+	assignDoorTypes();
+	drawWorld();
+}var world, currentRoom;
+
+var chanceOfAddingDoor = 0.2;
+var currentColorIndex = 0;
+var regionColors = [{
+	background:"#BBBBBB",
+	border:"#A0A0A0",
+	other:"#CFCFCF",
+	lock:"#FFFFFF"
+},{
+	background:"#990000",
+	border:"#FF0000",
+	other:"#FF0000",
+	lock:"#FF6666"
+},{
+	background:"#009900",
+	border:"#00BB00",
+	other:"#00BB00",
+	lock:"#66FF66"
+},{
+	background:"#000099",
+	border:"#0000FF",
+	other:"#0000FF",
+	lock:"#6666FF"
+},{
+	background:"#9F9F9F",
+	border:"#555555",
+	other:"#555555",
+	lock:"#B0B0B0"
+}];
+
+function startAt(x, y, region) {
+	world.frontiers.length = 0;
+	world.frontiers.push({
+		x: x,
+		y: y
+	});
+	world.currentRegion = region;
+	world.regions.push(region);
+}
+
+function startNewRegion(region) {
+	var frontier = getRandom(getFrontiersForAllRooms());
+	startAt(frontier.x, frontier.y, region);
+}
+
+function getRandom(array) {
+	var index = random(0, array.length - 1);
+	return array[index];
+}
+
+function getFrontiersForAllRooms() {
+	var results = [];
+	for (var i = 0; i < world.rooms.length; i++) {
+		results = addBorderingFrontiers(results, world.rooms[i]);
+	}
+	return results;
+}
+
+function addBorderingFrontiers(array, room) {
+	var roomX = room.mapX;
+	while (roomX < room.mapX + room.mapW) {
+		if (canPlaceRoom(roomX, room.mapY - 1, 1, 1)) {
+			array.push({
+				x: roomX,
+				y: room.mapY - 1
+			});
+		}
+		if (canPlaceRoom(roomX, room.mapY + room.mapH, 1, 1)) {
+			array.push({
+				x: roomX,
+				y: room.mapY + room.mapH
+			});
+		}
+		roomX++;
+	}
+	var roomY = room.mapX;
+	while (roomY < room.mapY + room.mapH) {
+		if (canPlaceRoom(roomY, room.mapX - 1, 1, 1)) {
+			array.push({
+				x: roomY,
+				y: room.mapX - 1
+			});
+		}
+		if (canPlaceRoom(roomY, room.mapX + room.mapW, 1, 1)) {
+			array.push({
+				x: roomY,
+				y: room.mapX + room.mapW
+			});
+		}
+		roomY++;
+	}
+	return array;
+}
+
+function canPlaceRoom(x, y, width, height) {
+	return (isInBounds(x, y, width, height)) && !isInAnyRoom(x, y, width, height);
+}
+
+function isInBounds(x, y, width, height) {
+	return x > 0 && y > 0 && x + width < world.width && y + height < world.height;
+}
+
+function isInAnyRoom(x, y, width, height) {
+	var room = null;
+	var i = 0;
+	while (i < world.rooms.length) {
+		room = world.rooms[i];
+		if (room.mapX > x + width - 1 || room.mapX + room.mapW - 1 < x || room.mapY > y + height - 1 || room.mapY + room.mapH - 1 < y) {
+			i++;
+			continue;
+		}
+		return true;
+	}
+	return false;
+}
+
+function addDoors(room) {
+	var doors = 0;
+	var door = null;
+	var stop = false;
+	var times = 100;
+	while (world.rooms.length > 1 && !stop) {
+		doors = 0;
+		doors = doors + addDoorsAlongNorthWall(room);
+		doors = doors + addDoorsAlongSouthWall(room);
+		doors = doors + addDoorsAlongWestWall(room);
+		doors = doors + addDoorsAlongEastWall(room);
+		if (room.region.rooms.length === 1 && doors > 0) {
+			stop = true;
+		}
+		for (var i = 0; i < room.doors.length; i++) {
+			door = room.doors[i];
+			if (other(door, room).region === room.region) {
+				stop = true;
+			}
+		}
+		times--;
+		if (times === 0) {
+			stop = true;
+		}
+		// console.log(times, stop)
+	}
+}
+
+function addDoorsAlongNorthWall(room) {
+	var object = null;
+	var thisRoom = null;
+	var door = null;
+	var array = [];
+	var mapX = room.mapX;
+	while (mapX < room.mapX + room.mapW) {
+		thisRoom = getRoom(mapX, room.mapY - 1);
+		if (thisRoom !== null) {
+			array.push({
+				x: mapX,
+				y: room.mapY,
+				other: thisRoom
+			});
+		}
+		mapX++;
+	}
+	var i = 0;
+	for (var e = 0; e < array.length; e++) {
+		object = array[e];
+		var hasDoor = false;
+		for(var t=0;t<room.doors.length;t++) {
+			if(room.doors[t].x === object.x && room.doors[t].y === object.y) {
+				hasDoor = true;
+			}
+		}
+		if (!(Math.random() > chanceOfAddingDoor || indexOf(room.doors, object) >= 0) && !hasDoor) {
+			door = Door(object.x, object.y, "N", room, object.other);
+			room.doors.push(door);
+			// object.other.doors.push(door);
+			object.other.doors.push(Door(object.x, object.y-1, "S", object.other, room));
+			i++;
+		}
+	}
+	return i;
+}
+
+function addDoorsAlongSouthWall(room) {
+	var object = null;
+	var thisRoom = null;
+	var door = null;
+	var array = [];
+	var mapX = room.mapX;
+	while (mapX < room.mapX + room.mapW) {
+		thisRoom = getRoom(mapX, room.mapY + room.mapH);
+		if (thisRoom !== null) {
+			array.push({
+				x: mapX,
+				y: room.mapY + room.mapH - 1,
+				other: thisRoom
+			});
+		}
+		mapX++;
+	}
+	var i = 0;
+	for (var e = 0; e < array.length; e++) {
+		object = array[e];
+		var hasDoor = false;
+		for(var t=0;t<room.doors.length;t++) {
+			if(room.doors[t].x === object.x && room.doors[t].y === object.y) {
+				hasDoor = true;
+			}
+		}
+		if (!(Math.random() > chanceOfAddingDoor || indexOf(room.doors, object) >= 0) && !hasDoor) {
+			door = Door(object.x, object.y, "S", room, object.other);
+			room.doors.push(door);
+			// object.other.doors.push(door);
+			object.other.doors.push(Door(object.x, object.y+1, "N", object.other, room));
+			i++;
+		}
+	}
+	return i;
+}
+
+function addDoorsAlongWestWall(room) {
+	var object = null;
+	var thisRoom = null;
+	var door = null;
+	var array = [];
+	var mapY = room.mapY;
+	while (mapY < room.mapY + room.mapH) {
+		thisRoom = getRoom(room.mapX - 1, mapY);
+		if (thisRoom !== null) {
+			array.push({
+				x: room.mapX,
+				y: mapY,
+				other: thisRoom
+			});
+		}
+		mapY++;
+	}
+	var i = 0;
+	for (var e = 0; e < array.length; e++) {
+		object = array[e];
+		var hasDoor = false;
+		for(var t=0;t<room.doors.length;t++) {
+			if(room.doors[t].x === object.x && room.doors[t].y === object.y) {
+				hasDoor = true;
+			}
+		}
+		if (!(Math.random() > chanceOfAddingDoor || indexOf(room.doors, object) >= 0) && !hasDoor) {
+			door = Door(object.x, object.y, "W", room, object.other);
+			room.doors.push(door);
+			// object.other.doors.push(door);
+			object.other.doors.push(Door(object.x-1, object.y, "E", object.other, room));
+			i++;
+		}
+	}
+	return i;
+}
+
+function addDoorsAlongEastWall(room) {
+	var object = null;
+	var thisRoom = null;
+	var door = null;
+	var array = [];
+	var mapY = room.mapY;
+	while (mapY < room.mapY + room.mapH) {
+		thisRoom = getRoom(room.mapX + room.mapW, mapY);
+		if (thisRoom !== null) {
+			array.push({
+				x: room.mapX + room.mapW - 1,
+				y: mapY,
+				other: thisRoom
+			});
+		}
+		mapY++;
+	}
+	var i = 0;
+	for (var e = 0; e < array.length; e++) {
+		object = array[e];
+		var hasDoor = false;
+		for(var t=0;t<room.doors.length;t++) {
+			if(room.doors[t].x === object.x && room.doors[t].y === object.y) {
+				hasDoor = true;
+			}
+		}
+		if (!(Math.random() > chanceOfAddingDoor || indexOf(room.doors, object) >= 0) && !hasDoor) {
+			door = Door(object.x, object.y, "E", room, object.other);
+			room.doors.push(door);
+			// object.other.doors.push(door);
+			object.other.doors.push(Door(object.x+1, object.y, "W", object.other, room));
+			i++;
+		}
+	}
+	return i;
+}
+
+
+function getRoom(x, y) {
+	var room = null;
+	var i = 0;
+	while (i < world.rooms.length) {
+		room = world.rooms[i];
+		if (room.mapX > x || room.mapX + room.mapW - 1 < x || room.mapY > y || room.mapY + room.mapH - 1 < y) {
+			i++;
+			continue;
+		}
+		return room;
+	}
+	return null;
+}
+
+function createRooms(numberOfRooms) {
+	var i = 0;
+	var length = world.rooms.length;
+	while (i++ < numberOfRooms * 10 && world.rooms.length < length + numberOfRooms) {
+		createRoom();
+	}
+}
+
+function createRoom() {
+	var frontier = getRandom(world.frontiers);
+	try {
+	addRoom(growRoom(frontier.x, frontier.y));
+} catch(e) {
+	console.log(world,frontier, e)
+}
+}
+
+function addRoom(room) {
+	if (room === null || !canPlaceRoom(room.mapX, room.mapY, room.mapW, room.mapH)) {
+		return false;
+	}
+	var array = [];
+	array = removeFrontiers(array, room);
+	world.frontiers = addBorderingFrontiers(array, room);
+	if(world.frontiers.length === 0) {
+		console.log(array, room, addBorderingFrontiers(array, room))
+	}
+	room.mapColor = world.currentRegion.color;
+	world.rooms.push(room);
+	world.currentRegion.rooms.push(room);
+	addDoors(room);
+}
+
+function addBorderingFrontiers(array, room) {
+	var mapX = room.mapX;
+	while (mapX < room.mapX + room.mapW) {
+		if (canPlaceRoom(mapX, room.mapY - 1, 1, 1)) {
+			array.push({
+				"x": mapX,
+				"y": room.mapY - 1
+			});
+		}
+		if (canPlaceRoom(mapX, room.mapY + room.mapH, 1, 1)) {
+			array.push({
+				"x": mapX,
+				"y": room.mapY + room.mapH
+			});
+		}
+		mapX++;
+	}
+	var mapY = room.mapY;
+	while (mapY < room.mapY + room.mapH) {
+		if (canPlaceRoom(room.mapX - 1, mapY, 1, 1)) {
+			array.push({
+				"x": room.mapX - 1,
+				"y": mapY
+			});
+		}
+		if (canPlaceRoom(room.mapX + room.mapW, mapY, 1, 1)) {
+			array.push({
+				"x": room.mapX + room.mapW,
+				"y": mapY
+			});
+		}
+		mapY++;
+	}
+	return array;
+}
+
+function removeFrontiers(array, room) {
+	for (var i = 0; i < world.frontiers.length; i++) {
+		if (!(world.frontiers[i].x >= room.mapX - 1 && world.frontiers[i].x <= room.mapX + room.mapW && world.frontiers[i].y >= room.mapY && world.frontiers[i].y <= room.mapY + room.mapH - 1)) {
+			if (!(world.frontiers[i].x >= room.mapX && world.frontiers[i].x <= room.mapX + room.mapW - 1 && world.frontiers[i].y >= room.mapY - 1 && world.frontiers[i].y <= room.mapY + room.mapH)) {
+				array.push(world.frontiers[i]);
+			}
+		}
+	}
+	return array;
+}
+
+function growRoom(x, y) {
+	var var1 = 0;
+	var width = 1;
+	var height = 1;
+	while (var1++ < 25 && (width < world.currentRegion.maxW || height < world.currentRegion.maxH) && Math.random() < 0.9) {
+		switch (parseInt(Math.random() * 4)) {
+			case 0:
+				if (height < world.currentRegion.maxH && (canPlaceRoom(x, y - 1, width, height + 1))) {
+					y--;
+					height++;
+				}
+				continue;
+			case 1:
+				if (height < world.currentRegion.maxH && (canPlaceRoom(x, y, width, height + 1))) {
+					height++;
+				}
+				continue;
+			case 2:
+				if (width < world.currentRegion.maxW && (canPlaceRoom(x - 1, y, width + 1, height))) {
+					x--;
+					width++;
+				}
+				continue;
+			case 3:
+				if (width < world.currentRegion.maxW && (canPlaceRoom(x, y, width + 1, height))) {
+					width++;
+				}
+				continue;
+			default:
+				continue;
+		}
+	}
+	return Room(x, y, width, height, world.currentRegion);
+}
+
+function Room(x, y, width, height, region) {
+	return {
+		mapX: x,
+		mapY: y,
+		mapW: width,
+		mapH: height,
+		mapColor: 4.281545727E9,
+		region: region,
+		specialType: 0,
+		doors: []
+	};
+}
+
+function Door(x, y, direction, room1, room2) {
+	return {
+		mapX: x,
+		mapY: y,
+		doorType: 0,
+		dir: direction,
+		room1: room1,
+		room2: room2
+	};
+}
+
+function clearDoorTypes() {
+	var room = null;
+	var door = null;
+	for (var i = 0; i < world.rooms.length; i++) {
+		room = world.rooms[i];
+		room.specialType = 0;
+		for (var e = 0; e < room.doors.length; e++) {
+			door = room.doors[e];
+			door.doorType = 0;
+		}
+	}
+}
+
+function assignDoorTypes() {
+	var door = null;
+	var array = [];
+	var region1 = null;
+	var region2 = null;
+	var room1 = null;
+	var room2 = null;
+	var array1 = [];
+	var array2 = [];
+	var array3 = [];
+	array3.push(world.regions[0]);
+	var i = 0;
+	while (array3.length > 0) {
+		i++;
+		array.length = 0;
+		region1 = array3.shift();
+		array2.push(region1);
+		room1 = getRandom(region1.rooms);
+		room1.specialType = i % regionColors.length;
+		for (var e = 0; e < region1.rooms.length; e++) {
+			room2 = region1.rooms[e];
+			for (var r = 0; r < room2.doors.length; r++) {
+				door = room2.doors[r];
+				region2 = other(door, room2).region;
+				if (region2 !== region1) {
+					if (door.doorType <= 0) {
+						if (array.indexOf(region2) >= 0) {
+							array1.push(door);
+						} else {
+							door.doorType = i % regionColors.length;
+							array.push(region2);
+							if (array2.indexOf(region2) === -1 && array3.indexOf(region2) === -1) {
+								array3.push(region2);
+							}
+						}
+					}
+				}
+			}
+		}
+	}
+	for (var t = 0; t < array1.length; t++) {
+		door = array1[t];
+		if (door.doorType <= 0) {
+			door.doorType = parseInt(Math.random() * (i % regionColors.length)) + 1;
+		}
+	}
+}
+
+function other(door, room) {
+	return door.room1 === room ? door.room2 : door.room1;
+}
+
+function create() {
+	world = {
+		width: 0,
+		height: 0,
+		rooms: [],
+		frontiers: [],
+		regions: [],
+		currentRegion: 0,
+
+	};
+	currentRegionColorIndex = 0;
+	world.width = 80;
+	world.height = 48;
+	startAt(40, 24, nextRegion());
+	createRooms(2);
+}
+
+function nextRegion() {
+	var region = Region(regionColors[currentRegionColorIndex], parseInt(Math.random() * 3) + parseInt(Math.random() * 3) + 1, parseInt(Math.random() * 3) + parseInt(Math.random() * 3) + 1);
+	currentRegionColorIndex = (currentRegionColorIndex + 1) % regionColors.length;
+	return region;
+}
+
+function Region(color, maxWidth, maxHeight) {
+	return {
+		color: color,
+		maxW: maxWidth,
+		maxH: maxHeight,
+		rooms: []
+	};
+}
+
+function startWorld() {
+	create();
+	drawWorld();
+}
+
+function addRoomToWorld() {
+	createRoom();
+	drawWorld();
+}
+
+function addRegion() {
+	startNewRegion(nextRegion());
+}
+
+function doors() {
+	clearDoorTypes();
+	assignDoorTypes();
+	drawWorld();
+}var world, currentRoom;
+
+var chanceOfAddingDoor = 0.2;
+var currentColorIndex = 0;
+var regionColors = [{
+	background: "#BBBBBB",
+	border: "#A0A0A0",
+	other: "#CFCFCF",
+	lock: "#FFFFFF"
+}, {
+	background: "#990000",
+	border: "#FF0000",
+	other: "#FF0000",
+	lock: "#FF6666"
+}, {
+	background: "#009900",
+	border: "#00BB00",
+	other: "#00BB00",
+	lock: "#66FF66"
+}, {
+	background: "#000099",
+	border: "#0000FF",
+	other: "#0000FF",
+	lock: "#6666FF"
+}, {
+	background: "#9F9F9F",
+	border: "#555555",
+	other: "#555555",
+	lock: "#B0B0B0"
+}];
+
+function startAt(x, y, region) {
+	world.frontiers.length = 0;
+	world.frontiers.push({
+		x: x,
+		y: y
+	});
+	world.currentRegion = region;
+	world.regions.push(region);
+}
+
+function startNewRegion(region) {
+	var trapped = true;
+	var frontiers = getFrontiersForAllRooms();
+	var frontier;
+	var test = [];
+	while (trapped) {
+		var emptySides = 0;
+		frontier = getRandom(frontiers);
+		test.length = 0;
+		test.push(getRoom(frontier.x - 1, frontier.y), getRoom(frontier.x + 1, frontier.y), getRoom(frontier.x, frontier.y - 1), getRoom(frontier.x, frontier.y + 1));
+		for (var i = 0; i < 4; i++) {
+			if (test[i] === null) {
+				emptySides++;
+			}
+		}
+		if (emptySides > 2) {
+			trapped = false;
+		}
+	}
+	startAt(frontier.x, frontier.y, region);
+}
+
+function getRandom(array) {
+	var index = random(0, array.length - 1);
+	return array[index];
+}
+
+function getFrontiersForAllRooms() {
+	var results = [];
+	for (var i = 0; i < world.rooms.length; i++) {
+		results = addBorderingFrontiers(results, world.rooms[i]);
+	}
+	return results;
+}
+
+function addBorderingFrontiers(array, room) {
+	var roomX = room.mapX;
+	while (roomX < room.mapX + room.mapW) {
+		if (canPlaceRoom(roomX, room.mapY - 1, 1, 1)) {
+			array.push({
+				x: roomX,
+				y: room.mapY - 1
+			});
+		}
+		if (canPlaceRoom(roomX, room.mapY + room.mapH, 1, 1)) {
+			array.push({
+				x: roomX,
+				y: room.mapY + room.mapH
+			});
+		}
+		roomX++;
+	}
+	var roomY = room.mapX;
+	while (roomY < room.mapY + room.mapH) {
+		if (canPlaceRoom(roomY, room.mapX - 1, 1, 1)) {
+			array.push({
+				x: roomY,
+				y: room.mapX - 1
+			});
+		}
+		if (canPlaceRoom(roomY, room.mapX + room.mapW, 1, 1)) {
+			array.push({
+				x: roomY,
+				y: room.mapX + room.mapW
+			});
+		}
+		roomY++;
+	}
+	return array;
+}
+
+function canPlaceRoom(x, y, width, height) {
+	return (isInBounds(x, y, width, height)) && !isInAnyRoom(x, y, width, height);
+}
+
+function isInBounds(x, y, width, height) {
+	return x > 0 && y > 0 && x + width < world.width && y + height < world.height;
+}
+
+function isInAnyRoom(x, y, width, height) {
+	var room = null;
+	var i = 0;
+	while (i < world.rooms.length) {
+		room = world.rooms[i];
+		if (room.mapX > x + width - 1 || room.mapX + room.mapW - 1 < x || room.mapY > y + height - 1 || room.mapY + room.mapH - 1 < y) {
+			i++;
+			continue;
+		}
+		return true;
+	}
+	return false;
+}
+
+function addDoors(room) {
+	var doors = 0;
+	var door = null;
+	var stop = false;
+	var times = 100;
+	while (world.rooms.length > 1 && !stop) {
+		doors = 0;
+		doors = doors + addDoorsAlongNorthWall(room);
+		doors = doors + addDoorsAlongSouthWall(room);
+		doors = doors + addDoorsAlongWestWall(room);
+		doors = doors + addDoorsAlongEastWall(room);
+		if (room.region.rooms.length === 1 && doors > 0) {
+			stop = true;
+		}
+		for (var i = 0; i < room.doors.length; i++) {
+			door = room.doors[i];
+			if (other(door, room).region === room.region) {
+				stop = true;
+			}
+		}
+		times--;
+		if (times === 0) {
+			stop = true;
+		}
+		// console.log(times, stop)
+	}
+}
+
+function addDoorsAlongNorthWall(room) {
+	var object = null;
+	var thisRoom = null;
+	var door = null;
+	var array = [];
+	var mapX = room.mapX;
+	while (mapX < room.mapX + room.mapW) {
+		thisRoom = getRoom(mapX, room.mapY - 1);
+		if (thisRoom !== null) {
+			array.push({
+				x: mapX,
+				y: room.mapY,
+				other: thisRoom
+			});
+		}
+		mapX++;
+	}
+	var i = 0;
+	for (var e = 0; e < array.length; e++) {
+		object = array[e];
+		var hasDoor = false;
+		for (var t = 0; t < room.doors.length; t++) {
+			if (room.doors[t].x === object.x && room.doors[t].y === object.y) {
+				hasDoor = true;
+			}
+		}
+		if (!(Math.random() > chanceOfAddingDoor || indexOf(room.doors, object) >= 0) && !hasDoor) {
+			door = Door(object.x, object.y, "N", room, object.other);
+			room.doors.push(door);
+			// object.other.doors.push(door);
+			object.other.doors.push(Door(object.x, object.y - 1, "S", object.other, room));
+			i++;
+		}
+	}
+	return i;
+}
+
+function addDoorsAlongSouthWall(room) {
+	var object = null;
+	var thisRoom = null;
+	var door = null;
+	var array = [];
+	var mapX = room.mapX;
+	while (mapX < room.mapX + room.mapW) {
+		thisRoom = getRoom(mapX, room.mapY + room.mapH);
+		if (thisRoom !== null) {
+			array.push({
+				x: mapX,
+				y: room.mapY + room.mapH - 1,
+				other: thisRoom
+			});
+		}
+		mapX++;
+	}
+	var i = 0;
+	for (var e = 0; e < array.length; e++) {
+		object = array[e];
+		var hasDoor = false;
+		for (var t = 0; t < room.doors.length; t++) {
+			if (room.doors[t].x === object.x && room.doors[t].y === object.y) {
+				hasDoor = true;
+			}
+		}
+		if (!(Math.random() > chanceOfAddingDoor || indexOf(room.doors, object) >= 0) && !hasDoor) {
+			door = Door(object.x, object.y, "S", room, object.other);
+			room.doors.push(door);
+			// object.other.doors.push(door);
+			object.other.doors.push(Door(object.x, object.y + 1, "N", object.other, room));
+			i++;
+		}
+	}
+	return i;
+}
+
+function addDoorsAlongWestWall(room) {
+	var object = null;
+	var thisRoom = null;
+	var door = null;
+	var array = [];
+	var mapY = room.mapY;
+	while (mapY < room.mapY + room.mapH) {
+		thisRoom = getRoom(room.mapX - 1, mapY);
+		if (thisRoom !== null) {
+			array.push({
+				x: room.mapX,
+				y: mapY,
+				other: thisRoom
+			});
+		}
+		mapY++;
+	}
+	var i = 0;
+	for (var e = 0; e < array.length; e++) {
+		object = array[e];
+		var hasDoor = false;
+		for (var t = 0; t < room.doors.length; t++) {
+			if (room.doors[t].x === object.x && room.doors[t].y === object.y) {
+				hasDoor = true;
+			}
+		}
+		if (!(Math.random() > chanceOfAddingDoor || indexOf(room.doors, object) >= 0) && !hasDoor) {
+			door = Door(object.x, object.y, "W", room, object.other);
+			room.doors.push(door);
+			// object.other.doors.push(door);
+			object.other.doors.push(Door(object.x - 1, object.y, "E", object.other, room));
+			i++;
+		}
+	}
+	return i;
+}
+
+function addDoorsAlongEastWall(room) {
+	var object = null;
+	var thisRoom = null;
+	var door = null;
+	var array = [];
+	var mapY = room.mapY;
+	while (mapY < room.mapY + room.mapH) {
+		thisRoom = getRoom(room.mapX + room.mapW, mapY);
+		if (thisRoom !== null) {
+			array.push({
+				x: room.mapX + room.mapW - 1,
+				y: mapY,
+				other: thisRoom
+			});
+		}
+		mapY++;
+	}
+	var i = 0;
+	for (var e = 0; e < array.length; e++) {
+		object = array[e];
+		var hasDoor = false;
+		for (var t = 0; t < room.doors.length; t++) {
+			if (room.doors[t].x === object.x && room.doors[t].y === object.y) {
+				hasDoor = true;
+			}
+		}
+		if (!(Math.random() > chanceOfAddingDoor || indexOf(room.doors, object) >= 0) && !hasDoor) {
+			door = Door(object.x, object.y, "E", room, object.other);
+			room.doors.push(door);
+			// object.other.doors.push(door);
+			object.other.doors.push(Door(object.x + 1, object.y, "W", object.other, room));
+			i++;
+		}
+	}
+	return i;
+}
+
+
+function getRoom(x, y) {
+	var room = null;
+	var i = 0;
+	while (i < world.rooms.length) {
+		room = world.rooms[i];
+		if (room.mapX > x || room.mapX + room.mapW - 1 < x || room.mapY > y || room.mapY + room.mapH - 1 < y) {
+			i++;
+			continue;
+		}
+		return room;
+	}
+	return null;
+}
+
+function createRooms(numberOfRooms) {
+	var i = 0;
+	var length = world.rooms.length;
+	while (i++ < numberOfRooms * 10 && world.rooms.length < length + numberOfRooms) {
+		createRoom();
+	}
+}
+
+function createRoom() {
+	if (world.frontiers.length > 0) {
+		var frontier = getRandom(world.frontiers);
+		try {
+			addRoom(growRoom(frontier.x, frontier.y));
+		} catch (e) {
+			console.log(world, frontier, e)
+		}
+	}
+}
+
+function addRoom(room) {
+	if (room === null || !canPlaceRoom(room.mapX, room.mapY, room.mapW, room.mapH)) {
+		return false;
+	}
+	var array = [];
+	array = removeFrontiers(array, room);
+	world.frontiers = addBorderingFrontiers(array, room);
+	if (world.frontiers.length === 0) {
+		console.log(array, room, addBorderingFrontiers(array, room))
+	}
+	room.mapColor = world.currentRegion.color;
+	world.rooms.push(room);
+	world.currentRegion.rooms.push(room);
+	addDoors(room);
+}
+
+function addBorderingFrontiers(array, room) {
+	var mapX = room.mapX;
+	while (mapX < room.mapX + room.mapW) {
+		if (canPlaceRoom(mapX, room.mapY - 1, 1, 1)) {
+			array.push({
+				"x": mapX,
+				"y": room.mapY - 1
+			});
+		}
+		if (canPlaceRoom(mapX, room.mapY + room.mapH, 1, 1)) {
+			array.push({
+				"x": mapX,
+				"y": room.mapY + room.mapH
+			});
+		}
+		mapX++;
+	}
+	var mapY = room.mapY;
+	while (mapY < room.mapY + room.mapH) {
+		if (canPlaceRoom(room.mapX - 1, mapY, 1, 1)) {
+			array.push({
+				"x": room.mapX - 1,
+				"y": mapY
+			});
+		}
+		if (canPlaceRoom(room.mapX + room.mapW, mapY, 1, 1)) {
+			array.push({
+				"x": room.mapX + room.mapW,
+				"y": mapY
+			});
+		}
+		mapY++;
+	}
+	return array;
+}
+
+function removeFrontiers(array, room) {
+	for (var i = 0; i < world.frontiers.length; i++) {
+		if (!(world.frontiers[i].x >= room.mapX - 1 && world.frontiers[i].x <= room.mapX + room.mapW && world.frontiers[i].y >= room.mapY && world.frontiers[i].y <= room.mapY + room.mapH - 1)) {
+			if (!(world.frontiers[i].x >= room.mapX && world.frontiers[i].x <= room.mapX + room.mapW - 1 && world.frontiers[i].y >= room.mapY - 1 && world.frontiers[i].y <= room.mapY + room.mapH)) {
+				array.push(world.frontiers[i]);
+			}
+		}
+	}
+	return array;
+}
+
+function growRoom(x, y) {
+	var var1 = 0;
+	var width = 1;
+	var height = 1;
+	while (var1++ < 25 && (width < world.currentRegion.maxW || height < world.currentRegion.maxH) && Math.random() < 0.9) {
+		switch (parseInt(Math.random() * 4)) {
+			case 0:
+				if (height < world.currentRegion.maxH && (canPlaceRoom(x, y - 1, width, height + 1))) {
+					y--;
+					height++;
+				}
+				continue;
+			case 1:
+				if (height < world.currentRegion.maxH && (canPlaceRoom(x, y, width, height + 1))) {
+					height++;
+				}
+				continue;
+			case 2:
+				if (width < world.currentRegion.maxW && (canPlaceRoom(x - 1, y, width + 1, height))) {
+					x--;
+					width++;
+				}
+				continue;
+			case 3:
+				if (width < world.currentRegion.maxW && (canPlaceRoom(x, y, width + 1, height))) {
+					width++;
+				}
+				continue;
+			default:
+				continue;
+		}
+	}
+	return Room(x, y, width, height, world.currentRegion);
+}
+
+function Room(x, y, width, height, region) {
+	return {
+		mapX: x,
+		mapY: y,
+		mapW: width,
+		mapH: height,
+		mapColor: 4.281545727E9,
+		region: region,
+		specialType: 0,
+		doors: []
+	};
+}
+
+function Door(x, y, direction, room1, room2) {
+	return {
+		mapX: x,
+		mapY: y,
+		doorType: 0,
+		dir: direction,
+		room1: room1,
+		room2: room2
+	};
+}
+
+function clearDoorTypes() {
+	var room = null;
+	var door = null;
+	for (var i = 0; i < world.rooms.length; i++) {
+		room = world.rooms[i];
+		room.specialType = 0;
+		for (var e = 0; e < room.doors.length; e++) {
+			door = room.doors[e];
+			door.doorType = 0;
+		}
+	}
+}
+
+function assignDoorTypes() {
+	var door = null;
+	var array = [];
+	var region1 = null;
+	var region2 = null;
+	var room1 = null;
+	var room2 = null;
+	var array1 = [];
+	var array2 = [];
+	var array3 = [];
+	array3.push(world.regions[0]);
+	var i = 0;
+	while (array3.length > 0) {
+		i++;
+		array.length = 0;
+		region1 = array3.shift();
+		array2.push(region1);
+		room1 = getRandom(region1.rooms);
+		room1.specialType = i % regionColors.length;
+		for (var e = 0; e < region1.rooms.length; e++) {
+			room2 = region1.rooms[e];
+			for (var r = 0; r < room2.doors.length; r++) {
+				door = room2.doors[r];
+				region2 = other(door, room2).region;
+				if (region2 !== region1) {
+					if (door.doorType <= 0) {
+						if (array.indexOf(region2) >= 0) {
+							array1.push(door);
+						} else {
+							door.doorType = i % regionColors.length;
+							array.push(region2);
+							if (array2.indexOf(region2) === -1 && array3.indexOf(region2) === -1) {
+								array3.push(region2);
+							}
+						}
+					}
+				}
+			}
+		}
+	}
+	for (var t = 0; t < array1.length; t++) {
+		door = array1[t];
+		if (door.doorType <= 0) {
+			door.doorType = parseInt(Math.random() * (i % regionColors.length)) + 1;
+		}
+	}
+}
+
+function other(door, room) {
+	return door.room1 === room ? door.room2 : door.room1;
+}
+
+function create() {
+	world = {
+		width: 0,
+		height: 0,
+		rooms: [],
+		frontiers: [],
+		regions: [],
+		currentRegion: 0,
+
+	};
+	currentRegionColorIndex = 0;
+	world.width = 80;
+	world.height = 48;
+	startAt(40, 24, nextRegion());
+	createRooms(2);
+}
+
+function nextRegion() {
+	var region = Region(regionColors[currentRegionColorIndex], parseInt(Math.random() * 3) + parseInt(Math.random() * 3) + 1, parseInt(Math.random() * 3) + parseInt(Math.random() * 3) + 1);
+	currentRegionColorIndex = (currentRegionColorIndex + 1) % regionColors.length;
+	return region;
+}
+
+function Region(color, maxWidth, maxHeight) {
+	return {
+		color: color,
+		maxW: maxWidth,
+		maxH: maxHeight,
+		rooms: []
+	};
+}
+
+function startWorld() {
+	create();
+	drawWorld();
+}
+
+function addRoomToWorld() {
 	createRoom();
 	drawWorld();
 }

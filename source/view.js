@@ -43,3 +43,50 @@ function parseViewPort() {
 	// viewPortY = (window.innerHeight-(height*16))/2;
 	// }
 }
+function parseMinimapViewport() {
+	var canvas = minimapContext.canvas;
+	var deadZoneX = canvas.width / 2;
+	var deadZoneY = canvas.height / 2;
+	var mapX = (currentRoom.mapX * miniMapSize);
+	var mapY = (currentRoom.mapY * miniMapSize);
+	if (mapX - miniViewPortX + deadZoneX > canvas.width) {
+		miniViewPortX = mapX - (canvas.width - deadZoneX);
+	} else if (mapX - deadZoneX < miniViewPortX) {
+		miniViewPortX = mapX - deadZoneX;
+	}
+	if (mapY - miniViewPortY + deadZoneY > canvas.height) {
+		miniViewPortY = mapY - (canvas.height - deadZoneY);
+	} else if (mapY - deadZoneY < miniViewPortY) {
+		miniViewPortY = mapY - deadZoneY;
+	}
+	// if (!(0 <= miniViewPortX &&
+	// 	width * 16 >= miniViewPortX + canvas.width &&
+	// 	0 <= miniViewPortY &&
+	// 	height * 16 >= miniViewPortY + canvas.height)) {
+	// 	if (miniViewPortX < 0) {
+	// 		miniViewPortX = 0;
+	// 	}
+	// 	if (miniViewPortY < 0) {
+	// 		miniViewPortY = 0;
+	// 	}
+	// 	if (miniViewPortX + canvas.width > width * 16) {
+	// 		miniViewPortX = (width / 2 * 16) - deadZoneX;
+	// 	}
+	// 	if (miniViewPortY + canvas.height > height * 16) {
+	// 	console.log(true)
+	// 		miniViewPortY = (height / 2 * 16) - deadZoneY;
+	// 	}
+	// }
+	miniViewPortY = ~~ (0.5 + miniViewPortY);
+	miniViewPortY = ~~ (0.5 + miniViewPortY);
+	// miniViewPortX = (window.innerWidth / 2) - (width*16) + player.x;
+	// miniViewPortX = player.x;
+	// miniViewPortY = (window.innerHeight / 2) - (height*16) + player.y;
+	// miniViewPortY = player.y;
+	// if(miniViewPortX < (window.innerWidth-(width*16))/2) {
+	// miniViewPortX = 0;
+	// }
+	// if(miniViewPortY < (window.innerHeight-(height*16))/2) {
+	// miniViewPortY = (window.innerHeight-(height*16))/2;
+	// }
+}

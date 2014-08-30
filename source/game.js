@@ -1,9 +1,9 @@
-var playerCanvas, tileCanvas, borderCanvas, playerContext, tileContext, borderContext, mapCanvas, mapContext;
+var playerCanvas, tileCanvas, borderCanvas, playerContext, tileContext, borderContext, minimapContext, minimapCanvas;
 var domtypes = ["getElementById", "querySelector", "querySelectorAll"];
 var getElementById = 0;
 var querySelector = 1;
 var querySelectorAll = 2;
-var runGameLoop = false;
+var runGameLoop = true;
 var frameEvent = new CustomEvent("frame");
 var currentTick = window.performance.now();
 var lastTick = window.performance.now();
@@ -13,8 +13,8 @@ var keymap = {};
 var player = {
 	x: 151,
 	y: 16 * 3,
-	w: 16,
-	h: 32,
+	w: tileSize,
+	h: tileSize * 2,
 	img: null,
 	xDirection: 0,
 	yDirection: 1,
@@ -26,7 +26,7 @@ var player = {
 	jumpStart: 0,
 	jumping: 0,
 	jumpsUsed: 0,
-	maxJumps: 1,
+	maxJumps: 3,
 	angle: 0,
 	health: 5,
 	maxHealth: 5
@@ -99,9 +99,11 @@ function DOMLoaded() {
 	playerCanvas = getByType(getElementById, "player");
 	borderCanvas = getByType(getElementById, "border");
 	tileCanvas = getByType(getElementById, "tile");
+	minimapCanvas = getByType(getElementById, "minimap");
 	playerContext = playerCanvas.getContext("2d");
 	borderContext = borderCanvas.getContext("2d");
 	tileContext = tileCanvas.getContext("2d");
+	minimapContext = minimapCanvas.getContext("2d");
 	resizeCanvas();
 	// createMap();
 	loop();
@@ -119,14 +121,14 @@ function DOMLoaded() {
 
 function resizeCanvas() {
 	if (window.innerWidth > 300) {
-		borderCanvas.width = playerCanvas.width = tileCanvas.width = 300;
+		borderCanvas.width = playerCanvas.width = tileCanvas.width = minimapCanvas.width = 300;
 	} else {
-		borderCanvas.width = playerCanvas.width = tileCanvas.width = window.innerWidth;
+		borderCanvas.width = playerCanvas.width = tileCanvas.width = minimapCanvas.width = window.innerWidth;
 	}
 	if (window.innerHeight > 300) {
-		borderCanvas.height = playerCanvas.height = tileCanvas.height = 300;
+		borderCanvas.height = playerCanvas.height = tileCanvas.height = minimapCanvas.width = 300;
 	} else {
-		borderCanvas.height = playerCanvas.height = tileCanvas.height = window.innerHeight;
+		borderCanvas.height = playerCanvas.height = tileCanvas.height = minimapCanvas.width = window.innerHeight;
 	}
 }
 
