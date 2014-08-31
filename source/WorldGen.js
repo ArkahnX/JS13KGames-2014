@@ -495,76 +495,23 @@ function clearDoorTypes() {
 
 function assignDoorTypes() {
 	var door = null;
-	var visitingRegions = [];
 	var region1 = null;
 	var region2 = null;
-	var room1 = null;
-	var room2 = null;
-	var otherDoors = [];
-	var visitedRegions = [];
-	var array3 = [];
+	var room = null;
 	for (var i = 0; i < world.regions.length; i++) {
-		visitingRegions.length = 0;
 		region1 = world.regions[i];
-		room1 = getRandom(region1.rooms);
-		visitedRegions.push(region1);
-		room1.specialType = (i + 2) % regionColors.length;
+		getRandom(region1.rooms).specialType = (i + 2) % regionColors.length;
 		for (var e = 0; e < region1.rooms.length; e++) {
-			room2 = region1.rooms[e];
-			for (var r = 0; r < room2.doors.length; r++) {
-				door = room2.doors[r];
-				region2 = other(door, room2).region;
+			room = region1.rooms[e];
+			for (var r = 0; r < room.doors.length; r++) {
+				door = room.doors[r];
+				region2 = other(door, room).region;
 				if (region2 !== region1) {
 					if (door.doorType === 0) {
 						door.doorType = (i + 1) % regionColors.length;
-						// if (visitingRegions.indexOf(region2) >= 0) {
-						// 	otherDoors.push(door);
-						// } else {
-						// 	door.doorType = i % regionColors.length;
-						// 	visitingRegions.push(region2);
-						// 	// if (visitedRegions.indexOf(region2) === -1 && region1 !== region2) {
-						// 	// 	array3.push(region2);
-						// 	// }
-						// }
 					}
 				}
 			}
-		}
-	}
-	// array3.push(world.regions[0]);
-	// var i = 0;
-	// while (array3.length > 0) {
-	// 	i++;
-	// 	visitingRegions.length = 0;
-	// 	region1 = array3.shift();
-	// 	visitedRegions.push(region1);
-	// 	room1 = getRandom(region1.rooms);
-	// 	room1.specialType = i % regionColors.length;
-	// 	for (var e = 0; e < region1.rooms.length; e++) {
-	// 		room2 = region1.rooms[e];
-	// 		for (var r = 0; r < room2.doors.length; r++) {
-	// 			door = room2.doors[r];
-	// 			region2 = other(door, room2).region;
-	// 			if (region2 !== region1) {
-	// 				if (door.doorType <= 0) {
-	// 					if (visitingRegions.indexOf(region2) >= 0) {
-	// 						otherDoors.push(door);
-	// 					} else {
-	// 						door.doorType = i % regionColors.length;
-	// 						visitingRegions.push(region2);
-	// 						if (visitedRegions.indexOf(region2) === -1 && array3.indexOf(region2) === -1) {
-	// 							array3.push(region2);
-	// 						}
-	// 					}
-	// 				}
-	// 			}
-	// 		}
-	// 	}
-	// }
-	for (var t = 0; t < otherDoors.length; t++) {
-		door = otherDoors[t];
-		if (door.doorType <= 0) {
-			door.doorType = parseInt(Math.random() * (i % regionColors.length)) + 1;
 		}
 	}
 }
