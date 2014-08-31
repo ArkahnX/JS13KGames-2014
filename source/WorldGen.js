@@ -8,18 +8,18 @@ var regionColors = [{
 	other: "#CFCFCF",
 	lock: "#FFFFFF"
 }, {
-	background: "#990000",
-	border: "#FF0000",
+	border: "#990000",
+	background: "#FF3333",
 	other: "#FF0000",
 	lock: "#FF6666"
 }, {
-	background: "#009900",
-	border: "#00BB00",
+	border: "#006600",
+	background: "#00BB00",
 	other: "#00BB00",
 	lock: "#66FF66"
 }, {
-	background: "#000099",
-	border: "#0000FF",
+	border: "#000066",
+	background: "#3333FF",
 	other: "#0000FF",
 	lock: "#6666FF"
 }, {
@@ -457,12 +457,13 @@ function Room(x, y, width, height, region) {
 		mapY: y,
 		mapW: width,
 		mapH: height,
-		mapColor: 4.281545727E9,
+		mapColor: null,
 		region: region,
 		specialType: 0,
 		startPositionX: 0,
 		startPositionY: 0,
 		startRoom: false,
+		visited:false,
 		doors: [],
 		map: null
 	};

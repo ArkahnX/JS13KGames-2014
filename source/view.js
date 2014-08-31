@@ -47,8 +47,8 @@ function parseMinimapViewport() {
 	var canvas = minimapContext.canvas;
 	var deadZoneX = canvas.width / 2;
 	var deadZoneY = canvas.height / 2;
-	var mapX = (currentRoom.mapX * miniMapSize);
-	var mapY = (currentRoom.mapY * miniMapSize);
+	var mapX = ((currentRoom.mapX + (modulus(modulus(modulus(player.x), roomSize), segmentsPerRoom))) * miniMapSize);
+	var mapY = ((currentRoom.mapY + (modulus(modulus(modulus(player.y), roomSize), segmentsPerRoom))) * miniMapSize);
 	if (mapX - miniViewPortX + deadZoneX > canvas.width) {
 		miniViewPortX = mapX - (canvas.width - deadZoneX);
 	} else if (mapX - deadZoneX < miniViewPortX) {

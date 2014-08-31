@@ -152,7 +152,7 @@ var files = walk(rootDir + "source");
 var data = "";
 for (var i = 0; i < files.length; i++) {
 	if (files[i].indexOf(".js") > 0 && files[i].indexOf(".json") === -1) {
-		data += fs.readFileSync(files[i], "utf8");
+		data += "\n" + fs.readFileSync(files[i], "utf8");
 	}
 }
 fs.truncateSync(rootDir + 'source/app.js');

@@ -1,4 +1,4 @@
-var playerCanvas, tileCanvas, borderCanvas, playerContext, tileContext, borderContext, minimapContext, minimapCanvas;
+var playerCanvas, tileCanvas, borderCanvas, playerContext, tileContext, borderContext, minimapContext, minimapCanvas, miniMapIconsContext, miniMapIconsCanvas;
 var domtypes = ["getElementById", "querySelector", "querySelectorAll"];
 var getElementById = 0;
 var querySelector = 1;
@@ -102,10 +102,12 @@ function DOMLoaded() {
 	borderCanvas = getByType(getElementById, "border");
 	tileCanvas = getByType(getElementById, "tile");
 	minimapCanvas = getByType(getElementById, "minimap");
+	miniMapIconsCanvas = getByType(getElementById, "minimapIcons");
 	playerContext = playerCanvas.getContext("2d");
 	borderContext = borderCanvas.getContext("2d");
 	tileContext = tileCanvas.getContext("2d");
 	minimapContext = minimapCanvas.getContext("2d");
+	miniMapIconsContext = miniMapIconsCanvas.getContext("2d");
 	resizeCanvas();
 	// createMap();
 	startWorld();
@@ -122,14 +124,14 @@ function DOMLoaded() {
 
 function resizeCanvas() {
 	if (window.innerWidth > 300) {
-		borderCanvas.width = playerCanvas.width = tileCanvas.width = minimapCanvas.width = 300;
+		borderCanvas.width = playerCanvas.width = tileCanvas.width = 300;
 	} else {
-		borderCanvas.width = playerCanvas.width = tileCanvas.width = minimapCanvas.width = window.innerWidth;
+		borderCanvas.width = playerCanvas.width = tileCanvas.width = window.innerWidth;
 	}
 	if (window.innerHeight > 300) {
-		borderCanvas.height = playerCanvas.height = tileCanvas.height = minimapCanvas.width = 300;
+		borderCanvas.height = playerCanvas.height = tileCanvas.height = 300;
 	} else {
-		borderCanvas.height = playerCanvas.height = tileCanvas.height = minimapCanvas.width = window.innerHeight;
+		borderCanvas.height = playerCanvas.height = tileCanvas.height = window.innerHeight;
 	}
 }
 

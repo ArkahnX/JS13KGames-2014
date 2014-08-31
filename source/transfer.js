@@ -72,21 +72,21 @@ function testDoors() {
 		}
 		if (window.performance.now() - player.doorCooldown > 400) {
 			if (player.x <= 0 && player.xDirection === LEFT && door.dir === "W" && translatedX === playerX && translatedY === playerY) {
-				console.log("Collision with left door");
+				// console.log("Collision with left door");
 				movePlayer(door.room2, "E", door.mapY);
 			}
 			if (player.y <= 0 && player.yDirection === JUMPING && door.dir === "N" && translatedX === playerX && translatedY === playerY) {
-				console.log("Collision with top door");
+				// console.log("Collision with top door");
 				movePlayer(door.room2, "S", door.mapX);
 			}
 			if (player.x + player.w >= roomWidth && player.xDirection === RIGHT && door.dir === "E" && translatedX === playerX2 && translatedY === playerY) {
-				console.log("Collision with right door");
+				// console.log("Collision with right door");
 				movePlayer(door.room2, "W", door.mapY);
 			}
 			if (player.y + player.h >= roomHeight && player.yDirection !== IDLE  && Math.abs(player.yAccel) > 5 && door.dir === "S" && translatedX === playerX && (translatedY === playerY2 || translatedY === playerY)) {
-				console.log(player.yAccel)
-			console.log(window.performance.now() - player.doorCooldown)
-				console.log("Collision with bottom door");
+				// console.log(player.yAccel)
+			// console.log(window.performance.now() - player.doorCooldown)
+				// console.log("Collision with bottom door");
 				movePlayer(door.room2, "N", door.mapX);
 			}
 		}
