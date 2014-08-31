@@ -144,8 +144,8 @@ function eachFrame(event) {
 		testWalking(entity);
 		testJumping(entity);
 		handleJump(entity);
-		testFalling(entity);
 		testDoors();
+		testFalling(entity);
 		// drawImg(entity);
 		// Physics.
 		// if (map[(((entity.x - entity.x % 16) / 16) * width) + (entity.y / 16)] === 1) {

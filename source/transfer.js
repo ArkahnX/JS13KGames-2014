@@ -83,7 +83,8 @@ function testDoors() {
 				console.log("Collision with right door");
 				movePlayer(door.room2, "W", door.mapY);
 			}
-			if (player.y + player.h >= roomHeight && player.yDirection !== IDLE && door.dir === "S" && translatedX === playerX && (translatedY === playerY2 || translatedY === playerY)) {
+			if (player.y + player.h >= roomHeight && player.yDirection !== IDLE  && Math.abs(player.yAccel) > 5 && door.dir === "S" && translatedX === playerX && (translatedY === playerY2 || translatedY === playerY)) {
+				console.log(player.yAccel)
 			console.log(window.performance.now() - player.doorCooldown)
 				console.log("Collision with bottom door");
 				movePlayer(door.room2, "N", door.mapX);
