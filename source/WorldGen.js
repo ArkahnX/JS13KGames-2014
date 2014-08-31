@@ -11,22 +11,22 @@ var regionColors = [{
 	border: "#990000",
 	background: "#FF3333",
 	other: "#FF0000",
-	lock: "#FF6666"
+	lock: "#FF0000"
 }, {
 	border: "#006600",
 	background: "#00BB00",
 	other: "#00BB00",
-	lock: "#66FF66"
+	lock: "#00FF00"
 }, {
 	border: "#000066",
 	background: "#3333FF",
 	other: "#0000FF",
-	lock: "#6666FF"
+	lock: "#0000FF"
 }, {
 	background: "#9F9F9F",
 	border: "#555555",
 	other: "#555555",
-	lock: "#B0B0B0"
+	lock: "#000000"
 }];
 
 function startAt(x, y, region) {
@@ -463,7 +463,7 @@ function Room(x, y, width, height, region) {
 		startPositionX: 0,
 		startPositionY: 0,
 		startRoom: false,
-		visited:false,
+		visited: false,
 		doors: [],
 		map: null
 	};
@@ -495,46 +495,74 @@ function clearDoorTypes() {
 
 function assignDoorTypes() {
 	var door = null;
-	var array = [];
+	var visitingRegions = [];
 	var region1 = null;
 	var region2 = null;
 	var room1 = null;
 	var room2 = null;
-	var array1 = [];
-	var array2 = [];
+	var otherDoors = [];
+	var visitedRegions = [];
 	var array3 = [];
-	array3.push(world.regions[0]);
-	var i = 0;
-	while (array3.length > 0) {
-		i++;
-		array.length = 0;
-		region1 = array3.shift();
-		array2.push(region1);
+	for (var i = 0; i < world.regions.length; i++) {
+		visitingRegions.length = 0;
+		region1 = world.regions[i];
 		room1 = getRandom(region1.rooms);
-		room1.specialType = i % regionColors.length;
+		visitedRegions.push(region1);
+		room1.specialType = (i + 2) % regionColors.length;
 		for (var e = 0; e < region1.rooms.length; e++) {
 			room2 = region1.rooms[e];
 			for (var r = 0; r < room2.doors.length; r++) {
 				door = room2.doors[r];
 				region2 = other(door, room2).region;
 				if (region2 !== region1) {
-					if (door.doorType <= 0) {
-						if (array.indexOf(region2) >= 0) {
-							array1.push(door);
-						} else {
-							door.doorType = i % regionColors.length;
-							array.push(region2);
-							if (array2.indexOf(region2) === -1 && array3.indexOf(region2) === -1) {
-								array3.push(region2);
-							}
-						}
+					if (door.doorType === 0) {
+						door.doorType = (i + 1) % regionColors.length;
+						// if (visitingRegions.indexOf(region2) >= 0) {
+						// 	otherDoors.push(door);
+						// } else {
+						// 	door.doorType = i % regionColors.length;
+						// 	visitingRegions.push(region2);
+						// 	// if (visitedRegions.indexOf(region2) === -1 && region1 !== region2) {
+						// 	// 	array3.push(region2);
+						// 	// }
+						// }
 					}
 				}
 			}
 		}
 	}
-	for (var t = 0; t < array1.length; t++) {
-		door = array1[t];
+	// array3.push(world.regions[0]);
+	// var i = 0;
+	// while (array3.length > 0) {
+	// 	i++;
+	// 	visitingRegions.length = 0;
+	// 	region1 = array3.shift();
+	// 	visitedRegions.push(region1);
+	// 	room1 = getRandom(region1.rooms);
+	// 	room1.specialType = i % regionColors.length;
+	// 	for (var e = 0; e < region1.rooms.length; e++) {
+	// 		room2 = region1.rooms[e];
+	// 		for (var r = 0; r < room2.doors.length; r++) {
+	// 			door = room2.doors[r];
+	// 			region2 = other(door, room2).region;
+	// 			if (region2 !== region1) {
+	// 				if (door.doorType <= 0) {
+	// 					if (visitingRegions.indexOf(region2) >= 0) {
+	// 						otherDoors.push(door);
+	// 					} else {
+	// 						door.doorType = i % regionColors.length;
+	// 						visitingRegions.push(region2);
+	// 						if (visitedRegions.indexOf(region2) === -1 && array3.indexOf(region2) === -1) {
+	// 							array3.push(region2);
+	// 						}
+	// 					}
+	// 				}
+	// 			}
+	// 		}
+	// 	}
+	// }
+	for (var t = 0; t < otherDoors.length; t++) {
+		door = otherDoors[t];
 		if (door.doorType <= 0) {
 			door.doorType = parseInt(Math.random() * (i % regionColors.length)) + 1;
 		}
@@ -565,7 +593,7 @@ function create() {
 	currentRoom.startPositionX = random(0, (currentRoom.mapW * segmentsPerRoom) - 1);
 	currentRoom.startPositionY = random(0, (currentRoom.mapH * segmentsPerRoom) - 1);
 	player.x = currentRoom.startPositionX * roomSize * tileSize + (roomSize / 2 * tileSize);
-	player.y = currentRoom.startPositionY * roomSize * tileSize + (2*tileSize);
+	player.y = currentRoom.startPositionY * roomSize * tileSize + (2 * tileSize);
 }
 
 function nextRegion() {
@@ -585,12 +613,10 @@ function Region(color, maxWidth, maxHeight) {
 
 function startWorld() {
 	create();
-	drawWorld();
 }
 
 function addRoomToWorld() {
 	createRoom();
-	drawWorld();
 }
 
 function addRegion() {
@@ -600,5 +626,4 @@ function addRegion() {
 function doors() {
 	clearDoorTypes();
 	assignDoorTypes();
-	drawWorld();
 }

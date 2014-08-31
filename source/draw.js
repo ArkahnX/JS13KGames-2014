@@ -204,8 +204,8 @@ function drawWorld() {
 	miniMapPlayerX = (currentRoom.mapX * miniMapSize) + (modulus(modulus(modulus(player.x), roomSize), segmentsPerRoom) * miniMapSize) - miniViewPortX;
 	miniMapPlayerY = (currentRoom.mapY * miniMapSize) + (modulus(modulus(modulus(player.y), roomSize), segmentsPerRoom) * miniMapSize) - miniViewPortY;
 	if (currentRoom.mapX + modulus(modulus(modulus(player.x), roomSize), segmentsPerRoom) !== lastPlayerX || currentRoom.mapY + modulus(modulus(modulus(player.y), roomSize), segmentsPerRoom) !== lastPlayerY || lastRoomLength !== world.rooms.length) {
-		minimapCanvas.width = 150;
-		minimapCanvas.height = 150;
+		minimapCanvas.width = 500;
+		minimapCanvas.height = 500;
 		minimapContext.clearRect(0, 0, minimapCanvas.width, minimapCanvas.height);
 		drawnDoors.length = 0;
 		minimapContext.lineWidth = 2;
@@ -273,6 +273,7 @@ function drawIcons(room) {
 	// this.iconStamp.frame = 16 + room.specialType;
 	// stamp(this.iconStamp, this.miniMapSize * (room.mapX + room.mapW / 2) - 4, this.miniMapSize * (room.mapY + room.mapH / 2) - 4);
 	var color = regionColors[room.specialType].lock;
+		// console.log(room.mapX, room.mapY)
 	if (room.specialType > 0) {
 		drawCircle(miniMapSize * (room.mapX + room.mapW / 2) - 3, miniMapSize * (room.mapY + room.mapH / 2), "rgba(0,0,0,0)", color);
 	}
@@ -339,8 +340,8 @@ var lastFrame = 0;
 
 function drawPlayer() {
 	if (!initPlayerCanvas) {
-		miniMapIconsCanvas.width = 150;
-		miniMapIconsCanvas.height = 150;
+		miniMapIconsCanvas.width = minimapCanvas.width;
+		miniMapIconsCanvas.height = minimapCanvas.height;
 		miniMapIconsContext.lineWidth = 1;
 		initPlayerCanvas = true;
 	}

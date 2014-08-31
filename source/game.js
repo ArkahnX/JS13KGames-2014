@@ -114,7 +114,9 @@ function DOMLoaded() {
 		for (var i = 0; i < rooms; i++) {
 			addRoomToWorld();
 		}
-		addRegion();
+		if (r + 1 < regionColors.length) {
+			addRegion();
+		}
 	}
 	doors();
 	loop();
