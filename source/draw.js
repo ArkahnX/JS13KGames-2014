@@ -1,31 +1,3 @@
-function drawImg(entity, x, y) {
-	if (entity.img !== null) {
-		context.drawImage(entity.img, entity.x || x, entity.y || y, entity.w, entity.h);
-	}
-}
-
-function drawRoom() {
-	var mapWidth = bigRoomList[0].width;
-	var mapHeight = bigRoomList[0].height;
-	var currentX = 0;
-	var currentY = 0;
-	var mapSize = bigRoomList[0].size * roomSize;
-	for (var y = 0; y < mapSize; y++) {
-		for (var x = 0; x < mapSize; x++) {
-			if (bigRoomList[0].map[coordinate(x, y, mapSize)] !== 0) {
-				drawRect(x, y, bigRoomList[0].map, mapSize, 1, 1);
-			}
-		}
-	}
-	for (var y = 0; y < mapSize; y++) {
-		for (var x = 0; x < mapSize; x++) {
-			if (bigRoomList[0].map[coordinate(x, y, mapSize)] !== 0) {
-				drawTile(x, y, bigRoomList[0].map, mapSize, 1, 1);
-			}
-		}
-	}
-}
-
 function drawMap() {
 	var startTime = window.performance.now();
 	var mapX1 = modulus(viewPortX) - 1;
@@ -238,7 +210,11 @@ function drawWorld() {
 		drawnDoors.length = 0;
 		minimapContext.lineWidth = 2;
 		forEachRoom("background", "border", function(room, roomX, roomY) {
-			drawRectangle(roomX, roomY, room.mapW * miniMapSize, room.mapH * miniMapSize, true);
+			minimapContext.beginPath();
+			minimapContext.rect(roomX, roomY, room.mapW * miniMapSize, room.mapH * miniMapSize);
+			minimapContext.fill();
+			minimapContext.stroke();
+			minimapContext.closePath();
 		});
 		forEachRoom(0, "background", drawDoors);
 		forEachRoom(0, 0, drawIcons);
@@ -266,17 +242,6 @@ function forEachRoom(fillStyle, strokeStyle, fn) {
 			}
 		}
 	}
-}
-
-function drawRectangle(x, y, w, h, stroke) {
-	minimapContext.beginPath();
-	minimapContext.rect(roomX, roomY, room.mapW * miniMapSize, room.mapH * miniMapSize);
-	minimapContext.fill();
-	if (stroke) {
-		minimapContext.stroke();
-	}
-	minimapContext.closePath();
-
 }
 
 var lockColors = []
@@ -315,13 +280,12 @@ function drawIcons(room) {
 
 function drawCircle(centerX, centerY, color, border) {
 	var radius = 3;
-
 	minimapContext.beginPath();
 	minimapContext.arc(centerX + radius - miniViewPortX, centerY - miniViewPortY, radius, 0, 2 * Math.PI, false);
 	minimapContext.fillStyle = color;
 	minimapContext.fill();
 	if (border) {
-		// minimapContext.lineWidth = 2;
+		minimapContext.lineWidth = 2;
 		minimapContext.strokeStyle = border;
 		minimapContext.stroke();
 	}

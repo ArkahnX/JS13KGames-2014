@@ -1,3 +1,8 @@
+var viewPortX = 0;
+var viewPortY = 0;
+var miniViewPortX = 0;
+var miniViewPortY = 0;
+
 function parseViewPort() {
 	var canvas = tileContext.canvas;
 	var deadZoneX = canvas.width / 2;

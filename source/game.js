@@ -1,5 +1,4 @@
 var playerCanvas, tileCanvas, borderCanvas, playerContext, tileContext, borderContext, minimapContext, minimapCanvas, miniMapIconsContext, miniMapIconsCanvas;
-var domtypes = ["getElementById", "querySelector", "querySelectorAll"];
 var getElementById = 0;
 var querySelector = 1;
 var querySelectorAll = 2;
@@ -26,11 +25,11 @@ var player = {
 	jumpStart: 0,
 	jumping: 0,
 	jumpsUsed: 0,
-	heightTraveled:0,
+	heightTraveled: 0,
 	maxJumps: 1,
 	angle: 0,
 	health: 5,
-	doorCooldown:window.performance.now(),
+	doorCooldown: window.performance.now(),
 	maxHealth: 5
 }
 var dt = currentTick - lastTick;
@@ -55,32 +54,32 @@ function listen(eventName, fn) {
 	events[eventName].push(fn);
 }
 
-function entity(x, y, w, h, img, moveable, jumpable) {
-	var entity = {
-		x: x,
-		y: y,
-		w: w,
-		h: h,
-		angle: 0,
-		img: img
-	};
-	if (moveable) {
-		entity.xDirection = 0;
-		entity.yDirection = 0;
-		entity.xAccel = 0;
-		entity.yAccel = 1;
-		entity.maxAccel = 5;
-	}
-	if (moveable) {
-		entity.jumpForce = 7;
-		entity.jumpHeight = 50;
-		entity.jumpStart = 0;
-		entity.jumping = 0;
-		entity.jumpsUsed = 0;
-		entity.maxJumps = 3;
-	}
-	return (entity);
-}
+// function entity(x, y, w, h, img, moveable) {
+// 	var entity = {
+// 		x: x,
+// 		y: y,
+// 		w: w,
+// 		h: h,
+// 		angle: 0,
+// 		img: img
+// 	};
+// 	if (moveable) {
+// 		entity.xDirection = 0;
+// 		entity.yDirection = 0;
+// 		entity.xAccel = 0;
+// 		entity.yAccel = 1;
+// 		entity.maxAccel = 5;
+// 	}
+// 	if (moveable) {
+// 		entity.jumpForce = 7;
+// 		entity.jumpHeight = 50;
+// 		entity.jumpStart = 0;
+// 		entity.jumping = 0;
+// 		entity.jumpsUsed = 0;
+// 		entity.maxJumps = 3;
+// 	}
+// 	return (entity);
+// }
 
 function trigger(event) {
 	var eventName = event.type;
@@ -91,25 +90,24 @@ function trigger(event) {
 	}
 }
 
-function getByType(type, id) {
-	return document[domtypes[type]](id);
+function getByType(id) {
+	return document.getElementById(id);
 }
 
 
 
 function DOMLoaded() {
-	playerCanvas = getByType(getElementById, "player");
-	borderCanvas = getByType(getElementById, "border");
-	tileCanvas = getByType(getElementById, "tile");
-	minimapCanvas = getByType(getElementById, "minimap");
-	miniMapIconsCanvas = getByType(getElementById, "minimapIcons");
+	playerCanvas = getByType("player");
+	borderCanvas = getByType("border");
+	tileCanvas = getByType("tile");
+	minimapCanvas = getByType("minimap");
+	miniMapIconsCanvas = getByType("minimapIcons");
 	playerContext = playerCanvas.getContext("2d");
 	borderContext = borderCanvas.getContext("2d");
 	tileContext = tileCanvas.getContext("2d");
 	minimapContext = minimapCanvas.getContext("2d");
 	miniMapIconsContext = miniMapIconsCanvas.getContext("2d");
 	resizeCanvas();
-	// createMap();
 	startWorld();
 	for (var r = 0; r < regionColors.length; r++) {
 		var rooms = random(10, 20);
@@ -137,7 +135,7 @@ function resizeCanvas() {
 
 
 
-function eachFrame(event) {
+function eachFrame() {
 	for (var i = 0; i < entities.length; i++) {
 		var entity = entities[i];
 		handleXMovement(entity);
@@ -148,17 +146,6 @@ function eachFrame(event) {
 		handleJump(entity);
 		testDoors();
 		testFalling(entity);
-		// drawImg(entity);
-		// Physics.
-		// if (map[(((entity.x - entity.x % 16) / 16) * width) + (entity.y / 16)] === 1) {
-		// 	context.fillStyle = "#FF0000";
-		// } else {
-		// 	context.fillStyle = "#FFFFFF";
-		// }
-		// context.fillRect((entity.x - entity.x % 16) / 16, entity.y, entity.w, entity.h);
-		// context.fillStyle = "#000000";
-		// context.fillRect(entity.x-viewPortX, entity.y-viewPortY, entity.w, entity.h);
-		// testHit(entity);
 	}
 	parseViewPort();
 	borderContext.strokeStyle = currentRoom.mapColor.border;
@@ -172,7 +159,6 @@ function eachFrame(event) {
 	tileContext.clearRect(0 - viewPortX, 0 - viewPortY, realMapWidth, realMapHeight);
 	drawMap();
 	drawWorld();
-	// drawRoom();
 	playerContext.fillStyle = "#000000";
 	for (var i = 0; i < entities.length; i++) {
 		var entity = entities[i];

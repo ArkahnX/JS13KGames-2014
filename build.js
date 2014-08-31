@@ -4,6 +4,7 @@
 // 	console.log(err.toString());
 // });
 var fs = require('fs');
+var path = require('path');
 var UglifyJS = require("uglify-js");
 
 var Q = [];
@@ -151,11 +152,14 @@ var rootDir = "D:/GitHub/js13kgames-2014/";
 var files = walk(rootDir + "source");
 var data = "";
 for (var i = 0; i < files.length; i++) {
-	if (files[i].indexOf(".js") > 0 && files[i].indexOf(".json") === -1) {
+	if (path.extname(files[i]) === ".js") {
 		data += "\n" + fs.readFileSync(files[i], "utf8");
 	}
 }
-fs.truncateSync(rootDir + 'source/app.js');
+var exists = fs.existsSync(rootDir + 'source/app.js');
+if (exists) {
+	fs.truncateSync(rootDir + 'source/app.js');
+}
 for (var attr in globals) {
 	if (data.indexOf(attr) > -1) {
 		data = data.replace(new RegExp(attr, "g"), globals[attr]);
@@ -191,10 +195,13 @@ var oldSize = getUTF8Size(fullCode);
 var newSize = getUTF8Size(uglifiedCode);
 var saved = ((1 - newSize / oldSize) * 100).toFixed(2);
 console.log("Saved " + saved + " % of old size: " + oldSize + "B with new size: " + newSize + "B for build.js");
-fs.truncateSync(rootDir + 'source/app.min.js');
+var exists = fs.existsSync(rootDir + 'source/app.min.js');
+if (exists) {
+	fs.truncateSync(rootDir + 'source/app.min.js');
+}
 fs.writeFileSync(rootDir + 'source/app.min.js', uglifiedCode);
-var minifiedCode = Minify(uglifiedCode);
+// var minifiedCode = Minify(uglifiedCode);
 
 // fs.writeFileSync(rootDir + "build/" + folder + "/" + fileName + ".js", uglifiedCode);
-console.log("Wrote final build to " + rootDir + "build/build.js");
-fs.writeFileSync(rootDir + 'build/build.js', minifiedCode);
+// console.log("Wrote final build to " + rootDir + "build/build.js");
+// fs.writeFileSync(rootDir + 'build/build.js', minifiedCode);

@@ -15,5 +15,5 @@ module.exports = {
 	usableRooms:9,
 	roomSize:10,
 	miniMapSize:16,
-	segmentsPerRoom:3,
+	segmentsPerRoom:1,
 };
