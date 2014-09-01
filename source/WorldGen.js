@@ -322,12 +322,11 @@ function getRoom(x, y) {
 	return null;
 }
 
-function getDoor(room, x, y) {
+function getDoor(room, x, y, dir) {
 	var door = null;
-	var i = 0;
-	while (i < room.doors.length) {
-		door = world.rooms[i];
-		if (door.mapX === x && door.mapY === y) {
+	for (var i = 0; i < room.doors.length; i++) {
+		door = room.doors[i];
+		if (door.dir === dir && door.mapX === room.mapX + x && door.mapY === room.mapY + y) {
 			return door;
 		}
 	}
@@ -500,7 +499,7 @@ function assignDoorTypes() {
 	var room = null;
 	for (var i = 0; i < world.regions.length; i++) {
 		region1 = world.regions[i];
-		getRandom(region1.rooms).specialType = (i + 2) % regionColors.length;
+		getRandom(region1.rooms).specialType = (i + 1) % regionColors.length;
 		for (var e = 0; e < region1.rooms.length; e++) {
 			room = region1.rooms[e];
 			for (var r = 0; r < room.doors.length; r++) {
@@ -509,6 +508,39 @@ function assignDoorTypes() {
 				if (region2 !== region1) {
 					if (door.doorType === 0) {
 						door.doorType = (i + 1) % regionColors.length;
+					}
+				}
+			}
+		}
+	}
+}
+
+function collectKey(room) {
+	if(player.keys.indexOf(room.specialType) === -1) {
+		player.keys.push(room.specialType);
+		unlockRooms();
+	}
+}
+
+function unlockRooms() {
+	for (var i = 0; i < world.rooms.length; i++) {
+		var hasDoor = false;
+		var room = world.rooms[i];
+		if (player.keys.indexOf(room.specialType) > -1) {
+			room.specialType = 0;
+		}
+		for (var e = 0; e < room.doors.length; e++) {
+			var door = room.doors[e];
+			if (player.keys.indexOf(door.doorType) > -1) {
+				door.doorType = 0;
+				hasDoor = true;
+			}
+		}
+		if (hasDoor && room.map !== null) {
+			for (var r = 0; r < room.map.map.length; r++) {
+				if (room.map.map[r] > 1) {
+					if (player.keys.indexOf(room.map.map[r] - 1)) {
+						room.map.map[r] = 0;
 					}
 				}
 			}
@@ -535,12 +567,6 @@ function create() {
 	world.height = 48;
 	startAt(40, 24, nextRegion());
 	createRooms(1);
-	enterRoom(world.rooms[0]);
-	currentRoom.startRoom = true;
-	currentRoom.startPositionX = random(0, (currentRoom.mapW * segmentsPerRoom) - 1);
-	currentRoom.startPositionY = random(0, (currentRoom.mapH * segmentsPerRoom) - 1);
-	player.x = currentRoom.startPositionX * roomSize * tileSize + (roomSize / 2 * tileSize);
-	player.y = currentRoom.startPositionY * roomSize * tileSize + (2 * tileSize);
 }
 
 function nextRegion() {

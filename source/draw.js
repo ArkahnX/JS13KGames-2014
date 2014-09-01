@@ -21,6 +21,7 @@ function drawMap() {
 		var startX = -currentMapTiles * tileSize * 2;
 		var hasFloor = 0;
 		var topTile;
+		tileContext.fillStyle = currentRoom.mapColor.background;
 		for (var x = mapX1; x < mapX2; x++) {
 			if (currentMap[coordinate(x, y, currentMapTiles)] !== 0) {
 				rectWidth += 1 * tileSize;
@@ -44,6 +45,15 @@ function drawMap() {
 				rectWidth = 0;
 				startX = -currentMapTiles * tileSize * 2;
 				hasFloor = 0;
+			}
+		}
+	}
+
+	for (var y = mapY1; y < mapY2; y++) {
+		for (var x = mapX1; x < mapX2; x++) {
+			if (currentMap[coordinate(x, y, currentMapTiles)] > 1) {
+				tileContext.fillStyle = regionColors[currentMap[coordinate(x, y, currentMapTiles)] - 1].background;
+				drawRect(x, y, currentMap, currentMapTiles, (x * tileSize) - viewPortX, tileSize, true);
 			}
 		}
 	}
@@ -209,12 +219,28 @@ function drawWorld() {
 		minimapContext.clearRect(0, 0, minimapCanvas.width, minimapCanvas.height);
 		drawnDoors.length = 0;
 		minimapContext.lineWidth = 2;
+		minimapContext.fillStyle = "#000";
+		for (var r = 0; r < world.regions.length; r++) {
+			for (var i = 0; i < world.regions[r].rooms.length; i++) {
+				room = world.regions[r].rooms[i];
+				roomX = (room.mapX * miniMapSize) - miniViewPortX;
+				roomY = (room.mapY * miniMapSize) - miniViewPortY;
+				if (roomX + (room.mapW * miniMapSize) > 0 && roomY + (room.mapH * miniMapSize) > 0 && roomX < minimapCanvas.width && roomY < minimapCanvas.height) {
+					minimapContext.beginPath();
+					minimapContext.rect(roomX, roomY, room.mapW * miniMapSize, room.mapH * miniMapSize);
+					minimapContext.fill();
+					minimapContext.closePath();
+				}
+			}
+		}
 		forEachRoom("background", "border", function(room, roomX, roomY) {
-			minimapContext.beginPath();
-			minimapContext.rect(roomX, roomY, room.mapW * miniMapSize, room.mapH * miniMapSize);
-			minimapContext.fill();
-			minimapContext.stroke();
-			minimapContext.closePath();
+			if (room.visited) {
+				minimapContext.beginPath();
+				minimapContext.rect(roomX, roomY, room.mapW * miniMapSize, room.mapH * miniMapSize);
+				minimapContext.fill();
+				minimapContext.stroke();
+				minimapContext.closePath();
+			}
 		});
 		forEachRoom(0, "background", drawDoors);
 		forEachRoom(0, 0, drawIcons);
@@ -247,35 +273,39 @@ function forEachRoom(fillStyle, strokeStyle, fn) {
 var lockColors = []
 
 function drawIcons(room) {
-	var door = null;
-	for (var i = 0; i < room.doors.length; i++) {
-		door = room.doors[i];
-		var color = regionColors[door.doorType].lock;
-		if (door.doorType > 0) {
-			switch (door.dir) {
-				case "N":
-					drawCircle(miniMapSize * door.mapX + 5, miniMapSize * door.mapY, color);
-					continue;
-				case "S":
-					drawCircle(miniMapSize * door.mapX + 5, miniMapSize * door.mapY + 16, color);
-					continue;
-				case "W":
-					drawCircle(miniMapSize * door.mapX - 3, miniMapSize * door.mapY + 8, color);
-					continue;
-				case "E":
-					drawCircle(miniMapSize * door.mapX + 13, miniMapSize * door.mapY + 8, color);
-					continue;
-				default:
-					continue;
+	if (room.visited) {
+		var door = null;
+		for (var i = 0; i < room.doors.length; i++) {
+			door = room.doors[i];
+			var color = regionColors[door.doorType].lock;
+			// console.log(door.doorType, regionColors[door.doorType])
+			if (door.doorType > 0) {
+				switch (door.dir) {
+					case "N":
+						drawCircle(miniMapSize * door.mapX + 5, miniMapSize * door.mapY, color);
+						continue;
+					case "S":
+						drawCircle(miniMapSize * door.mapX + 5, miniMapSize * door.mapY + 16, color);
+						continue;
+					case "W":
+						drawCircle(miniMapSize * door.mapX - 3, miniMapSize * door.mapY + 8, color);
+						continue;
+					case "E":
+						drawCircle(miniMapSize * door.mapX + 13, miniMapSize * door.mapY + 8, color);
+						continue;
+					default:
+						continue;
+				}
 			}
 		}
-	}
-	// this.iconStamp.frame = 16 + room.specialType;
-	// stamp(this.iconStamp, this.miniMapSize * (room.mapX + room.mapW / 2) - 4, this.miniMapSize * (room.mapY + room.mapH / 2) - 4);
-	var color = regionColors[room.specialType].lock;
+		// this.iconStamp.frame = 16 + room.specialType;
+		// stamp(this.iconStamp, this.miniMapSize * (room.mapX + room.mapW / 2) - 4, this.miniMapSize * (room.mapY + room.mapH / 2) - 4);
+		var color = regionColors[room.specialType].lock;
 		// console.log(room.mapX, room.mapY)
-	if (room.specialType > 0) {
-		drawCircle(miniMapSize * (room.mapX + room.mapW / 2) - 3, miniMapSize * (room.mapY + room.mapH / 2), "rgba(0,0,0,0)", color);
+		if (room.specialType > 0) {
+			// console.log(room.specialType, regionColors[room.specialType])
+			drawCircle(miniMapSize * (room.mapX + room.mapW / 2) - 3, miniMapSize * (room.mapY + room.mapH / 2), "rgba(0,0,0,0)", color);
+		}
 	}
 }
 
@@ -296,32 +326,34 @@ function drawCircle(centerX, centerY, color, border) {
 var drawnDoors = [];
 
 function drawDoors(room) {
-	var door = null;
-	// var color = room.region.color.background;
-	// minimapContext.lineWidth = 2;
-	// minimapContext.strokeStyle = color;
-	// minimapContext.fillStyle = color;
-	for (var e = 0; e < room.doors.length; e++) {
-		door = room.doors[e];
-		var ID = room.mapX + "-" + room.mapY + "-" + door.room2.mapX + "-" + door.room2.mapY;
-		var ID2 = door.room2.mapX + "-" + door.room2.mapY + "-" + room.mapX + "-" + room.mapY;
-		if (drawnDoors.indexOf(ID2) === -1 && drawnDoors.indexOf(ID) === -1) {
-			var doorX = miniMapSize * door.mapX;
-			var doorY = miniMapSize * door.mapY;
+	if (room.visited) {
+		var door = null;
+		// var color = room.region.color.background;
+		// minimapContext.lineWidth = 2;
+		// minimapContext.strokeStyle = color;
+		// minimapContext.fillStyle = color;
+		for (var e = 0; e < room.doors.length; e++) {
+			door = room.doors[e];
+			var ID = room.mapX + "-" + room.mapY + "-" + door.room2.mapX + "-" + door.room2.mapY;
+			var ID2 = door.room2.mapX + "-" + door.room2.mapY + "-" + room.mapX + "-" + room.mapY;
+			if (drawnDoors.indexOf(ID2) === -1 && drawnDoors.indexOf(ID) === -1) {
+				var doorX = miniMapSize * door.mapX;
+				var doorY = miniMapSize * door.mapY;
 
-			if (door.dir === "N") {
-				drawLine2(doorX + 4, doorY, doorX + miniMapSize - 4, doorY);
+				if (door.dir === "N") {
+					drawLine2(doorX + 4, doorY, doorX + miniMapSize - 4, doorY);
+				}
+				if (door.dir === "S") {
+					drawLine2(doorX + 4, miniMapSize * (door.mapY + 1), doorX + miniMapSize - 4, miniMapSize * (door.mapY + 1));
+				}
+				if (door.dir === "W") {
+					drawLine2(doorX, doorY + 4, doorX, doorY + miniMapSize - 4);
+				}
+				if (door.dir === "E") {
+					drawLine2(miniMapSize * (door.mapX + 1), doorY + 4, miniMapSize * (door.mapX + 1), doorY + miniMapSize - 4);
+				}
+				drawnDoors.push(ID);
 			}
-			if (door.dir === "S") {
-				drawLine2(doorX + 4, miniMapSize * (door.mapY + 1), doorX + miniMapSize - 4, miniMapSize * (door.mapY + 1));
-			}
-			if (door.dir === "W") {
-				drawLine2(doorX, doorY + 4, doorX, doorY + miniMapSize - 4);
-			}
-			if (door.dir === "E") {
-				drawLine2(miniMapSize * (door.mapX + 1), doorY + 4, miniMapSize * (door.mapX + 1), doorY + miniMapSize - 4);
-			}
-			drawnDoors.push(ID);
 		}
 	}
 }

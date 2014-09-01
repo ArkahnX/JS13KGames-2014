@@ -98,6 +98,8 @@ function enterRoom(room) {
 		playerSizedRoom(room);
 	}
 	currentRoom = room;
+	collectKey(room);
+	currentRoom.visited = true;
 	currentMapTiles = room.map.tiles;
 	currentMap = room.map.map;
 	mapHeight = room.map.height * roomSize;

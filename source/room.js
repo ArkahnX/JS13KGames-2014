@@ -41,20 +41,20 @@ function cloneRoom(room) {
 	};
 }
 
-roomList.push(smallRoom(0,  blankArray));
-roomList.push(smallRoom(1,  room1));
-roomList.push(smallRoom(2,  room2));
-roomList.push(smallRoom(3,  room3));
-roomList.push(smallRoom(4,  room4));
-roomList.push(smallRoom(5,  room5));
-roomList.push(smallRoom(6,  room6));
-roomList.push(smallRoom(7,  room7));
-roomList.push(smallRoom(8,  room8));
-roomList.push(smallRoom(9,  room9));
-roomList.push(smallRoom(10,  room10));
-roomList.push(smallRoom(11,  room11));
-roomList.push(smallRoom(12,  room12));
-roomList.push(smallRoom(13,  room13));
+roomList.push(smallRoom(0, blankArray));
+roomList.push(smallRoom(1, room1));
+roomList.push(smallRoom(2, room2));
+roomList.push(smallRoom(3, room3));
+roomList.push(smallRoom(4, room4));
+roomList.push(smallRoom(5, room5));
+roomList.push(smallRoom(6, room6));
+roomList.push(smallRoom(7, room7));
+roomList.push(smallRoom(8, room8));
+roomList.push(smallRoom(9, room9));
+roomList.push(smallRoom(10, room10));
+roomList.push(smallRoom(11, room11));
+roomList.push(smallRoom(12, room12));
+roomList.push(smallRoom(13, room13));
 
 function BigRoom(width, height, worldRoom, roomCreator) {
 	var array = [];
@@ -67,10 +67,17 @@ function BigRoom(width, height, worldRoom, roomCreator) {
 	array = roomCreator(array, width, height, topSize);
 	var room;
 	var rooms = {};
+	var northDoor, eastDoor, southDoor, westDoor;
 	for (var y = 0; y < topSize * roomSize; y++) {
 		for (var x = 0; x < topSize * roomSize; x++) {
-			var arrayIndex = coordinate(Math.floor(x / roomSize), Math.floor(y / roomSize), topSize);
-			var roomId = Math.floor(x / roomSize) + "-" + Math.floor(y / roomSize);
+			var roomX = Math.floor(x / roomSize);
+			var roomY = Math.floor(y / roomSize);
+			northDoor = getDoor(worldRoom, roomX, roomY, "N");
+			eastDoor = getDoor(worldRoom, roomX, roomY, "E");
+			southDoor = getDoor(worldRoom, roomX, roomY, "S");
+			westDoor = getDoor(worldRoom, roomX, roomY, "W");
+			var arrayIndex = coordinate(roomX, roomY, topSize);
+			var roomId = roomX + "-" + roomY;
 			if (x % roomSize === 0 || y % roomSize === 0) {
 				if (!rooms[roomId]) {
 					room = cloneRoom(roomList[array[arrayIndex]]);
@@ -81,6 +88,41 @@ function BigRoom(width, height, worldRoom, roomCreator) {
 			var mapCoord = coordinate(x, y, topSize * roomSize);
 			var roomCoord = coordinate(x % roomSize, y % roomSize, roomSize);
 			map[mapCoord] = room.map[roomCoord];
+			if (x === 0) {
+				// console.log(roomX, roomY, worldRoom)
+			}
+			// top walls
+			if ((y === 0 && northDoor === null && x < width * roomSize)) {
+				map[mapCoord] = 1;
+			}
+			// left walls
+			if ((x === 0 && westDoor === null && y < height * roomSize)) {
+				map[mapCoord] = 1;
+			}
+			// bottom walls
+			if ((y === height * roomSize - 1 && southDoor === null && x < width * roomSize)) {
+				map[mapCoord] = 1;
+			}
+			// right walls
+			if ((x === width * roomSize - 1 && eastDoor === null && y < height * roomSize)) {
+				map[mapCoord] = 1;
+			}
+			// top walls
+			if ((y === 0 && northDoor !== null && x < width * roomSize && northDoor.doorType > 0 && map[mapCoord] === 0)) {
+				map[mapCoord] = northDoor.doorType + 1;
+			}
+			// left walls
+			if ((x === 0 && westDoor !== null && y < height * roomSize && westDoor.doorType > 0 && map[mapCoord] === 0)) {
+				map[mapCoord] = westDoor.doorType + 1;
+			}
+			// bottom walls
+			if ((y === height * roomSize - 1 && southDoor !== null && x < width * roomSize && southDoor.doorType > 0 && map[mapCoord] === 0)) {
+				map[mapCoord] = southDoor.doorType + 1;
+			}
+			// right walls
+			if ((x === width * roomSize - 1 && eastDoor !== null && y < height * roomSize && eastDoor.doorType > 0 && map[mapCoord] === 0)) {
+				map[mapCoord] = eastDoor.doorType + 1;
+			}
 		}
 	}
 	// currentMapTiles = topSize * roomSize;

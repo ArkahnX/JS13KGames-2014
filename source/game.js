@@ -30,7 +30,8 @@ var player = {
 	angle: 0,
 	health: 5,
 	doorCooldown: window.performance.now(),
-	maxHealth: 5
+	maxHealth: 5,
+	keys:[]
 }
 var dt = currentTick - lastTick;
 var entities = [player];
@@ -119,6 +120,12 @@ function DOMLoaded() {
 		}
 	}
 	doors();
+	enterRoom(world.rooms[0]);
+	currentRoom.startRoom = true;
+	currentRoom.startPositionX = random(0, (currentRoom.mapW * segmentsPerRoom) - 1);
+	currentRoom.startPositionY = random(0, (currentRoom.mapH * segmentsPerRoom) - 1);
+	player.x = currentRoom.startPositionX * roomSize * tileSize + (roomSize / 2 * tileSize);
+	player.y = currentRoom.startPositionY * roomSize * tileSize + (2 * tileSize);
 	loop();
 }
 
