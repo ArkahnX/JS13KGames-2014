@@ -15,45 +15,12 @@ function drawMap() {
 	if (mapY2 > currentMapTiles) {
 		mapY2 = currentMapTiles;
 	}
-	// for (var y = mapY1; y < mapY2; y++) {
-	// 	var rectWidth = 0;
-	// 	var startX = -currentMapTiles * tileSize * 2;
-	// 	var hasFloor = 0;
-	// 	var topTile;
-	// 	tileContext.fillStyle = currentRoom.mapColor.background;
-	// 	for (var x = mapX1; x < mapX2; x++) {
-	// 		if (currentMap[coordinate(x, y, currentMapTiles)] !== 0) {
-	// 			rectWidth += 1 * tileSize;
-	// 			if (startX === -currentMapTiles * tileSize * 2) {
-	// 				startX = (x * tileSize) - viewPortX;
-	// 			}
-	// 			if (y - 1 < 0) {
-	// 				topTile = -1;
-	// 			} else {
-	// 				topTile = currentMap[coordinate(x, y - 1, currentMapTiles)];
-	// 			}
-	// 			if (topTile === 0) {
-	// 				hasFloor = 1;
-	// 			}
-	// 			// drawTile(x, y, currentMap, currentMapTiles, startX, rectWidth, hasFloor);
-	// 		}
-	// 		if (currentMap[coordinate(x, y, currentMapTiles)] === 0 || x === mapX2 - 1) {
-	// 			drawRect(x, y, currentMap, currentMapTiles, startX, rectWidth, hasFloor);
-	// 		}
-	// 		if (currentMap[coordinate(x, y, currentMapTiles)] === 0 || x === mapX2 - 1) {
-	// 			rectWidth = 0;
-	// 			startX = -currentMapTiles * tileSize * 2;
-	// 			hasFloor = 0;
-	// 		}
-	// 	}
-	// }
-
-	tileContext.fillStyle = currentRoom.mapColor.background;
 	for (var y = mapY1; y < mapY2; y++) {
 		var rectWidth = 0;
 		var startX = -currentMapTiles * tileSize * 2;
 		var hasFloor = 0;
 		var topTile;
+		tileContext.fillStyle = currentRoom.mapColor.background;
 		for (var x = mapX1; x < mapX2; x++) {
 			if (currentMap[coordinate(x, y, currentMapTiles)] !== 0) {
 				rectWidth += 1 * tileSize;
@@ -68,19 +35,16 @@ function drawMap() {
 				if (topTile === 0) {
 					hasFloor = 1;
 				}
+				// drawTile(x, y, currentMap, currentMapTiles, startX, rectWidth, hasFloor);
+			}
+			if (currentMap[coordinate(x, y, currentMapTiles)] === 0 || x === mapX2 - 1) {
 				drawRect(x, y, currentMap, currentMapTiles, startX, rectWidth, hasFloor);
+			}
+			if (currentMap[coordinate(x, y, currentMapTiles)] === 0 || x === mapX2 - 1) {
+				rectWidth = 0;
 				startX = -currentMapTiles * tileSize * 2;
 				hasFloor = 0;
-				rectWidth = 0;
 			}
-			// if (currentMap[coordinate(x, y, currentMapTiles)] === 0 || x === mapX2 - 1) {
-			// 	drawRect(x, y, currentMap, currentMapTiles, startX, rectWidth, hasFloor);
-			// }
-			// if (currentMap[coordinate(x, y, currentMapTiles)] === 0 || x === mapX2 - 1) {
-			// 	rectWidth = 0;
-			// 	startX = -currentMapTiles * tileSize * 2;
-			// 	hasFloor = 0;
-			// }
 		}
 	}
 
@@ -98,7 +62,6 @@ function drawRect(x, y, map, currentMapTiles, startX, rectWidth, hasFloor) {
 	} else {
 		tileContext.fillRect(canvasX, canvasY, rectWidth, tileSize);
 	}
-	// }
 }
 
 function parseVerticalLines(mapX1, mapY1, mapX2, mapY2, type) {

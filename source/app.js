@@ -1,5 +1,5 @@
 
-// javascript-astar
+/*// javascript-astar
 // http://github.com/bgrins/javascript-astar
 // Freely distributable under the MIT License.
 // Implements the astar search algorithm in javascript using a binary heap.
@@ -12,7 +12,7 @@ var astar = {
 				node.g = 0;
 				node.h = 0;
 				node[COST] = node[SPEED];
-				node.visited = false;
+				node.v = false;
 				node.closed = false;
 				node.parent = NULL;
 			}
@@ -64,12 +64,12 @@ var astar = {
 				// The g score is the shortest distance from start to current node.
 				// We need to check if the path we have arrived at this neighbor is the shortest one we have seen yet.
 				var gScore = currentNode.g + neighbor[COST];
-				var beenVisited = neighbor.visited;
+				var beenVisited = neighbor.v;
 
 				if (!beenVisited || gScore < neighbor.g) {
 
 					// Found an optimal (so far) path to this node.  Take score for node to see how good it is.
-					neighbor.visited = true;
+					neighbor.v = true;
 					neighbor.parent = currentNode;
 					neighbor.h = neighbor.h || heuristic(neighbor.x, neighbor.y, end.x, end.y);
 					neighbor.g = gScore;
@@ -203,7 +203,7 @@ BinaryHeap.prototype = {
 				if (child1Score < elemScore) swap = child1N;
 			}
 
-			// Do the same checks for the other child.
+			// Do the same checks for the o child.
 			if (child2N < length) {
 				var child2 = this.content[child2N],
 					child2Score = this.scoreFunction(child2);
@@ -225,32 +225,31 @@ BinaryHeap.prototype = {
 			}
 		}
 	}
-};
+};*/
 function drawMap() {
-	var startTime = window.performance.now();
-	var mapX1 = modulus(viewPortX) - 1;
-	var mapY1 = modulus(viewPortY) - 1;
-	var mapX2 = modulus(viewPortX) + modulus(playerCanvas.width) + 2;
-	var mapY2 = modulus(viewPortY) + modulus(playerCanvas.height) + 2;
-	if (mapX1 < 0) {
-		mapX1 = 0;
+	var x1 = modulus(viewPortX) - 1;
+	var y1 = modulus(viewPortY) - 1;
+	var x2 = modulus(viewPortX) + modulus(playerCanvas.width) + 2;
+	var y2 = modulus(viewPortY) + modulus(playerCanvas.height) + 2;
+	if (x1 < 0) {
+		x1 = 0;
 	}
-	if (mapY1 < 0) {
-		mapY1 = 0;
+	if (y1 < 0) {
+		y1 = 0;
 	}
-	if (mapX2 > currentMapTiles) {
-		mapX2 = currentMapTiles;
+	if (x2 > currentMapTiles) {
+		x2 = currentMapTiles;
 	}
-	if (mapY2 > currentMapTiles) {
-		mapY2 = currentMapTiles;
+	if (y2 > currentMapTiles) {
+		y2 = currentMapTiles;
 	}
-	for (var y = mapY1; y < mapY2; y++) {
+	for (var y = y1; y < y2; y++) {
 		var rectWidth = 0;
 		var startX = -currentMapTiles * 16 * 2;
 		var hasFloor = 0;
 		var topTile;
-		tileContext.fillStyle = currentRoom.mapColor.background;
-		for (var x = mapX1; x < mapX2; x++) {
+		tileContext.fillStyle = currentRoom.c.bg;
+		for (var x = x1; x < x2; x++) {
 			if (currentMap[coordinate(x, y, currentMapTiles)] !== 0) {
 				rectWidth += 1 * 16;
 				if (startX === -currentMapTiles * 16 * 2) {
@@ -266,10 +265,10 @@ function drawMap() {
 				}
 				// drawTile(x, y, currentMap, currentMapTiles, startX, rectWidth, hasFloor);
 			}
-			if (currentMap[coordinate(x, y, currentMapTiles)] === 0 || x === mapX2 - 1) {
+			if (currentMap[coordinate(x, y, currentMapTiles)] === 0 || x === x2 - 1) {
 				drawRect(x, y, currentMap, currentMapTiles, startX, rectWidth, hasFloor);
 			}
-			if (currentMap[coordinate(x, y, currentMapTiles)] === 0 || x === mapX2 - 1) {
+			if (currentMap[coordinate(x, y, currentMapTiles)] === 0 || x === x2 - 1) {
 				rectWidth = 0;
 				startX = -currentMapTiles * 16 * 2;
 				hasFloor = 0;
@@ -277,43 +276,29 @@ function drawMap() {
 		}
 	}
 
-	for (var y = mapY1; y < mapY2; y++) {
-		for (var x = mapX1; x < mapX2; x++) {
-			if (currentMap[coordinate(x, y, currentMapTiles)] > 1) {
-				tileContext.fillStyle = regionColors[currentMap[coordinate(x, y, currentMapTiles)] - 1].background;
-				drawRect(x, y, currentMap, currentMapTiles, (x * 16) - viewPortX, 16, true);
-			}
-		}
-	}
-
-	parseVerticalLines(mapX1, mapY1, mapX2, mapY2, 1);
-	parseVerticalLines(mapX1, mapY1, mapX2, mapY2, 4);
-	parseHorizontalLines(mapX1, mapY1, mapX2, mapY2, 2);
-	parseHorizontalLines(mapX1, mapY1, mapX2, mapY2, 8);
-	var time = window.performance.now() - startTime
-	if (time > longestTime) {
-		longestTime = time;
-	}
+	parseVerticalLines(x1, y1, x2, y2, 1);
+	parseVerticalLines(x1, y1, x2, y2, 4);
+	parseHorizontalLines(x1, y1, x2, y2, 2);
+	parseHorizontalLines(x1, y1, x2, y2, 8);
 }
 
 function drawRect(x, y, map, currentMapTiles, startX, rectWidth, hasFloor) {
 	var canvasX = startX;
 	var canvasY = (y * 16) - viewPortY;
 	if (hasFloor === 1) {
-		tileContext.fillRect(canvasX, canvasY - 5, rectWidth, 21);
+		tileContext.fillRect(canvasX, canvasY - (16 * 0.3125), rectWidth, 16 + (16 * 0.3125));
 	} else {
 		tileContext.fillRect(canvasX, canvasY, rectWidth, 16);
 	}
-	// }
 }
 
-function parseVerticalLines(mapX1, mapY1, mapX2, mapY2, type) {
-	for (var x = mapX1; x < mapX2; x++) {
+function parseVerticalLines(x1, y1, x2, y2, type) {
+	for (var x = x1; x < x2; x++) {
 		var rectSize = 0;
 		var startPosition = -currentMapTiles * 16 * 2;
 		var hasFloor = 0;
 		var mainTile = 0;
-		for (var y = mapY1; y < mapY2; y++) {
+		for (var y = y1; y < y2; y++) {
 			var topRightTile = currentMap[coordinate(x + 1, y - 1, currentMapTiles)];
 			var topTile = currentMap[coordinate(x, y - 1, currentMapTiles)];
 			var topLeftTile = currentMap[coordinate(x - 1, y - 1, currentMapTiles)];
@@ -338,8 +323,8 @@ function parseVerticalLines(mapX1, mapY1, mapX2, mapY2, type) {
 				}
 				// drawTile(x, y, currentMap, currentMapTiles, startPosition, rectSize, hasFloor);
 			}
-			if (currentMap[coordinate(x, y, currentMapTiles)] === 0 || y === mapY2 - 1 || mainTile > 0) {
-				borderContext.beginPath();
+			if (currentMap[coordinate(x, y, currentMapTiles)] === 0 || y === y2 - 1 || mainTile > 0) {
+				bdContext.beginPath();
 				var canvasY = startPosition;
 				var canvasX = (x * 16) - viewPortX;
 				var canvasY2 = canvasY + rectSize;
@@ -349,17 +334,17 @@ function parseVerticalLines(mapX1, mapY1, mapX2, mapY2, type) {
 					startX = canvasX2
 				}
 				if (hasFloor) {
-					canvasY = canvasY - 5;
+					canvasY = canvasY - (16 * 0.3125);
 				}
 				if (((type === 4 && topRightTile === 0) || (type === 1 && topLeftTile === 0)) && mainTile > 0) {
-					drawLine(startX, canvasY, startX, canvasY2 + 3);
+					drawLine(startX, canvasY, startX, canvasY2 + (16 * 0.1875));
 				} else {
 					drawLine(startX, canvasY, startX, canvasY2);
 				}
-				borderContext.closePath();
-				borderContext.stroke();
+				bdContext.closePath();
+				bdContext.stroke();
 			}
-			if (currentMap[coordinate(x, y, currentMapTiles)] === 0 || y === mapY2 - 1 || mainTile > 0) {
+			if (currentMap[coordinate(x, y, currentMapTiles)] === 0 || y === y2 - 1 || mainTile > 0) {
 				rectSize = 0;
 				startPosition = -currentMapTiles * 16 * 2;
 				hasFloor = 0;
@@ -368,13 +353,13 @@ function parseVerticalLines(mapX1, mapY1, mapX2, mapY2, type) {
 	}
 }
 
-function parseHorizontalLines(mapX1, mapY1, mapX2, mapY2, type) {
-	for (var y = mapY1; y < mapY2; y++) {
+function parseHorizontalLines(x1, y1, x2, y2, type) {
+	for (var y = y1; y < y2; y++) {
 		var rectSize = 0;
 		var startPosition = -currentMapTiles * 16 * 2;
 		var hasFloor = 0;
 		var mainTile = 0;
-		for (var x = mapX1; x < mapX2; x++) {
+		for (var x = x1; x < x2; x++) {
 			if (type === 2) {
 				if (y - 1 < 0) {
 					mainTile = -1;
@@ -395,26 +380,26 @@ function parseHorizontalLines(mapX1, mapY1, mapX2, mapY2, type) {
 				}
 				// drawTile(x, y, currentMap, currentMapTiles, startPosition, rectSize, hasFloor);
 			}
-			if (currentMap[coordinate(x, y, currentMapTiles)] === 0 || x === mapX2 - 1 || mainTile > 0) {
-				borderContext.beginPath();
+			if (currentMap[coordinate(x, y, currentMapTiles)] === 0 || x === x2 - 1 || mainTile > 0) {
+				bdContext.beginPath();
 				var canvasX = startPosition;
 				var canvasY = (y * 16) - viewPortY;
 				var canvasX2 = canvasX + rectSize;
 				var canvasY2 = ((y + 1) * 16) - viewPortY;
 				if (type === 2) {
 					if (hasFloor === 1) {
-						drawLine(canvasX, canvasY - 5, canvasX2, canvasY - 5);
-						drawLine(canvasX, canvasY + 3, canvasX2, canvasY + 3);
+						drawLine(canvasX, canvasY - (16 * 0.3125), canvasX2, canvasY - (16 * 0.3125));
+						drawLine(canvasX, canvasY + (16 * 0.1875), canvasX2, canvasY + (16 * 0.1875));
 					} else {
 						drawLine(canvasX, canvasY, canvasX2, canvasY);
 					}
 				} else if (type === 8) {
 					drawLine(canvasX, canvasY2, canvasX2, canvasY2);
 				}
-				borderContext.closePath();
-				borderContext.stroke();
+				bdContext.closePath();
+				bdContext.stroke();
 			}
-			if (currentMap[coordinate(x, y, currentMapTiles)] === 0 || x === mapX2 - 1 || mainTile > 0) {
+			if (currentMap[coordinate(x, y, currentMapTiles)] === 0 || x === x2 - 1 || mainTile > 0) {
 				rectSize = 0;
 				startPosition = -currentMapTiles * 16 * 2;
 				hasFloor = 0;
@@ -427,8 +412,8 @@ function parseHorizontalLines(mapX1, mapY1, mapX2, mapY2, type) {
 var longestTime = 0;
 
 function drawLine(startX, startY, endX, endY) {
-	borderContext.moveTo(startX, startY);
-	borderContext.lineTo(endX, endY);
+	bdContext.moveTo(startX, startY);
+	bdContext.lineTo(endX, endY);
 }
 
 var lastPlayerX = 0;
@@ -439,113 +424,108 @@ var lastRoomLength = 0;
 
 function drawWorld() {
 	parseMinimapViewport();
-	miniMapPlayerX = (currentRoom.mapX * 16) + (modulus(modulus(modulus(player.x), 10), 1) * 16) - miniViewPortX;
-	miniMapPlayerY = (currentRoom.mapY * 16) + (modulus(modulus(modulus(player.y), 10), 1) * 16) - miniViewPortY;
-	if (currentRoom.mapX + modulus(modulus(modulus(player.x), 10), 1) !== lastPlayerX || currentRoom.mapY + modulus(modulus(modulus(player.y), 10), 1) !== lastPlayerY || lastRoomLength !== world.rooms.length) {
+	miniMapPlayerX = (currentRoom.x * 16) + (modulus(modulus(modulus(player.x), 10), 1) * 16) - miniViewPortX;
+	miniMapPlayerY = (currentRoom.y * 16) + (modulus(modulus(modulus(player.y), 10), 1) * 16) - miniViewPortY;
+	if (currentRoom.x + modulus(modulus(modulus(player.x), 10), 1) !== lastPlayerX || currentRoom.y + modulus(modulus(modulus(player.y), 10), 1) !== lastPlayerY || lastRoomLength !== world.rooms.length) {
 		minimapCanvas.width = 500;
 		minimapCanvas.height = 500;
 		minimapContext.clearRect(0, 0, minimapCanvas.width, minimapCanvas.height);
 		drawnDoors.length = 0;
 		minimapContext.lineWidth = 2;
 		minimapContext.fillStyle = "#000";
-		for (var r = 0; r < world.regions.length; r++) {
-			for (var i = 0; i < world.regions[r].rooms.length; i++) {
-				room = world.regions[r].rooms[i];
-				roomX = (room.mapX * 16) - miniViewPortX;
-				roomY = (room.mapY * 16) - miniViewPortY;
-				if (roomX + (room.mapW * 16) > 0 && roomY + (room.mapH * 16) > 0 && roomX < minimapCanvas.width && roomY < minimapCanvas.height) {
+		for (var r = 0; r < world.r.length; r++) {
+			for (var i = 0; i < world.r[r].rooms.length; i++) {
+				room = world.r[r].rooms[i];
+				roomX = (room.x * 16) - miniViewPortX;
+				roomY = (room.y * 16) - miniViewPortY;
+				if (roomX + (room.w * 16) > 0 && roomY + (room.h * 16) > 0 && roomX < minimapCanvas.width && roomY < minimapCanvas.height) {
 					minimapContext.beginPath();
-					minimapContext.rect(roomX, roomY, room.mapW * 16, room.mapH * 16);
+					minimapContext.rect(roomX, roomY, room.w * 16, room.h * 16);
 					minimapContext.fill();
 					minimapContext.closePath();
 				}
 			}
 		}
-		forEachRoom("background", "border", function(room, roomX, roomY) {
-			if (room.visited) {
+		forEachRoom("bg", "bd", function(room, roomX, roomY) {
+			if (room.v) {
 				minimapContext.beginPath();
-				minimapContext.rect(roomX, roomY, room.mapW * 16, room.mapH * 16);
+				minimapContext.rect(roomX, roomY, room.w * 16, room.h * 16);
 				minimapContext.fill();
 				minimapContext.stroke();
 				minimapContext.closePath();
 			}
 		});
-		forEachRoom(0, "background", drawDoors);
+		forEachRoom(0, "bg", drawDoors);
 		forEachRoom(0, 0, drawIcons);
 	}
 	drawPlayer();
-	lastPlayerX = currentRoom.mapX + modulus(modulus(modulus(player.x), 10), 1);
-	lastPlayerY = currentRoom.mapY + modulus(modulus(modulus(player.y), 10), 1);
+	lastPlayerX = currentRoom.x + modulus(modulus(modulus(player.x), 10), 1);
+	lastPlayerY = currentRoom.y + modulus(modulus(modulus(player.y), 10), 1);
 	lastRoomLength = world.rooms.length;
 }
 
 function forEachRoom(fillStyle, strokeStyle, fn) {
-	for (var r = 0; r < world.regions.length; r++) {
+	for (var r = 0; r < world.r.length; r++) {
 		if (typeof fillStyle === "string") {
-			minimapContext.fillStyle = world.regions[r].color[fillStyle];
+			minimapContext.fillStyle = world.r[r].color[fillStyle];
 		}
 		if (typeof strokeStyle === "string") {
-			minimapContext.strokeStyle = world.regions[r].color[strokeStyle];
+			minimapContext.strokeStyle = world.r[r].color[strokeStyle];
 		}
-		for (var i = 0; i < world.regions[r].rooms.length; i++) {
-			room = world.regions[r].rooms[i];
-			roomX = (room.mapX * 16) - miniViewPortX;
-			roomY = (room.mapY * 16) - miniViewPortY;
-			if (roomX + (room.mapW * 16) > 0 && roomY + (room.mapH * 16) > 0 && roomX < minimapCanvas.width && roomY < minimapCanvas.height) {
+		for (var i = 0; i < world.r[r].rooms.length; i++) {
+			room = world.r[r].rooms[i];
+			roomX = (room.x * 16) - miniViewPortX;
+			roomY = (room.y * 16) - miniViewPortY;
+			if (roomX + (room.w * 16) > 0 && roomY + (room.h * 16) > 0 && roomX < minimapCanvas.width && roomY < minimapCanvas.height) {
 				fn(room, roomX, roomY);
 			}
 		}
 	}
 }
 
-var lockColors = []
+var lColors = []
 
 function drawIcons(room) {
-	if (room.visited) {
+	if (room.v) {
 		var door = null;
-		for (var i = 0; i < room.doors.length; i++) {
-			door = room.doors[i];
-			var color = regionColors[door.doorType].lock;
-			// console.log(door.doorType, regionColors[door.doorType])
-			if (door.doorType > 0) {
+		for (var i = 0; i < room.d.length; i++) {
+			door = room.d[i];
+			var color = rColors[door.dt].l;
+			if (door.dt > 0) {
 				switch (door.dir) {
 					case "N":
-						drawCircle(16 * door.mapX + 5, 16 * door.mapY, color);
+						drawCircle(16 * door.x + 5, 16 * door.y, color);
 						continue;
 					case "S":
-						drawCircle(16 * door.mapX + 5, 16 * door.mapY + 16, color);
+						drawCircle(16 * door.x + 5, 16 * door.y + 16, color);
 						continue;
 					case "W":
-						drawCircle(16 * door.mapX - 3, 16 * door.mapY + 8, color);
+						drawCircle(16 * door.x - 3, 16 * door.y + 8, color);
 						continue;
 					case "E":
-						drawCircle(16 * door.mapX + 13, 16 * door.mapY + 8, color);
+						drawCircle(16 * door.x + 13, 16 * door.y + 8, color);
 						continue;
 					default:
 						continue;
 				}
 			}
 		}
-		// this.iconStamp.frame = 16 + room.specialType;
-		// stamp(this.iconStamp, this.16 * (room.mapX + room.mapW / 2) - 4, this.16 * (room.mapY + room.mapH / 2) - 4);
-		var color = regionColors[room.specialType].lock;
-		// console.log(room.mapX, room.mapY)
-		if (room.specialType > 0) {
-			// console.log(room.specialType, regionColors[room.specialType])
-			drawCircle(16 * (room.mapX + room.mapW / 2) - 3, 16 * (room.mapY + room.mapH / 2), "rgba(0,0,0,0)", color);
+		var color = rColors[room.s].l;
+		if (room.s > 0) {
+			drawCircle(16 * (room.x + room.w / 2) - 3, 16 * (room.y + room.h / 2), "rgba(0,0,0,0)", color);
 		}
 	}
 }
 
-function drawCircle(centerX, centerY, color, border) {
+function drawCircle(centerX, centerY, color, bd) {
 	var radius = 3;
 	minimapContext.beginPath();
 	minimapContext.arc(centerX + radius - miniViewPortX, centerY - miniViewPortY, radius, 0, 2 * Math.PI, false);
 	minimapContext.fillStyle = color;
 	minimapContext.fill();
-	if (border) {
+	if (bd) {
 		minimapContext.lineWidth = 2;
-		minimapContext.strokeStyle = border;
+		minimapContext.strokeStyle = bd;
 		minimapContext.stroke();
 	}
 	minimapContext.closePath();
@@ -554,31 +534,27 @@ function drawCircle(centerX, centerY, color, border) {
 var drawnDoors = [];
 
 function drawDoors(room) {
-	if (room.visited) {
+	if (room.v) {
 		var door = null;
-		// var color = room.region.color.background;
-		// minimapContext.lineWidth = 2;
-		// minimapContext.strokeStyle = color;
-		// minimapContext.fillStyle = color;
-		for (var e = 0; e < room.doors.length; e++) {
-			door = room.doors[e];
-			var ID = room.mapX + "-" + room.mapY + "-" + door.room2.mapX + "-" + door.room2.mapY;
-			var ID2 = door.room2.mapX + "-" + door.room2.mapY + "-" + room.mapX + "-" + room.mapY;
+		for (var e = 0; e < room.d.length; e++) {
+			door = room.d[e];
+			var ID = room.x + "-" + room.y + "-" + door.r2.x + "-" + door.r2.y;
+			var ID2 = door.r2.x + "-" + door.r2.y + "-" + room.x + "-" + room.y;
 			if (drawnDoors.indexOf(ID2) === -1 && drawnDoors.indexOf(ID) === -1) {
-				var doorX = 16 * door.mapX;
-				var doorY = 16 * door.mapY;
+				var doorX = 16 * door.x;
+				var doorY = 16 * door.y;
 
 				if (door.dir === "N") {
 					drawLine2(doorX + 4, doorY, doorX + 16 - 4, doorY);
 				}
 				if (door.dir === "S") {
-					drawLine2(doorX + 4, 16 * (door.mapY + 1), doorX + 16 - 4, 16 * (door.mapY + 1));
+					drawLine2(doorX + 4, 16 * (door.y + 1), doorX + 16 - 4, 16 * (door.y + 1));
 				}
 				if (door.dir === "W") {
 					drawLine2(doorX, doorY + 4, doorX, doorY + 16 - 4);
 				}
 				if (door.dir === "E") {
-					drawLine2(16 * (door.mapX + 1), doorY + 4, 16 * (door.mapX + 1), doorY + 16 - 4);
+					drawLine2(16 * (door.x + 1), doorY + 4, 16 * (door.x + 1), doorY + 16 - 4);
 				}
 				drawnDoors.push(ID);
 			}
@@ -623,7 +599,7 @@ function drawPlayer() {
 	miniMapIconsContext.closePath();
 	lastFrame = frame;
 }
-var playerCanvas, tileCanvas, borderCanvas, playerContext, tileContext, borderContext, minimapContext, minimapCanvas, miniMapIconsContext, miniMapIconsCanvas;
+var playerCanvas, tileCanvas, bdCanvas, playerContext, tileContext, bdContext, minimapContext, minimapCanvas, miniMapIconsContext, miniMapIconsCanvas;
 var getElementById = 0;
 var querySelector = 1;
 var querySelectorAll = 2;
@@ -724,46 +700,46 @@ function getByType(id) {
 
 function DOMLoaded() {
 	playerCanvas = getByType("player");
-	borderCanvas = getByType("border");
+	bdCanvas = getByType("bd");
 	tileCanvas = getByType("tile");
 	minimapCanvas = getByType("minimap");
 	miniMapIconsCanvas = getByType("minimapIcons");
 	playerContext = playerCanvas.getContext("2d");
-	borderContext = borderCanvas.getContext("2d");
+	bdContext = bdCanvas.getContext("2d");
 	tileContext = tileCanvas.getContext("2d");
 	minimapContext = minimapCanvas.getContext("2d");
 	miniMapIconsContext = miniMapIconsCanvas.getContext("2d");
 	resizeCanvas();
 	startWorld();
-	for (var r = 0; r < regionColors.length; r++) {
+	for (var r = 0; r < rColors.length; r++) {
 		var rooms = random(10, 20);
 		for (var i = 0; i < rooms; i++) {
 			addRoomToWorld();
 		}
-		if (r + 1 < regionColors.length) {
+		if (r + 1 < rColors.length) {
 			addRegion();
 		}
 	}
-	doors();
+	d();
 	enterRoom(world.rooms[0]);
-	currentRoom.startRoom = true;
-	currentRoom.startPositionX = random(0, (currentRoom.mapW * 1) - 1);
-	currentRoom.startPositionY = random(0, (currentRoom.mapH * 1) - 1);
-	player.x = currentRoom.startPositionX * 10 * 16 + (10 / 2 * 16);
-	player.y = currentRoom.startPositionY * 10 * 16 + (2 * 16);
+	currentRoom.sr = true;
+	currentRoom.sx = random(0, (currentRoom.w * 1) - 1);
+	currentRoom.sy = random(0, (currentRoom.h * 1) - 1);
+	player.x = currentRoom.sx * 10 * 16 + (10 / 2 * 16);
+	player.y = currentRoom.sy * 10 * 16 + (2 * 16);
 	loop();
 }
 
 function resizeCanvas() {
 	if (window.innerWidth > 300) {
-		borderCanvas.width = playerCanvas.width = tileCanvas.width = 300;
+		bdCanvas.width = playerCanvas.width = tileCanvas.width = 300;
 	} else {
-		borderCanvas.width = playerCanvas.width = tileCanvas.width = window.innerWidth;
+		bdCanvas.width = playerCanvas.width = tileCanvas.width = window.innerWidth;
 	}
 	if (window.innerHeight > 300) {
-		borderCanvas.height = playerCanvas.height = tileCanvas.height = 300;
+		bdCanvas.height = playerCanvas.height = tileCanvas.height = 300;
 	} else {
-		borderCanvas.height = playerCanvas.height = tileCanvas.height = window.innerHeight;
+		bdCanvas.height = playerCanvas.height = tileCanvas.height = window.innerHeight;
 	}
 }
 
@@ -782,13 +758,13 @@ function eachFrame() {
 		testFalling(entity);
 	}
 	parseViewPort();
-	borderContext.strokeStyle = currentRoom.mapColor.border;
-	borderContext.lineWidth = 2;
+	bdContext.strokeStyle = currentRoom.c.bd;
+	bdContext.lineWidth = 2;
 	playerContext.clearRect(0, 0, playerCanvas.width, playerCanvas.height);
-	borderContext.clearRect(0, 0, borderCanvas.width, borderCanvas.height);
-	tileContext.fillStyle = currentRoom.mapColor.border;
+	bdContext.clearRect(0, 0, bdCanvas.width, bdCanvas.height);
+	tileContext.fillStyle = currentRoom.c.bd;
 	tileContext.fillRect(0, 0, tileCanvas.width, tileCanvas.height);
-	tileContext.fillStyle = currentRoom.mapColor.background;
+	tileContext.fillStyle = currentRoom.c.bg;
 	// optimize
 	tileContext.clearRect(0 - viewPortX, 0 - viewPortY, realMapWidth, realMapHeight);
 	drawMap();
@@ -947,8 +923,8 @@ function handleKeyUp(event) {
 // 				// console.log(room)
 // 			}
 // 			// if ((y * numMapTiles + x) % (10 * 10) === 0) {
-// 			// 	// room = rotate(room1, 10, 10, random(0, 3));
-// 			// 	room = rotate(room1, 10, 10, 0);
+// 			// 	// room = rotate(r1, 10, 10, random(0, 3));
+// 			// 	room = rotate(r1, 10, 10, 0);
 // 			// 	console.log(room)
 // 			// }
 // 			// X and Y for room arent being calculated properly
@@ -959,7 +935,7 @@ function handleKeyUp(event) {
 // 			// console.log((i * 10 + e) % 100,(e + 1) * (i + 1))
 // 			// console.log(i,e,tilePosition(i, e, width),tilePosition(i, e, 10) % 100)
 // 			// console.log(((i ) * width) + (e ))
-// 			// room = rotate(room1, 10, 10, 3);
+// 			// room = rotate(r1, 10, 10, 3);
 // 			// map = map.concat(room);
 // 			// console.log(map, room)
 // 			// for (var x = 0; x < 10; x++) {
@@ -972,7 +948,7 @@ function handleKeyUp(event) {
 // 			// }
 // 		}
 // 	}
-// 	// console.log(width, height, room1, map.length)
+// 	// console.log(width, height, r1, map.length)
 // 	// console.log(map)
 // }
 
@@ -1107,7 +1083,7 @@ function testFalling(entity) {
 	} else {
 		falling = currentMap[bottomRight] !== 0 || currentMap[bottomLeft] !== 0;
 	}
-	if ((falling || entity.y + entity.h > mapHeight * 16) && entity.yDirection === 1) {
+	if ((falling || entity.y + entity.h > height * 16) && entity.yDirection === 1) {
 		// console.log("STOP FALL")
 		entity.y = modulus(entity.y) * 16;
 		entity.yAccel = 0;
@@ -1164,19 +1140,19 @@ function testWalking(entity) {
 		}
 	}
 	if (xAlignment === 0) {
-		if ((walkRight || entity.x + entity.w > mapWidth * 16 || entity.x < 0) && entity.xAccel > 0) {
+		if ((walkRight || entity.x + entity.w > width * 16 || entity.x < 0) && entity.xAccel > 0) {
 			// console.log("STOP 1")
 			entity.x = modulus(entity.x) * 16;
 			// entity.xDirection = 0;
 			entity.xAccel = 0;
 		}
 	} else {
-		if ((walkRight || entity.x + entity.w > mapWidth * 16 || entity.x < 0) && entity.xAccel > 0) {
+		if ((walkRight || entity.x + entity.w > width * 16 || entity.x < 0) && entity.xAccel > 0) {
 			// console.log("STOP 1")
 			entity.x = modulus(entity.x) * 16;
 			// entity.xDirection = 0;
 			entity.xAccel = 0;
-		} else if ((walkLeft || entity.x + entity.w > mapWidth * 16 || entity.x < 0) && entity.xAccel < 0) {
+		} else if ((walkLeft || entity.x + entity.w > width * 16 || entity.x < 0) && entity.xAccel < 0) {
 			// console.log("STOP -1")
 			entity.x = modulus(entity.x + entity.w) * 16;
 			// entity.xDirection = 0;
@@ -1199,21 +1175,25 @@ for (var i = 0; i < 10 * 10; i++) {
 
 
 
-var room1 = [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1];
-var room2 = [1, 1, 1, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 1, 1, 1, 1];
-var room3 = [1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 0, 0, 0, 0, 1, 1, 1, 0, 0, 0, 1, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1];
-var room4 = [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 0, 0, 0, 0, 0, 1, 1, 1];
-var room5 = [1, 1, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1];
-var room6 = [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 1, 1, 0, 0, 0, 1, 1, 1, 0, 0, 0, 1, 1, 1, 0, 1, 1, 1, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 1];
-var room7 = [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 1, 1, 0, 0, 0, 1, 1, 0, 0, 1, 1, 0, 0, 0, 1, 1, 1, 0, 1, 1, 0, 0, 0, 0, 1, 1, 1, 0, 1, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 1, 1, 1, 1, 1, 0, 0, 0, 0, 1, 1, 1, 1, 1];
-var room8 = [1, 1, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 1, 1, 1, 0, 0, 0, 0, 0, 0, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1];
-var room9 = [1, 1, 1, 0, 0, 0, 0, 0, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 0, 0, 0, 0, 0, 1, 1, 1];
-var room10 = [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 1, 2, 2, 0, 0, 0, 0, 0, 0, 0, 1, 2, 2, 0, 0, 0, 0, 0, 0, 0, 1, 2, 2, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1];
-var room11 = [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 2, 2, 1, 1, 0, 0, 0, 0, 0, 0, 2, 2, 1, 1, 0, 0, 0, 0, 0, 0, 2, 2, 1, 1, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1];
-var room12 = [1, 1, 1, 0, 0, 0, 0, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 1, 1, 0, 0, 0, 1, 1, 0, 0, 1, 1, 1, 1, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 2, 2, 2, 2, 1, 1, 1, 1, 1, 1, 2, 2, 2, 2, 1, 1, 1];
-var room13 = [1, 1, 1, 2, 2, 2, 2, 1, 1, 1, 1, 1, 1, 2, 2, 2, 2, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 1, 1, 1, 1, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 0, 0, 0, 0, 0, 1, 1, 1];
+var roomOne = "1111111111111111111111111111110000000000000000000000000000001111111111111111111111111111111111111111";
+var roomTwo = "1110001111111000111111100011111110001111111000111111100011111110001111111000111111100011111110001111";
+var roomThree = "1000000001110000001111100001110001001000000000000000000000000000000000000111100011111111111111111111";
+var roomFour = "1111111111111000011100000000000000000000000011000000011110000000000000000000000011000000111100000111";
+var roomFive = "1100000011110000001111000001111110000001111000000011110000001111100000111111000011111111111111111111";
+var roomSix = "1111111111100000000110000000001100000000110001100011100011101110000011111100000111110000011111100001";
+var roomSeven = "1111111111100000000100000000010000000011000110001100110001110110000111010000111111000011111000011111";
+var roomEight = "1100000011110000001111100000111000000111000000011100000011110000011111000011111111111111111111111111";
+var roomNine = "1110000011110000000100000000000000000000000011000000001100000000000000000000000011000000111100000111";
+var roomTen = "1111111111111000000011100000001220000000122000000012200000001111100000111110000011111000001111111111";
+var roomEleven = "1111111111000000111100000011110000002211000000221100000022110000111111000011111100001111111111111111";
+var roomTwelve = "1110000111100000000110000000011000110001100111100110000000011000000001100000000111122221111112222111";
+var roomThirteen = "1112222111111222211110000000011000000001100000000110011110011000000001100000000110000000011100000111";
 
 function smallRoom(RoomType, array) {
+	array = array.split("");
+	for (var i = 0; i < array.length; i++) {
+		array[i] = parseInt(array[i]);
+	}
 	return {
 		map: array,
 		type: RoomType
@@ -1227,20 +1207,23 @@ function cloneRoom(room) {
 	};
 }
 
-roomList.push(smallRoom(0, blankArray));
-roomList.push(smallRoom(1, room1));
-roomList.push(smallRoom(2, room2));
-roomList.push(smallRoom(3, room3));
-roomList.push(smallRoom(4, room4));
-roomList.push(smallRoom(5, room5));
-roomList.push(smallRoom(6, room6));
-roomList.push(smallRoom(7, room7));
-roomList.push(smallRoom(8, room8));
-roomList.push(smallRoom(9, room9));
-roomList.push(smallRoom(10, room10));
-roomList.push(smallRoom(11, room11));
-roomList.push(smallRoom(12, room12));
-roomList.push(smallRoom(13, room13));
+roomList.push({
+	map: blankArray,
+	type: 0
+});
+roomList.push(smallRoom(1, roomOne));
+roomList.push(smallRoom(2, roomTwo));
+roomList.push(smallRoom(3, roomThree));
+roomList.push(smallRoom(4, roomFour));
+roomList.push(smallRoom(5, roomFive));
+roomList.push(smallRoom(6, roomSix));
+roomList.push(smallRoom(7, roomSeven));
+roomList.push(smallRoom(8, roomEight));
+roomList.push(smallRoom(9, roomNine));
+roomList.push(smallRoom(10, roomTen));
+roomList.push(smallRoom(11, roomEleven));
+roomList.push(smallRoom(12, roomTwelve));
+roomList.push(smallRoom(13, roomThirteen));
 
 function BigRoom(width, height, worldRoom, roomCreator) {
 	var array = [];
@@ -1294,20 +1277,20 @@ function BigRoom(width, height, worldRoom, roomCreator) {
 				map[mapCoord] = 1;
 			}
 			// top walls
-			if ((y === 0 && northDoor !== null && x < width * 10 && northDoor.doorType > 0 && map[mapCoord] === 0)) {
-				map[mapCoord] = northDoor.doorType + 1;
+			if ((y === 0 && northDoor !== null && x < width * 10 && northDoor.dt > 0 && map[mapCoord] === 0)) {
+				map[mapCoord] = northDoor.dt + 1;
 			}
 			// left walls
-			if ((x === 0 && westDoor !== null && y < height * 10 && westDoor.doorType > 0 && map[mapCoord] === 0)) {
-				map[mapCoord] = westDoor.doorType + 1;
+			if ((x === 0 && westDoor !== null && y < height * 10 && westDoor.dt > 0 && map[mapCoord] === 0)) {
+				map[mapCoord] = westDoor.dt + 1;
 			}
 			// bottom walls
-			if ((y === height * 10 - 1 && southDoor !== null && x < width * 10 && southDoor.doorType > 0 && map[mapCoord] === 0)) {
-				map[mapCoord] = southDoor.doorType + 1;
+			if ((y === height * 10 - 1 && southDoor !== null && x < width * 10 && southDoor.dt > 0 && map[mapCoord] === 0)) {
+				map[mapCoord] = southDoor.dt + 1;
 			}
 			// right walls
-			if ((x === width * 10 - 1 && eastDoor !== null && y < height * 10 && eastDoor.doorType > 0 && map[mapCoord] === 0)) {
-				map[mapCoord] = eastDoor.doorType + 1;
+			if ((x === width * 10 - 1 && eastDoor !== null && y < height * 10 && eastDoor.dt > 0 && map[mapCoord] === 0)) {
+				map[mapCoord] = eastDoor.dt + 1;
 			}
 		}
 	}
@@ -1324,143 +1307,143 @@ function BigRoom(width, height, worldRoom, roomCreator) {
 
 
 
-function setRoom(startX, startY, currentX, currentY, arraySize, array, validRooms, roomSelection, roomsX, roomsY) {
-	roomSelection.length = 0;
-	for (var e = 0; e < roomList.length; e++) {
-		validRooms[e] = e;
-	}
-	var aboveRoom = array[coordinate(currentX, currentY - 1, arraySize)];
-	var leftRoom = array[coordinate(currentX - 1, currentY, arraySize)];
-	var rightRoom = array[coordinate(currentX + 1, currentY, arraySize)];
-	var belowRoom = array[coordinate(currentX, currentY + 1, arraySize)];
-	if (currentY - 1 < 0) {
-		aboveRoom = -1;
-	}
-	if (currentX - 1 < 0) {
-		leftRoom = -1;
-	}
-	if (currentY + 1 > roomsY - 1) {
-		belowRoom = -1;
-	}
-	if (currentX + 1 > roomsX - 1) {
-		rightRoom = -1;
-	}
-	if (aboveRoom === 4 || aboveRoom === 2 || aboveRoom === 6 || aboveRoom === 7 || aboveRoom === 9 || aboveRoom === 13) {
-		console.warn("Room for Above")
-		for (var i = 0; i < validRooms.length; i++) {
-			validRooms[i] = -1;
-		}
-		validRooms[2] = 2;
-		validRooms[3] = 3;
-		validRooms[5] = 5;
-		validRooms[8] = 8;
-		validRooms[9] = 9;
-		if (leftRoom !== -1) {
-			if (leftRoom === 1 || leftRoom === 3 || leftRoom === 4 || leftRoom === 5 || leftRoom === 6 || leftRoom === 9 || leftRoom === 10) {
-				console.warn("Room for Above and Left")
-				validRooms[2] = -1;
-				validRooms[5] = -1;
-				validRooms[3] = 3;
-				validRooms[8] = 8;
-				validRooms[9] = 9;
-				if (rightRoom !== -1) {
-					if (rightRoom === 1 || rightRoom === 3 || rightRoom === 4 || rightRoom === 7 || rightRoom === 8 || rightRoom === 9 || rightRoom === 11) {
-						validRooms[8] = -1;
-					}
-				}
-			}
-		}
-		if (rightRoom !== -1) {
-			if (rightRoom === 1 || rightRoom === 3 || rightRoom === 4 || rightRoom === 7 || rightRoom === 8 || rightRoom === 9 || rightRoom === 11) {
-				console.warn("Room for Above and Left")
-				validRooms[2] = -1;
-				validRooms[8] = -1;
-				validRooms[3] = 3;
-				validRooms[5] = 5;
-				validRooms[9] = 9;
-				if (leftRoom !== -1) {
-					if (leftRoom === 1 || leftRoom === 3 || leftRoom === 4 || leftRoom === 5 || leftRoom === 6 || leftRoom === 9 || leftRoom === 10) {
-						validRooms[5] = -1;
-					}
-				}
-			}
-		}
-	}
-	if (currentX === 0) {
-		console.warn("Left of Map")
-		validRooms[7] = -1;
-		validRooms[8] = -1;
-		validRooms[1] = -1;
-	}
-	if (currentX === roomsX - 1) {
-		console.warn("Right of Map")
-		validRooms[5] = -1;
-		validRooms[6] = -1;
-		validRooms[1] = -1;
-	}
-	if (currentY === 0) {
-		console.warn("Top of Map")
-		validRooms[3] = -1;
-		validRooms[5] = -1;
-		validRooms[8] = -1;
-		validRooms[2] = -1;
-	}
-	if (currentY === roomsY - 1) {
-		console.warn("Bottom of Map")
-		validRooms[4] = -1;
-		validRooms[6] = -1;
-		validRooms[7] = -1;
-		validRooms[2] = -1;
-	}
-	if (currentX === startX && currentY === startY) {
-		console.warn("Room for Start")
-		for (var i = 0; i < validRooms.length; i++) {
-			validRooms[i] = -1;
-		}
-		validRooms[10] = 10;
-		validRooms[11] = 11;
-		validRooms[12] = 12;
-		validRooms[13] = 13;
-		if (leftRoom === -1) {
-			validRooms[11] = -1;
-		}
-		if (aboveRoom === -1) {
-			validRooms[12] = -1;
-		}
-		if (rightRoom === -1) {
-			validRooms[10] = -1;
-		}
-		if (belowRoom === -1) {
-			validRooms[13] = -1;
-		}
-	} else {
-		validRooms[10] = -1;
-		validRooms[11] = -1;
-		validRooms[12] = -1;
-		validRooms[13] = -1;
-	}
-	validRooms[9] = 9;
-	for (var i = 0; i < validRooms.length; i++) {
-		if (validRooms[i] !== -1) {
-			roomSelection.push(validRooms[i]);
-		}
-	}
-	var selectedRoom = roomSelection[random(0, roomSelection.length - 1)];
-	if (selectedRoom === 11) {
-		if ([1, 3, 4, 5, 6, 9].indexOf(leftRoom) === -1) {
-			setRoom(startX, startY, currentX - 1, currentY, arraySize, array, validRooms, roomSelection, roomsX, roomsY);
-		}
-	}
-	if (selectedRoom === 12) {
-		if ([2, 4, 6, 7, 9].indexOf(aboveRoom) === -1) {
-			setRoom(startX, startY, currentX, currentY - 1, arraySize, array, validRooms, roomSelection, roomsX, roomsY);
-		}
-	}
-	array[coordinate(currentX, currentY, arraySize)] = selectedRoom;
-}
+// function setRoom(startX, startY, currentX, currentY, arraySize, array, validRooms, roomSelection, roomsX, roomsY) {
+// 	roomSelection.length = 0;
+// 	for (var e = 0; e < roomList.length; e++) {
+// 		validRooms[e] = e;
+// 	}
+// 	var aboveRoom = array[coordinate(currentX, currentY - 1, arraySize)];
+// 	var leftRoom = array[coordinate(currentX - 1, currentY, arraySize)];
+// 	var rightRoom = array[coordinate(currentX + 1, currentY, arraySize)];
+// 	var belowRoom = array[coordinate(currentX, currentY + 1, arraySize)];
+// 	if (currentY - 1 < 0) {
+// 		aboveRoom = -1;
+// 	}
+// 	if (currentX - 1 < 0) {
+// 		leftRoom = -1;
+// 	}
+// 	if (currentY + 1 > roomsY - 1) {
+// 		belowRoom = -1;
+// 	}
+// 	if (currentX + 1 > roomsX - 1) {
+// 		rightRoom = -1;
+// 	}
+// 	if (aboveRoom === 4 || aboveRoom === 2 || aboveRoom === 6 || aboveRoom === 7 || aboveRoom === 9 || aboveRoom === 13) {
+// 		console.warn("Room for Above")
+// 		for (var i = 0; i < validRooms.length; i++) {
+// 			validRooms[i] = -1;
+// 		}
+// 		validRooms[2] = 2;
+// 		validRooms[3] = 3;
+// 		validRooms[5] = 5;
+// 		validRooms[8] = 8;
+// 		validRooms[9] = 9;
+// 		if (leftRoom !== -1) {
+// 			if (leftRoom === 1 || leftRoom === 3 || leftRoom === 4 || leftRoom === 5 || leftRoom === 6 || leftRoom === 9 || leftRoom === 10) {
+// 				console.warn("Room for Above and Left")
+// 				validRooms[2] = -1;
+// 				validRooms[5] = -1;
+// 				validRooms[3] = 3;
+// 				validRooms[8] = 8;
+// 				validRooms[9] = 9;
+// 				if (rightRoom !== -1) {
+// 					if (rightRoom === 1 || rightRoom === 3 || rightRoom === 4 || rightRoom === 7 || rightRoom === 8 || rightRoom === 9 || rightRoom === 11) {
+// 						validRooms[8] = -1;
+// 					}
+// 				}
+// 			}
+// 		}
+// 		if (rightRoom !== -1) {
+// 			if (rightRoom === 1 || rightRoom === 3 || rightRoom === 4 || rightRoom === 7 || rightRoom === 8 || rightRoom === 9 || rightRoom === 11) {
+// 				console.warn("Room for Above and Left")
+// 				validRooms[2] = -1;
+// 				validRooms[8] = -1;
+// 				validRooms[3] = 3;
+// 				validRooms[5] = 5;
+// 				validRooms[9] = 9;
+// 				if (leftRoom !== -1) {
+// 					if (leftRoom === 1 || leftRoom === 3 || leftRoom === 4 || leftRoom === 5 || leftRoom === 6 || leftRoom === 9 || leftRoom === 10) {
+// 						validRooms[5] = -1;
+// 					}
+// 				}
+// 			}
+// 		}
+// 	}
+// 	if (currentX === 0) {
+// 		console.warn("Left of Map")
+// 		validRooms[7] = -1;
+// 		validRooms[8] = -1;
+// 		validRooms[1] = -1;
+// 	}
+// 	if (currentX === roomsX - 1) {
+// 		console.warn("Right of Map")
+// 		validRooms[5] = -1;
+// 		validRooms[6] = -1;
+// 		validRooms[1] = -1;
+// 	}
+// 	if (currentY === 0) {
+// 		console.warn("Top of Map")
+// 		validRooms[3] = -1;
+// 		validRooms[5] = -1;
+// 		validRooms[8] = -1;
+// 		validRooms[2] = -1;
+// 	}
+// 	if (currentY === roomsY - 1) {
+// 		console.warn("Bottom of Map")
+// 		validRooms[4] = -1;
+// 		validRooms[6] = -1;
+// 		validRooms[7] = -1;
+// 		validRooms[2] = -1;
+// 	}
+// 	if (currentX === startX && currentY === startY) {
+// 		console.warn("Room for Start")
+// 		for (var i = 0; i < validRooms.length; i++) {
+// 			validRooms[i] = -1;
+// 		}
+// 		validRooms[10] = 10;
+// 		validRooms[11] = 11;
+// 		validRooms[12] = 12;
+// 		validRooms[13] = 13;
+// 		if (leftRoom === -1) {
+// 			validRooms[11] = -1;
+// 		}
+// 		if (aboveRoom === -1) {
+// 			validRooms[12] = -1;
+// 		}
+// 		if (rightRoom === -1) {
+// 			validRooms[10] = -1;
+// 		}
+// 		if (belowRoom === -1) {
+// 			validRooms[13] = -1;
+// 		}
+// 	} else {
+// 		validRooms[10] = -1;
+// 		validRooms[11] = -1;
+// 		validRooms[12] = -1;
+// 		validRooms[13] = -1;
+// 	}
+// 	validRooms[9] = 9;
+// 	for (var i = 0; i < validRooms.length; i++) {
+// 		if (validRooms[i] !== -1) {
+// 			roomSelection.push(validRooms[i]);
+// 		}
+// 	}
+// 	var selectedRoom = roomSelection[random(0, roomSelection.length - 1)];
+// 	if (selectedRoom === 11) {
+// 		if ([1, 3, 4, 5, 6, 9].indexOf(leftRoom) === -1) {
+// 			setRoom(startX, startY, currentX - 1, currentY, arraySize, array, validRooms, roomSelection, roomsX, roomsY);
+// 		}
+// 	}
+// 	if (selectedRoom === 12) {
+// 		if ([2, 4, 6, 7, 9].indexOf(aboveRoom) === -1) {
+// 			setRoom(startX, startY, currentX, currentY - 1, arraySize, array, validRooms, roomSelection, roomsX, roomsY);
+// 		}
+// 	}
+// 	array[coordinate(currentX, currentY, arraySize)] = selectedRoom;
+// }
 
 function playerSizedRoom(room) {
-	room.map = BigRoom(room.mapW * 1, room.mapH * 1, room, function(array, roomsX, roomsY, arraySize) {
+	room.map = BigRoom(room.w * 1, room.h * 1, room, function(array, roomsX, roomsY, arraySize) {
 		var currentX = 0;
 		var currentY = 0;
 		for (var i = 0; i < arraySize * arraySize; i++) {
@@ -1479,24 +1462,24 @@ function playerSizedRoom(room) {
 	});
 }
 var currentMap = null;
-var mapWidth = 0;
-var mapHeight = 0;
+var width = 0;
+var height = 0;
 
 function movePlayer(room, direction, position) {
 	enterRoom(room);
-	for (var i = 0; i < room.doors.length; i++) {
+	for (var i = 0; i < room.d.length; i++) {
 		var match = false;
-		var door = room.doors[i];
+		var door = room.d[i];
 		if (door.dir === direction) {
 			if (door.dir === "N" || door.dir === "S") {
-				match = position === door.mapX;
+				match = position === door.x;
 			}
 			if (door.dir === "E" || door.dir === "W") {
-				match = position === door.mapY;
+				match = position === door.y;
 			}
 			if (match) {
-				var translatedX = ((door.mapX - room.mapX) * 1);
-				var translatedY = ((door.mapY - room.mapY) * 1);
+				var translatedX = ((door.x - room.x) * 1);
+				var translatedY = ((door.y - room.y) * 1);
 				// console.log(player.x, player.y)
 				if (door.dir === "N") {
 					translatedX += Math.floor(1 / 2);
@@ -1506,13 +1489,13 @@ function movePlayer(room, direction, position) {
 				if (door.dir === "E") {
 					translatedY += Math.floor(1 / 2);
 					translatedX += 1;
-					player.x = (room.mapW * 10 * 16 * 1) - (player.w);
+					player.x = (room.w * 10 * 16 * 1) - (player.w);
 					player.y = (player.y % (10 * 16)) + (translatedY * 10 * 16);
 				}
 				if (door.dir === "S") {
 					translatedX += Math.floor(1 / 2);
 					translatedY += 1;
-					player.y = (room.mapH * 10 * 16 * 1) - (player.h);
+					player.y = (room.h * 10 * 16 * 1) - (player.h);
 					player.x = (player.x % (10 * 16)) + (translatedX * 10 * 16);
 				}
 				if (door.dir === "W") {
@@ -1526,16 +1509,16 @@ function movePlayer(room, direction, position) {
 }
 
 function testDoors() {
-	for (var i = 0; i < currentRoom.doors.length; i++) {
-		var door = currentRoom.doors[i];
-		var translatedX = ((door.mapX - currentRoom.mapX) * 1);
-		var translatedY = ((door.mapY - currentRoom.mapY) * 1);
+	for (var i = 0; i < currentRoom.d.length; i++) {
+		var door = currentRoom.d[i];
+		var translatedX = ((door.x - currentRoom.x) * 1);
+		var translatedY = ((door.y - currentRoom.y) * 1);
 		var playerX = modulus(modulus(player.x), 10);
 		var playerX2 = modulus(modulus(player.x + player.w), 10);
 		var playerY = modulus(modulus(player.y), 10);
 		var playerY2 = modulus(modulus(player.y + player.h), 10);
-		var roomWidth = currentRoom.mapW * 10 * 16 * 1;
-		var roomHeight = currentRoom.mapH * 10 * 16 * 1;
+		var roomWidth = currentRoom.w * 10 * 16 * 1;
+		var roomHeight = currentRoom.h * 10 * 16 * 1;
 		if (door.dir === "N") {
 			translatedX += Math.floor(1 / 2);
 		}
@@ -1553,21 +1536,21 @@ function testDoors() {
 		if (window.performance.now() - player.doorCooldown > 400) {
 			if (player.x <= 0 && player.xDirection === -1 && door.dir === "W" && translatedX === playerX && translatedY === playerY) {
 				// console.log("Collision with left door");
-				movePlayer(door.room2, "E", door.mapY);
+				movePlayer(door.r2, "E", door.y);
 			}
 			if (player.y <= 0 && player.yDirection === -1 && door.dir === "N" && translatedX === playerX && translatedY === playerY) {
 				// console.log("Collision with top door");
-				movePlayer(door.room2, "S", door.mapX);
+				movePlayer(door.r2, "S", door.x);
 			}
 			if (player.x + player.w >= roomWidth && player.xDirection === 1 && door.dir === "E" && translatedX === playerX2 && translatedY === playerY) {
 				// console.log("Collision with right door");
-				movePlayer(door.room2, "W", door.mapY);
+				movePlayer(door.r2, "W", door.y);
 			}
 			if (player.y + player.h >= roomHeight && player.yDirection !== 0  && Math.abs(player.yAccel) > 5 && door.dir === "S" && translatedX === playerX && (translatedY === playerY2 || translatedY === playerY)) {
 				// console.log(player.yAccel)
 			// console.log(window.performance.now() - player.doorCooldown)
 				// console.log("Collision with bottom door");
-				movePlayer(door.room2, "N", door.mapX);
+				movePlayer(door.r2, "N", door.x);
 			}
 		}
 	}
@@ -1579,11 +1562,11 @@ function enterRoom(room) {
 	}
 	currentRoom = room;
 	collectKey(room);
-	currentRoom.visited = true;
+	currentRoom.v = true;
 	currentMapTiles = room.map.tiles;
 	currentMap = room.map.map;
-	mapHeight = room.map.height * 10;
-	mapWidth = room.map.width * 10;
+	height = room.map.height * 10;
+	width = room.map.width * 10;
 	realMapHeight = room.map.height * 10 * 16;
 	realMapWidth = room.map.width * 10 * 16;
 	player.doorCooldown = window.performance.now();
@@ -1607,132 +1590,76 @@ function parseViewPort() {
 	} else if (player.y - deadZoneY < viewPortY) {
 		viewPortY = player.y - deadZoneY;
 	}
-	// if (!(0 <= viewPortX &&
-	// 	width * 16 >= viewPortX + canvas.width &&
-	// 	0 <= viewPortY &&
-	// 	height * 16 >= viewPortY + canvas.height)) {
-	// 	if (viewPortX < 0) {
-	// 		viewPortX = 0;
-	// 	}
-	// 	if (viewPortY < 0) {
-	// 		viewPortY = 0;
-	// 	}
-	// 	if (viewPortX + canvas.width > width * 16) {
-	// 		viewPortX = (width / 2 * 16) - deadZoneX;
-	// 	}
-	// 	if (viewPortY + canvas.height > height * 16) {
-	// 	console.log(true)
-	// 		viewPortY = (height / 2 * 16) - deadZoneY;
-	// 	}
-	// }
 	viewPortY = ~~ (0.5 + viewPortY);
 	viewPortY = ~~ (0.5 + viewPortY);
-	// viewPortX = (window.innerWidth / 2) - (width*16) + player.x;
-	// viewPortX = player.x;
-	// viewPortY = (window.innerHeight / 2) - (height*16) + player.y;
-	// viewPortY = player.y;
-	// if(viewPortX < (window.innerWidth-(width*16))/2) {
-	// viewPortX = 0;
-	// }
-	// if(viewPortY < (window.innerHeight-(height*16))/2) {
-	// viewPortY = (window.innerHeight-(height*16))/2;
-	// }
 }
 function parseMinimapViewport() {
 	var canvas = minimapContext.canvas;
 	var deadZoneX = canvas.width / 2;
 	var deadZoneY = canvas.height / 2;
-	var mapX = ((currentRoom.mapX + (modulus(modulus(modulus(player.x), 10), 1))) * 16);
-	var mapY = ((currentRoom.mapY + (modulus(modulus(modulus(player.y), 10), 1))) * 16);
-	if (mapX - miniViewPortX + deadZoneX > canvas.width) {
-		miniViewPortX = mapX - (canvas.width - deadZoneX);
-	} else if (mapX - deadZoneX < miniViewPortX) {
-		miniViewPortX = mapX - deadZoneX;
+	var x = ((currentRoom.x + (modulus(modulus(modulus(player.x), 10), 1))) * 16);
+	var y = ((currentRoom.y + (modulus(modulus(modulus(player.y), 10), 1))) * 16);
+	if (x - miniViewPortX + deadZoneX > canvas.width) {
+		miniViewPortX = x - (canvas.width - deadZoneX);
+	} else if (x - deadZoneX < miniViewPortX) {
+		miniViewPortX = x - deadZoneX;
 	}
-	if (mapY - miniViewPortY + deadZoneY > canvas.height) {
-		miniViewPortY = mapY - (canvas.height - deadZoneY);
-	} else if (mapY - deadZoneY < miniViewPortY) {
-		miniViewPortY = mapY - deadZoneY;
+	if (y - miniViewPortY + deadZoneY > canvas.height) {
+		miniViewPortY = y - (canvas.height - deadZoneY);
+	} else if (y - deadZoneY < miniViewPortY) {
+		miniViewPortY = y - deadZoneY;
 	}
-	// if (!(0 <= miniViewPortX &&
-	// 	width * 16 >= miniViewPortX + canvas.width &&
-	// 	0 <= miniViewPortY &&
-	// 	height * 16 >= miniViewPortY + canvas.height)) {
-	// 	if (miniViewPortX < 0) {
-	// 		miniViewPortX = 0;
-	// 	}
-	// 	if (miniViewPortY < 0) {
-	// 		miniViewPortY = 0;
-	// 	}
-	// 	if (miniViewPortX + canvas.width > width * 16) {
-	// 		miniViewPortX = (width / 2 * 16) - deadZoneX;
-	// 	}
-	// 	if (miniViewPortY + canvas.height > height * 16) {
-	// 	console.log(true)
-	// 		miniViewPortY = (height / 2 * 16) - deadZoneY;
-	// 	}
-	// }
 	miniViewPortY = ~~ (0.5 + miniViewPortY);
 	miniViewPortY = ~~ (0.5 + miniViewPortY);
-	// miniViewPortX = (window.innerWidth / 2) - (width*16) + player.x;
-	// miniViewPortX = player.x;
-	// miniViewPortY = (window.innerHeight / 2) - (height*16) + player.y;
-	// miniViewPortY = player.y;
-	// if(miniViewPortX < (window.innerWidth-(width*16))/2) {
-	// miniViewPortX = 0;
-	// }
-	// if(miniViewPortY < (window.innerHeight-(height*16))/2) {
-	// miniViewPortY = (window.innerHeight-(height*16))/2;
-	// }
 }
 var world, currentRoom;
 
 var chanceOfAddingDoor = 0.2;
 var currentColorIndex = 0;
-var regionColors = [{
-	background: "#BBBBBB",
-	border: "#A0A0A0",
-	other: "#CFCFCF",
-	lock: "#FFFFFF"
+var rColors = [{
+	bg: "#BBBBBB",
+	bd: "#A0A0A0",
+	o: "#CFCFCF",
+	l: "#FFFFFF"
 }, {
-	border: "#990000",
-	background: "#FF3333",
-	other: "#FF0000",
-	lock: "#FF0000"
+	bd: "#990000",
+	bg: "#FF3333",
+	o: "#FF0000",
+	l: "#FF0000"
 }, {
-	border: "#006600",
-	background: "#00BB00",
-	other: "#00BB00",
-	lock: "#00FF00"
+	bd: "#006600",
+	bg: "#00BB00",
+	o: "#00BB00",
+	l: "#00FF00"
 }, {
-	border: "#000066",
-	background: "#3333FF",
-	other: "#0000FF",
-	lock: "#0000FF"
+	bd: "#000066",
+	bg: "#3333FF",
+	o: "#0000FF",
+	l: "#0000FF"
 }, {
-	background: "#9F9F9F",
-	border: "#555555",
-	other: "#555555",
-	lock: "#000000"
+	bg: "#9F9F9F",
+	bd: "#555555",
+	o: "#555555",
+	l: "#000000"
 }];
 
-function startAt(x, y, region) {
-	world.frontiers.length = 0;
-	world.frontiers.push({
+function startAt(x, y, r) {
+	world.f.length = 0;
+	world.f.push({
 		x: x,
 		y: y
 	});
-	world.currentRegion = region;
-	world.regions.push(region);
+	world.cr = r;
+	world.r.push(r);
 }
 
-function startNewRegion(region) {
+function startNewRegion(r) {
 	var trapped = true;
-	var frontiers = getFrontiersForAllRooms();
+	var f = getFrontiersForAllRooms();
 	var test = [];
 	while (trapped) {
 		var emptySides = 0;
-		var frontier = getRandom(frontiers);
+		var frontier = getRandom(f);
 		test.length = 0;
 		test.push(getRoom(frontier.x - 1, frontier.y), getRoom(frontier.x + 1, frontier.y), getRoom(frontier.x, frontier.y - 1), getRoom(frontier.x, frontier.y + 1));
 		for (var i = 0; i < 4; i++) {
@@ -1744,7 +1671,7 @@ function startNewRegion(region) {
 			trapped = false;
 		}
 	}
-	startAt(frontier.x, frontier.y, region);
+	startAt(frontier.x, frontier.y, r);
 }
 
 function getRandom(array) {
@@ -1761,34 +1688,34 @@ function getFrontiersForAllRooms() {
 }
 
 function addBorderingFrontiers(array, room) {
-	var roomX = room.mapX;
-	while (roomX < room.mapX + room.mapW) {
-		if (canPlaceRoom(roomX, room.mapY - 1, 1, 1)) {
+	var roomX = room.x;
+	while (roomX < room.x + room.w) {
+		if (canPlaceRoom(roomX, room.y - 1, 1, 1)) {
 			array.push({
 				x: roomX,
-				y: room.mapY - 1
+				y: room.y - 1
 			});
 		}
-		if (canPlaceRoom(roomX, room.mapY + room.mapH, 1, 1)) {
+		if (canPlaceRoom(roomX, room.y + room.h, 1, 1)) {
 			array.push({
 				x: roomX,
-				y: room.mapY + room.mapH
+				y: room.y + room.h
 			});
 		}
 		roomX++;
 	}
-	var roomY = room.mapX;
-	while (roomY < room.mapY + room.mapH) {
-		if (canPlaceRoom(roomY, room.mapX - 1, 1, 1)) {
+	var roomY = room.x;
+	while (roomY < room.y + room.h) {
+		if (canPlaceRoom(roomY, room.x - 1, 1, 1)) {
 			array.push({
 				x: roomY,
-				y: room.mapX - 1
+				y: room.x - 1
 			});
 		}
-		if (canPlaceRoom(roomY, room.mapX + room.mapW, 1, 1)) {
+		if (canPlaceRoom(roomY, room.x + room.w, 1, 1)) {
 			array.push({
 				x: roomY,
-				y: room.mapX + room.mapW
+				y: room.x + room.w
 			});
 		}
 		roomY++;
@@ -1809,7 +1736,7 @@ function isInAnyRoom(x, y, width, height) {
 	var i = 0;
 	while (i < world.rooms.length) {
 		room = world.rooms[i];
-		if (room.mapX > x + width - 1 || room.mapX + room.mapW - 1 < x || room.mapY > y + height - 1 || room.mapY + room.mapH - 1 < y) {
+		if (room.x > x + width - 1 || room.x + room.w - 1 < x || room.y > y + height - 1 || room.y + room.h - 1 < y) {
 			i++;
 			continue;
 		}
@@ -1819,22 +1746,22 @@ function isInAnyRoom(x, y, width, height) {
 }
 
 function addDoors(room) {
-	var doors = 0;
+	var d = 0;
 	var door = null;
 	var stop = false;
 	var times = 100;
 	while (world.rooms.length > 1 && !stop) {
-		doors = 0;
-		doors = doors + addDoorsAlongNorthWall(room);
-		doors = doors + addDoorsAlongSouthWall(room);
-		doors = doors + addDoorsAlongWestWall(room);
-		doors = doors + addDoorsAlongEastWall(room);
-		if (room.region.rooms.length === 1 && doors > 0) {
+		d = 0;
+		d = d + addDoorsAlongNorthWall(room);
+		d = d + addDoorsAlongSouthWall(room);
+		d = d + addDoorsAlongWestWall(room);
+		d = d + addDoorsAlongEastWall(room);
+		if (room.r.rooms.length === 1 && d > 0) {
 			stop = true;
 		}
-		for (var i = 0; i < room.doors.length; i++) {
-			door = room.doors[i];
-			if (other(door, room).region === room.region) {
+		for (var i = 0; i < room.d.length; i++) {
+			door = room.d[i];
+			if (o(door, room).r === room.r) {
 				stop = true;
 			}
 		}
@@ -1851,32 +1778,32 @@ function addDoorsAlongNorthWall(room) {
 	var thisRoom = null;
 	var door = null;
 	var array = [];
-	var mapX = room.mapX;
-	while (mapX < room.mapX + room.mapW) {
-		thisRoom = getRoom(mapX, room.mapY - 1);
+	var x = room.x;
+	while (x < room.x + room.w) {
+		thisRoom = getRoom(x, room.y - 1);
 		if (thisRoom !== null) {
 			array.push({
-				x: mapX,
-				y: room.mapY,
-				other: thisRoom
+				x: x,
+				y: room.y,
+				o: thisRoom
 			});
 		}
-		mapX++;
+		x++;
 	}
 	var i = 0;
 	for (var e = 0; e < array.length; e++) {
 		object = array[e];
 		var hasDoor = false;
-		for (var t = 0; t < room.doors.length; t++) {
-			if (room.doors[t].room2 === object.other) {
+		for (var t = 0; t < room.d.length; t++) {
+			if (room.d[t].r2 === object.o) {
 				hasDoor = true;
 			}
 		}
-		if (!(Math.random() > chanceOfAddingDoor || indexOf(room.doors, object) >= 0) && !hasDoor) {
-			door = Door(object.x, object.y, "N", room, object.other);
-			room.doors.push(door);
-			// object.other.doors.push(door);
-			object.other.doors.push(Door(object.x, object.y - 1, "S", object.other, room));
+		if (!(Math.random() > chanceOfAddingDoor || indexOf(room.d, object) >= 0) && !hasDoor) {
+			door = Door(object.x, object.y, "N", room, object.o);
+			room.d.push(door);
+			// object.o.d.push(door);
+			object.o.d.push(Door(object.x, object.y - 1, "S", object.o, room));
 			i++;
 		}
 	}
@@ -1888,32 +1815,32 @@ function addDoorsAlongSouthWall(room) {
 	var thisRoom = null;
 	var door = null;
 	var array = [];
-	var mapX = room.mapX;
-	while (mapX < room.mapX + room.mapW) {
-		thisRoom = getRoom(mapX, room.mapY + room.mapH);
+	var x = room.x;
+	while (x < room.x + room.w) {
+		thisRoom = getRoom(x, room.y + room.h);
 		if (thisRoom !== null) {
 			array.push({
-				x: mapX,
-				y: room.mapY + room.mapH - 1,
-				other: thisRoom
+				x: x,
+				y: room.y + room.h - 1,
+				o: thisRoom
 			});
 		}
-		mapX++;
+		x++;
 	}
 	var i = 0;
 	for (var e = 0; e < array.length; e++) {
 		object = array[e];
 		var hasDoor = false;
-		for (var t = 0; t < room.doors.length; t++) {
-			if (room.doors[t].room2 === object.other) {
+		for (var t = 0; t < room.d.length; t++) {
+			if (room.d[t].r2 === object.o) {
 				hasDoor = true;
 			}
 		}
-		if (!(Math.random() > chanceOfAddingDoor || indexOf(room.doors, object) >= 0) && !hasDoor) {
-			door = Door(object.x, object.y, "S", room, object.other);
-			room.doors.push(door);
-			// object.other.doors.push(door);
-			object.other.doors.push(Door(object.x, object.y + 1, "N", object.other, room));
+		if (!(Math.random() > chanceOfAddingDoor || indexOf(room.d, object) >= 0) && !hasDoor) {
+			door = Door(object.x, object.y, "S", room, object.o);
+			room.d.push(door);
+			// object.o.d.push(door);
+			object.o.d.push(Door(object.x, object.y + 1, "N", object.o, room));
 			i++;
 		}
 	}
@@ -1925,32 +1852,32 @@ function addDoorsAlongWestWall(room) {
 	var thisRoom = null;
 	var door = null;
 	var array = [];
-	var mapY = room.mapY;
-	while (mapY < room.mapY + room.mapH) {
-		thisRoom = getRoom(room.mapX - 1, mapY);
+	var y = room.y;
+	while (y < room.y + room.h) {
+		thisRoom = getRoom(room.x - 1, y);
 		if (thisRoom !== null) {
 			array.push({
-				x: room.mapX,
-				y: mapY,
-				other: thisRoom
+				x: room.x,
+				y: y,
+				o: thisRoom
 			});
 		}
-		mapY++;
+		y++;
 	}
 	var i = 0;
 	for (var e = 0; e < array.length; e++) {
 		object = array[e];
 		var hasDoor = false;
-		for (var t = 0; t < room.doors.length; t++) {
-			if (room.doors[t].room2 === object.other) {
+		for (var t = 0; t < room.d.length; t++) {
+			if (room.d[t].r2 === object.o) {
 				hasDoor = true;
 			}
 		}
-		if (!(Math.random() > chanceOfAddingDoor || indexOf(room.doors, object) >= 0) && !hasDoor) {
-			door = Door(object.x, object.y, "W", room, object.other);
-			room.doors.push(door);
-			// object.other.doors.push(door);
-			object.other.doors.push(Door(object.x - 1, object.y, "E", object.other, room));
+		if (!(Math.random() > chanceOfAddingDoor || indexOf(room.d, object) >= 0) && !hasDoor) {
+			door = Door(object.x, object.y, "W", room, object.o);
+			room.d.push(door);
+			// object.o.d.push(door);
+			object.o.d.push(Door(object.x - 1, object.y, "E", object.o, room));
 			i++;
 		}
 	}
@@ -1962,32 +1889,32 @@ function addDoorsAlongEastWall(room) {
 	var thisRoom = null;
 	var door = null;
 	var array = [];
-	var mapY = room.mapY;
-	while (mapY < room.mapY + room.mapH) {
-		thisRoom = getRoom(room.mapX + room.mapW, mapY);
+	var y = room.y;
+	while (y < room.y + room.h) {
+		thisRoom = getRoom(room.x + room.w, y);
 		if (thisRoom !== null) {
 			array.push({
-				x: room.mapX + room.mapW - 1,
-				y: mapY,
-				other: thisRoom
+				x: room.x + room.w - 1,
+				y: y,
+				o: thisRoom
 			});
 		}
-		mapY++;
+		y++;
 	}
 	var i = 0;
 	for (var e = 0; e < array.length; e++) {
 		object = array[e];
 		var hasDoor = false;
-		for (var t = 0; t < room.doors.length; t++) {
-			if (room.doors[t].room2 === object.other) {
+		for (var t = 0; t < room.d.length; t++) {
+			if (room.d[t].r2 === object.o) {
 				hasDoor = true;
 			}
 		}
-		if (!(Math.random() > chanceOfAddingDoor || indexOf(room.doors, object) >= 0) && !hasDoor) {
-			door = Door(object.x, object.y, "E", room, object.other);
-			room.doors.push(door);
-			// object.other.doors.push(door);
-			object.other.doors.push(Door(object.x + 1, object.y, "W", object.other, room));
+		if (!(Math.random() > chanceOfAddingDoor || indexOf(room.d, object) >= 0) && !hasDoor) {
+			door = Door(object.x, object.y, "E", room, object.o);
+			room.d.push(door);
+			// object.o.d.push(door);
+			object.o.d.push(Door(object.x + 1, object.y, "W", object.o, room));
 			i++;
 		}
 	}
@@ -2000,7 +1927,7 @@ function getRoom(x, y) {
 	var i = 0;
 	while (i < world.rooms.length) {
 		room = world.rooms[i];
-		if (room.mapX > x || room.mapX + room.mapW - 1 < x || room.mapY > y || room.mapY + room.mapH - 1 < y) {
+		if (room.x > x || room.x + room.w - 1 < x || room.y > y || room.y + room.h - 1 < y) {
 			i++;
 			continue;
 		}
@@ -2011,9 +1938,9 @@ function getRoom(x, y) {
 
 function getDoor(room, x, y, dir) {
 	var door = null;
-	for (var i = 0; i < room.doors.length; i++) {
-		door = room.doors[i];
-		if (door.dir === dir && door.mapX === room.mapX + x && door.mapY === room.mapY + y) {
+	for (var i = 0; i < room.d.length; i++) {
+		door = room.d[i];
+		if (door.dir === dir && door.x === room.x + x && door.y === room.y + y) {
 			return door;
 		}
 	}
@@ -2029,8 +1956,8 @@ function createRooms(numberOfRooms) {
 }
 
 function createRoom() {
-	// if (world.frontiers.length > 0) {
-	var frontier = getRandom(world.frontiers);
+	// if (world.f.length > 0) {
+	var frontier = getRandom(world.f);
 	try {
 		addRoom(growRoom(frontier.x, frontier.y));
 	} catch (e) {
@@ -2040,62 +1967,62 @@ function createRoom() {
 }
 
 function addRoom(room) {
-	if (room === null || !canPlaceRoom(room.mapX, room.mapY, room.mapW, room.mapH)) {
+	if (room === null || !canPlaceRoom(room.x, room.y, room.w, room.h)) {
 		return false;
 	}
 	var array = [];
 	array = removeFrontiers(array, room);
-	world.frontiers = addBorderingFrontiers(array, room);
-	if (world.frontiers.length === 0) {
+	world.f = addBorderingFrontiers(array, room);
+	if (world.f.length === 0) {
 		console.log(array, room, addBorderingFrontiers(array, room))
 	}
-	room.mapColor = world.currentRegion.color;
+	room.c = world.cr.color;
 	world.rooms.push(room);
-	world.currentRegion.rooms.push(room);
+	world.cr.rooms.push(room);
 	addDoors(room);
 }
 
 function addBorderingFrontiers(array, room) {
-	var mapX = room.mapX;
-	while (mapX < room.mapX + room.mapW) {
-		if (canPlaceRoom(mapX, room.mapY - 1, 1, 1)) {
+	var x = room.x;
+	while (x < room.x + room.w) {
+		if (canPlaceRoom(x, room.y - 1, 1, 1)) {
 			array.push({
-				"x": mapX,
-				"y": room.mapY - 1
+				"x": x,
+				"y": room.y - 1
 			});
 		}
-		if (canPlaceRoom(mapX, room.mapY + room.mapH, 1, 1)) {
+		if (canPlaceRoom(x, room.y + room.h, 1, 1)) {
 			array.push({
-				"x": mapX,
-				"y": room.mapY + room.mapH
+				"x": x,
+				"y": room.y + room.h
 			});
 		}
-		mapX++;
+		x++;
 	}
-	var mapY = room.mapY;
-	while (mapY < room.mapY + room.mapH) {
-		if (canPlaceRoom(room.mapX - 1, mapY, 1, 1)) {
+	var y = room.y;
+	while (y < room.y + room.h) {
+		if (canPlaceRoom(room.x - 1, y, 1, 1)) {
 			array.push({
-				"x": room.mapX - 1,
-				"y": mapY
+				"x": room.x - 1,
+				"y": y
 			});
 		}
-		if (canPlaceRoom(room.mapX + room.mapW, mapY, 1, 1)) {
+		if (canPlaceRoom(room.x + room.w, y, 1, 1)) {
 			array.push({
-				"x": room.mapX + room.mapW,
-				"y": mapY
+				"x": room.x + room.w,
+				"y": y
 			});
 		}
-		mapY++;
+		y++;
 	}
 	return array;
 }
 
 function removeFrontiers(array, room) {
-	for (var i = 0; i < world.frontiers.length; i++) {
-		if (!(world.frontiers[i].x >= room.mapX - 1 && world.frontiers[i].x <= room.mapX + room.mapW && world.frontiers[i].y >= room.mapY && world.frontiers[i].y <= room.mapY + room.mapH - 1)) {
-			if (!(world.frontiers[i].x >= room.mapX && world.frontiers[i].x <= room.mapX + room.mapW - 1 && world.frontiers[i].y >= room.mapY - 1 && world.frontiers[i].y <= room.mapY + room.mapH)) {
-				array.push(world.frontiers[i]);
+	for (var i = 0; i < world.f.length; i++) {
+		if (!(world.f[i].x >= room.x - 1 && world.f[i].x <= room.x + room.w && world.f[i].y >= room.y && world.f[i].y <= room.y + room.h - 1)) {
+			if (!(world.f[i].x >= room.x && world.f[i].x <= room.x + room.w - 1 && world.f[i].y >= room.y - 1 && world.f[i].y <= room.y + room.h)) {
+				array.push(world.f[i]);
 			}
 		}
 	}
@@ -2106,27 +2033,27 @@ function growRoom(x, y) {
 	var var1 = 0;
 	var width = 1;
 	var height = 1;
-	while (var1++ < 25 && (width < world.currentRegion.maxW || height < world.currentRegion.maxH) && Math.random() < 0.9) {
+	while (var1++ < 25 && (width < world.cr.maxW || height < world.cr.maxH) && Math.random() < 0.9) {
 		switch (parseInt(Math.random() * 4)) {
 			case 0:
-				if (height < world.currentRegion.maxH && (canPlaceRoom(x, y - 1, width, height + 1))) {
+				if (height < world.cr.maxH && (canPlaceRoom(x, y - 1, width, height + 1))) {
 					y--;
 					height++;
 				}
 				continue;
 			case 1:
-				if (height < world.currentRegion.maxH && (canPlaceRoom(x, y, width, height + 1))) {
+				if (height < world.cr.maxH && (canPlaceRoom(x, y, width, height + 1))) {
 					height++;
 				}
 				continue;
 			case 2:
-				if (width < world.currentRegion.maxW && (canPlaceRoom(x - 1, y, width + 1, height))) {
+				if (width < world.cr.maxW && (canPlaceRoom(x - 1, y, width + 1, height))) {
 					x--;
 					width++;
 				}
 				continue;
 			case 3:
-				if (width < world.currentRegion.maxW && (canPlaceRoom(x, y, width + 1, height))) {
+				if (width < world.cr.maxW && (canPlaceRoom(x, y, width + 1, height))) {
 					width++;
 				}
 				continue;
@@ -2134,35 +2061,35 @@ function growRoom(x, y) {
 				continue;
 		}
 	}
-	return Room(x, y, width, height, world.currentRegion);
+	return Room(x, y, width, height, world.cr);
 }
 
-function Room(x, y, width, height, region) {
+function Room(x, y, width, height, r) {
 	return {
-		mapX: x,
-		mapY: y,
-		mapW: width,
-		mapH: height,
-		mapColor: null,
-		region: region,
-		specialType: 0,
-		startPositionX: 0,
-		startPositionY: 0,
-		startRoom: false,
-		visited: false,
-		doors: [],
+		x: x,
+		y: y,
+		w: width,
+		h: height,
+		c: null,
+		r: r,
+		s: 0,
+		sx: 0,
+		sy: 0,
+		sr: false,
+		v: false,
+		d: [],
 		map: null
 	};
 }
 
-function Door(x, y, direction, room1, room2) {
+function Door(x, y, direction, r1, r2) {
 	return {
-		mapX: x,
-		mapY: y,
-		doorType: 0,
+		x: x,
+		y: y,
+		dt: 0,
 		dir: direction,
-		room1: room1,
-		room2: room2
+		r1: r1,
+		r2: r2
 	};
 }
 
@@ -2171,30 +2098,30 @@ function clearDoorTypes() {
 	var door = null;
 	for (var i = 0; i < world.rooms.length; i++) {
 		room = world.rooms[i];
-		room.specialType = 0;
-		for (var e = 0; e < room.doors.length; e++) {
-			door = room.doors[e];
-			door.doorType = 0;
+		room.s = 0;
+		for (var e = 0; e < room.d.length; e++) {
+			door = room.d[e];
+			door.dt = 0;
 		}
 	}
 }
 
 function assignDoorTypes() {
 	var door = null;
-	var region1 = null;
-	var region2 = null;
+	var r1 = null;
+	var r2 = null;
 	var room = null;
-	for (var i = 0; i < world.regions.length; i++) {
-		region1 = world.regions[i];
-		getRandom(region1.rooms).specialType = (i + 1) % regionColors.length;
-		for (var e = 0; e < region1.rooms.length; e++) {
-			room = region1.rooms[e];
-			for (var r = 0; r < room.doors.length; r++) {
-				door = room.doors[r];
-				region2 = other(door, room).region;
-				if (region2 !== region1) {
-					if (door.doorType === 0) {
-						door.doorType = (i + 1) % regionColors.length;
+	for (var i = 0; i < world.r.length; i++) {
+		r1 = world.r[i];
+		getRandom(r1.rooms).s = (i + 1) % rColors.length;
+		for (var e = 0; e < r1.rooms.length; e++) {
+			room = r1.rooms[e];
+			for (var r = 0; r < room.d.length; r++) {
+				door = room.d[r];
+				r2 = o(door, room).r;
+				if (r2 !== r1) {
+					if (door.dt === 0) {
+						door.dt = (i + 1) % rColors.length;
 					}
 				}
 			}
@@ -2203,23 +2130,23 @@ function assignDoorTypes() {
 }
 
 function collectKey(room) {
-	if(player.keys.indexOf(room.specialType) === -1) {
-		player.keys.push(room.specialType);
-		unlockRooms();
+	if(player.keys.indexOf(room.s) === -1) {
+		player.keys.push(room.s);
+		unlRooms();
 	}
 }
 
-function unlockRooms() {
+function unlRooms() {
 	for (var i = 0; i < world.rooms.length; i++) {
 		var hasDoor = false;
 		var room = world.rooms[i];
-		if (player.keys.indexOf(room.specialType) > -1) {
-			room.specialType = 0;
+		if (player.keys.indexOf(room.s) > -1) {
+			room.s = 0;
 		}
-		for (var e = 0; e < room.doors.length; e++) {
-			var door = room.doors[e];
-			if (player.keys.indexOf(door.doorType) > -1) {
-				door.doorType = 0;
+		for (var e = 0; e < room.d.length; e++) {
+			var door = room.d[e];
+			if (player.keys.indexOf(door.dt) > -1) {
+				door.dt = 0;
 				hasDoor = true;
 			}
 		}
@@ -2235,8 +2162,8 @@ function unlockRooms() {
 	}
 }
 
-function other(door, room) {
-	return door.room1 === room ? door.room2 : door.room1;
+function o(door, room) {
+	return door.r1 === room ? door.r2 : door.r1;
 }
 
 function create() {
@@ -2244,12 +2171,12 @@ function create() {
 		width: 0,
 		height: 0,
 		rooms: [],
-		frontiers: [],
-		regions: [],
-		currentRegion: 0,
+		f: [],
+		r: [],
+		cr: 0,
 
 	};
-	currentRegionColorIndex = 0;
+	crColorIndex = 0;
 	world.width = 80;
 	world.height = 48;
 	startAt(40, 24, nextRegion());
@@ -2257,9 +2184,9 @@ function create() {
 }
 
 function nextRegion() {
-	var region = Region(regionColors[currentRegionColorIndex], parseInt(Math.random() * 3) + parseInt(Math.random() * 3) + 1, parseInt(Math.random() * 3) + parseInt(Math.random() * 3) + 1);
-	currentRegionColorIndex = (currentRegionColorIndex + 1) % regionColors.length;
-	return region;
+	var r = Region(rColors[crColorIndex], parseInt(Math.random() * 3) + parseInt(Math.random() * 3) + 1, parseInt(Math.random() * 3) + parseInt(Math.random() * 3) + 1);
+	crColorIndex = (crColorIndex + 1) % rColors.length;
+	return r;
 }
 
 function Region(color, maxWidth, maxHeight) {
@@ -2283,7 +2210,7 @@ function addRegion() {
 	startNewRegion(nextRegion());
 }
 
-function doors() {
+function d() {
 	clearDoorTypes();
 	assignDoorTypes();
 }

@@ -13,21 +13,25 @@ for (var i = 0; i < roomSize * roomSize; i++) {
 
 
 
-var room1 = [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1];
-var room2 = [1, 1, 1, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 1, 1, 1, 1];
-var room3 = [1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 0, 0, 0, 0, 1, 1, 1, 0, 0, 0, 1, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1];
-var room4 = [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 0, 0, 0, 0, 0, 1, 1, 1];
-var room5 = [1, 1, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1];
-var room6 = [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 1, 1, 0, 0, 0, 1, 1, 1, 0, 0, 0, 1, 1, 1, 0, 1, 1, 1, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 1];
-var room7 = [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 1, 1, 0, 0, 0, 1, 1, 0, 0, 1, 1, 0, 0, 0, 1, 1, 1, 0, 1, 1, 0, 0, 0, 0, 1, 1, 1, 0, 1, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 1, 1, 1, 1, 1, 0, 0, 0, 0, 1, 1, 1, 1, 1];
-var room8 = [1, 1, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 1, 1, 1, 0, 0, 0, 0, 0, 0, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1];
-var room9 = [1, 1, 1, 0, 0, 0, 0, 0, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 0, 0, 0, 0, 0, 1, 1, 1];
-var room10 = [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 1, 2, 2, 0, 0, 0, 0, 0, 0, 0, 1, 2, 2, 0, 0, 0, 0, 0, 0, 0, 1, 2, 2, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1];
-var room11 = [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 2, 2, 1, 1, 0, 0, 0, 0, 0, 0, 2, 2, 1, 1, 0, 0, 0, 0, 0, 0, 2, 2, 1, 1, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1];
-var room12 = [1, 1, 1, 0, 0, 0, 0, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 1, 1, 0, 0, 0, 1, 1, 0, 0, 1, 1, 1, 1, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 2, 2, 2, 2, 1, 1, 1, 1, 1, 1, 2, 2, 2, 2, 1, 1, 1];
-var room13 = [1, 1, 1, 2, 2, 2, 2, 1, 1, 1, 1, 1, 1, 2, 2, 2, 2, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 1, 1, 1, 1, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 0, 0, 0, 0, 0, 1, 1, 1];
+var roomOne = "1111111111111111111111111111110000000000000000000000000000001111111111111111111111111111111111111111";
+var roomTwo = "1110001111111000111111100011111110001111111000111111100011111110001111111000111111100011111110001111";
+var roomThree = "1000000001110000001111100001110001001000000000000000000000000000000000000111100011111111111111111111";
+var roomFour = "1111111111111000011100000000000000000000000011000000011110000000000000000000000011000000111100000111";
+var roomFive = "1100000011110000001111000001111110000001111000000011110000001111100000111111000011111111111111111111";
+var roomSix = "1111111111100000000110000000001100000000110001100011100011101110000011111100000111110000011111100001";
+var roomSeven = "1111111111100000000100000000010000000011000110001100110001110110000111010000111111000011111000011111";
+var roomEight = "1100000011110000001111100000111000000111000000011100000011110000011111000011111111111111111111111111";
+var roomNine = "1110000011110000000100000000000000000000000011000000001100000000000000000000000011000000111100000111";
+var roomTen = "1111111111111000000011100000001220000000122000000012200000001111100000111110000011111000001111111111";
+var roomEleven = "1111111111000000111100000011110000002211000000221100000022110000111111000011111100001111111111111111";
+var roomTwelve = "1110000111100000000110000000011000110001100111100110000000011000000001100000000111122221111112222111";
+var roomThirteen = "1112222111111222211110000000011000000001100000000110011110011000000001100000000110000000011100000111";
 
 function smallRoom(RoomType, array) {
+	array = array.split("");
+	for (var i = 0; i < array.length; i++) {
+		array[i] = parseInt(array[i]);
+	}
 	return {
 		map: array,
 		type: RoomType
@@ -41,20 +45,23 @@ function cloneRoom(room) {
 	};
 }
 
-roomList.push(smallRoom(0, blankArray));
-roomList.push(smallRoom(1, room1));
-roomList.push(smallRoom(2, room2));
-roomList.push(smallRoom(3, room3));
-roomList.push(smallRoom(4, room4));
-roomList.push(smallRoom(5, room5));
-roomList.push(smallRoom(6, room6));
-roomList.push(smallRoom(7, room7));
-roomList.push(smallRoom(8, room8));
-roomList.push(smallRoom(9, room9));
-roomList.push(smallRoom(10, room10));
-roomList.push(smallRoom(11, room11));
-roomList.push(smallRoom(12, room12));
-roomList.push(smallRoom(13, room13));
+roomList.push({
+	map: blankArray,
+	type: 0
+});
+roomList.push(smallRoom(1, roomOne));
+roomList.push(smallRoom(2, roomTwo));
+roomList.push(smallRoom(3, roomThree));
+roomList.push(smallRoom(4, roomFour));
+roomList.push(smallRoom(5, roomFive));
+roomList.push(smallRoom(6, roomSix));
+roomList.push(smallRoom(7, roomSeven));
+roomList.push(smallRoom(8, roomEight));
+roomList.push(smallRoom(9, roomNine));
+roomList.push(smallRoom(10, roomTen));
+roomList.push(smallRoom(11, roomEleven));
+roomList.push(smallRoom(12, roomTwelve));
+roomList.push(smallRoom(13, roomThirteen));
 
 function BigRoom(width, height, worldRoom, roomCreator) {
 	var array = [];
@@ -138,140 +145,140 @@ function BigRoom(width, height, worldRoom, roomCreator) {
 
 
 
-function setRoom(startX, startY, currentX, currentY, arraySize, array, validRooms, roomSelection, roomsX, roomsY) {
-	roomSelection.length = 0;
-	for (var e = 0; e < roomList.length; e++) {
-		validRooms[e] = e;
-	}
-	var aboveRoom = array[coordinate(currentX, currentY - 1, arraySize)];
-	var leftRoom = array[coordinate(currentX - 1, currentY, arraySize)];
-	var rightRoom = array[coordinate(currentX + 1, currentY, arraySize)];
-	var belowRoom = array[coordinate(currentX, currentY + 1, arraySize)];
-	if (currentY - 1 < 0) {
-		aboveRoom = -1;
-	}
-	if (currentX - 1 < 0) {
-		leftRoom = -1;
-	}
-	if (currentY + 1 > roomsY - 1) {
-		belowRoom = -1;
-	}
-	if (currentX + 1 > roomsX - 1) {
-		rightRoom = -1;
-	}
-	if (aboveRoom === 4 || aboveRoom === 2 || aboveRoom === 6 || aboveRoom === 7 || aboveRoom === 9 || aboveRoom === 13) {
-		console.warn("Room for Above")
-		for (var i = 0; i < validRooms.length; i++) {
-			validRooms[i] = -1;
-		}
-		validRooms[2] = 2;
-		validRooms[3] = 3;
-		validRooms[5] = 5;
-		validRooms[8] = 8;
-		validRooms[9] = 9;
-		if (leftRoom !== -1) {
-			if (leftRoom === 1 || leftRoom === 3 || leftRoom === 4 || leftRoom === 5 || leftRoom === 6 || leftRoom === 9 || leftRoom === 10) {
-				console.warn("Room for Above and Left")
-				validRooms[2] = -1;
-				validRooms[5] = -1;
-				validRooms[3] = 3;
-				validRooms[8] = 8;
-				validRooms[9] = 9;
-				if (rightRoom !== -1) {
-					if (rightRoom === 1 || rightRoom === 3 || rightRoom === 4 || rightRoom === 7 || rightRoom === 8 || rightRoom === 9 || rightRoom === 11) {
-						validRooms[8] = -1;
-					}
-				}
-			}
-		}
-		if (rightRoom !== -1) {
-			if (rightRoom === 1 || rightRoom === 3 || rightRoom === 4 || rightRoom === 7 || rightRoom === 8 || rightRoom === 9 || rightRoom === 11) {
-				console.warn("Room for Above and Left")
-				validRooms[2] = -1;
-				validRooms[8] = -1;
-				validRooms[3] = 3;
-				validRooms[5] = 5;
-				validRooms[9] = 9;
-				if (leftRoom !== -1) {
-					if (leftRoom === 1 || leftRoom === 3 || leftRoom === 4 || leftRoom === 5 || leftRoom === 6 || leftRoom === 9 || leftRoom === 10) {
-						validRooms[5] = -1;
-					}
-				}
-			}
-		}
-	}
-	if (currentX === 0) {
-		console.warn("Left of Map")
-		validRooms[7] = -1;
-		validRooms[8] = -1;
-		validRooms[1] = -1;
-	}
-	if (currentX === roomsX - 1) {
-		console.warn("Right of Map")
-		validRooms[5] = -1;
-		validRooms[6] = -1;
-		validRooms[1] = -1;
-	}
-	if (currentY === 0) {
-		console.warn("Top of Map")
-		validRooms[3] = -1;
-		validRooms[5] = -1;
-		validRooms[8] = -1;
-		validRooms[2] = -1;
-	}
-	if (currentY === roomsY - 1) {
-		console.warn("Bottom of Map")
-		validRooms[4] = -1;
-		validRooms[6] = -1;
-		validRooms[7] = -1;
-		validRooms[2] = -1;
-	}
-	if (currentX === startX && currentY === startY) {
-		console.warn("Room for Start")
-		for (var i = 0; i < validRooms.length; i++) {
-			validRooms[i] = -1;
-		}
-		validRooms[10] = 10;
-		validRooms[11] = 11;
-		validRooms[12] = 12;
-		validRooms[13] = 13;
-		if (leftRoom === -1) {
-			validRooms[11] = -1;
-		}
-		if (aboveRoom === -1) {
-			validRooms[12] = -1;
-		}
-		if (rightRoom === -1) {
-			validRooms[10] = -1;
-		}
-		if (belowRoom === -1) {
-			validRooms[13] = -1;
-		}
-	} else {
-		validRooms[10] = -1;
-		validRooms[11] = -1;
-		validRooms[12] = -1;
-		validRooms[13] = -1;
-	}
-	validRooms[9] = 9;
-	for (var i = 0; i < validRooms.length; i++) {
-		if (validRooms[i] !== -1) {
-			roomSelection.push(validRooms[i]);
-		}
-	}
-	var selectedRoom = roomSelection[random(0, roomSelection.length - 1)];
-	if (selectedRoom === 11) {
-		if ([1, 3, 4, 5, 6, 9].indexOf(leftRoom) === -1) {
-			setRoom(startX, startY, currentX - 1, currentY, arraySize, array, validRooms, roomSelection, roomsX, roomsY);
-		}
-	}
-	if (selectedRoom === 12) {
-		if ([2, 4, 6, 7, 9].indexOf(aboveRoom) === -1) {
-			setRoom(startX, startY, currentX, currentY - 1, arraySize, array, validRooms, roomSelection, roomsX, roomsY);
-		}
-	}
-	array[coordinate(currentX, currentY, arraySize)] = selectedRoom;
-}
+// function setRoom(startX, startY, currentX, currentY, arraySize, array, validRooms, roomSelection, roomsX, roomsY) {
+// 	roomSelection.length = 0;
+// 	for (var e = 0; e < roomList.length; e++) {
+// 		validRooms[e] = e;
+// 	}
+// 	var aboveRoom = array[coordinate(currentX, currentY - 1, arraySize)];
+// 	var leftRoom = array[coordinate(currentX - 1, currentY, arraySize)];
+// 	var rightRoom = array[coordinate(currentX + 1, currentY, arraySize)];
+// 	var belowRoom = array[coordinate(currentX, currentY + 1, arraySize)];
+// 	if (currentY - 1 < 0) {
+// 		aboveRoom = -1;
+// 	}
+// 	if (currentX - 1 < 0) {
+// 		leftRoom = -1;
+// 	}
+// 	if (currentY + 1 > roomsY - 1) {
+// 		belowRoom = -1;
+// 	}
+// 	if (currentX + 1 > roomsX - 1) {
+// 		rightRoom = -1;
+// 	}
+// 	if (aboveRoom === 4 || aboveRoom === 2 || aboveRoom === 6 || aboveRoom === 7 || aboveRoom === 9 || aboveRoom === 13) {
+// 		console.warn("Room for Above")
+// 		for (var i = 0; i < validRooms.length; i++) {
+// 			validRooms[i] = -1;
+// 		}
+// 		validRooms[2] = 2;
+// 		validRooms[3] = 3;
+// 		validRooms[5] = 5;
+// 		validRooms[8] = 8;
+// 		validRooms[9] = 9;
+// 		if (leftRoom !== -1) {
+// 			if (leftRoom === 1 || leftRoom === 3 || leftRoom === 4 || leftRoom === 5 || leftRoom === 6 || leftRoom === 9 || leftRoom === 10) {
+// 				console.warn("Room for Above and Left")
+// 				validRooms[2] = -1;
+// 				validRooms[5] = -1;
+// 				validRooms[3] = 3;
+// 				validRooms[8] = 8;
+// 				validRooms[9] = 9;
+// 				if (rightRoom !== -1) {
+// 					if (rightRoom === 1 || rightRoom === 3 || rightRoom === 4 || rightRoom === 7 || rightRoom === 8 || rightRoom === 9 || rightRoom === 11) {
+// 						validRooms[8] = -1;
+// 					}
+// 				}
+// 			}
+// 		}
+// 		if (rightRoom !== -1) {
+// 			if (rightRoom === 1 || rightRoom === 3 || rightRoom === 4 || rightRoom === 7 || rightRoom === 8 || rightRoom === 9 || rightRoom === 11) {
+// 				console.warn("Room for Above and Left")
+// 				validRooms[2] = -1;
+// 				validRooms[8] = -1;
+// 				validRooms[3] = 3;
+// 				validRooms[5] = 5;
+// 				validRooms[9] = 9;
+// 				if (leftRoom !== -1) {
+// 					if (leftRoom === 1 || leftRoom === 3 || leftRoom === 4 || leftRoom === 5 || leftRoom === 6 || leftRoom === 9 || leftRoom === 10) {
+// 						validRooms[5] = -1;
+// 					}
+// 				}
+// 			}
+// 		}
+// 	}
+// 	if (currentX === 0) {
+// 		console.warn("Left of Map")
+// 		validRooms[7] = -1;
+// 		validRooms[8] = -1;
+// 		validRooms[1] = -1;
+// 	}
+// 	if (currentX === roomsX - 1) {
+// 		console.warn("Right of Map")
+// 		validRooms[5] = -1;
+// 		validRooms[6] = -1;
+// 		validRooms[1] = -1;
+// 	}
+// 	if (currentY === 0) {
+// 		console.warn("Top of Map")
+// 		validRooms[3] = -1;
+// 		validRooms[5] = -1;
+// 		validRooms[8] = -1;
+// 		validRooms[2] = -1;
+// 	}
+// 	if (currentY === roomsY - 1) {
+// 		console.warn("Bottom of Map")
+// 		validRooms[4] = -1;
+// 		validRooms[6] = -1;
+// 		validRooms[7] = -1;
+// 		validRooms[2] = -1;
+// 	}
+// 	if (currentX === startX && currentY === startY) {
+// 		console.warn("Room for Start")
+// 		for (var i = 0; i < validRooms.length; i++) {
+// 			validRooms[i] = -1;
+// 		}
+// 		validRooms[10] = 10;
+// 		validRooms[11] = 11;
+// 		validRooms[12] = 12;
+// 		validRooms[13] = 13;
+// 		if (leftRoom === -1) {
+// 			validRooms[11] = -1;
+// 		}
+// 		if (aboveRoom === -1) {
+// 			validRooms[12] = -1;
+// 		}
+// 		if (rightRoom === -1) {
+// 			validRooms[10] = -1;
+// 		}
+// 		if (belowRoom === -1) {
+// 			validRooms[13] = -1;
+// 		}
+// 	} else {
+// 		validRooms[10] = -1;
+// 		validRooms[11] = -1;
+// 		validRooms[12] = -1;
+// 		validRooms[13] = -1;
+// 	}
+// 	validRooms[9] = 9;
+// 	for (var i = 0; i < validRooms.length; i++) {
+// 		if (validRooms[i] !== -1) {
+// 			roomSelection.push(validRooms[i]);
+// 		}
+// 	}
+// 	var selectedRoom = roomSelection[random(0, roomSelection.length - 1)];
+// 	if (selectedRoom === 11) {
+// 		if ([1, 3, 4, 5, 6, 9].indexOf(leftRoom) === -1) {
+// 			setRoom(startX, startY, currentX - 1, currentY, arraySize, array, validRooms, roomSelection, roomsX, roomsY);
+// 		}
+// 	}
+// 	if (selectedRoom === 12) {
+// 		if ([2, 4, 6, 7, 9].indexOf(aboveRoom) === -1) {
+// 			setRoom(startX, startY, currentX, currentY - 1, arraySize, array, validRooms, roomSelection, roomsX, roomsY);
+// 		}
+// 	}
+// 	array[coordinate(currentX, currentY, arraySize)] = selectedRoom;
+// }
 
 function playerSizedRoom(room) {
 	room.map = BigRoom(room.mapW * segmentsPerRoom, room.mapH * segmentsPerRoom, room, function(array, roomsX, roomsY, arraySize) {
