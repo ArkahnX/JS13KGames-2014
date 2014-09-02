@@ -263,7 +263,6 @@ function drawMap() {
 				if (topTile === 0) {
 					hasFloor = 1;
 				}
-				// drawTile(x, y, currentMap, currentMapTiles, startX, rectWidth, hasFloor);
 			}
 			if (currentMap[coordinate(x, y, currentMapTiles)] === 0 || x === x2 - 1) {
 				drawRect(x, y, currentMap, currentMapTiles, startX, rectWidth, hasFloor);
@@ -272,6 +271,15 @@ function drawMap() {
 				rectWidth = 0;
 				startX = -currentMapTiles * 16 * 2;
 				hasFloor = 0;
+			}
+		}
+	}
+
+	for (var y = y1; y < y2; y++) {
+		for (var x = x1; x < x2; x++) {
+			if (currentMap[coordinate(x, y, currentMapTiles)] > 1) {
+				tileContext.fillStyle = rColors[currentMap[coordinate(x, y, currentMapTiles)] - 1].bg;
+				drawRect(x, y, currentMap, currentMapTiles, (x * 16) - viewPortX, 16, true);
 			}
 		}
 	}
@@ -427,8 +435,8 @@ function drawWorld() {
 	miniMapPlayerX = (currentRoom.x * 16) + (modulus(modulus(modulus(player.x), 10), 1) * 16) - miniViewPortX;
 	miniMapPlayerY = (currentRoom.y * 16) + (modulus(modulus(modulus(player.y), 10), 1) * 16) - miniViewPortY;
 	if (currentRoom.x + modulus(modulus(modulus(player.x), 10), 1) !== lastPlayerX || currentRoom.y + modulus(modulus(modulus(player.y), 10), 1) !== lastPlayerY || lastRoomLength !== world.rooms.length) {
-		minimapCanvas.width = 500;
-		minimapCanvas.height = 500;
+		minimapCanvas.width = 150;
+		minimapCanvas.height = 150;
 		minimapContext.clearRect(0, 0, minimapCanvas.width, minimapCanvas.height);
 		drawnDoors.length = 0;
 		minimapContext.lineWidth = 2;
@@ -616,22 +624,22 @@ var player = {
 	w: 16,
 	h: 16 * 2,
 	img: null,
-	xDirection: 0,
-	yDirection: 1,
-	xAccel: 0,
-	yAccel: 0,
-	maxAccel: 5,
-	jumpForce: 7,
-	jumpHeight: 50,
-	jumpStart: 0,
-	jumping: 0,
-	jumpsUsed: 0,
-	heightTraveled: 0,
-	maxJumps: 1,
-	angle: 0,
-	health: 5,
-	doorCooldown: window.performance.now(),
-	maxHealth: 5,
+	xd: 0,
+	yd: 1,
+	xa: 0,
+	ya: 0,
+	maxa: 5,
+	jf: 7,
+	jh: 50,
+	js: 0,
+	j: 0,
+	ju: 0,
+	ht: 0,
+	mj: 1,
+	a: 0,
+	ῼ: 5,
+	dc: window.performance.now(),
+	mῼ: 5,
 	keys:[]
 }
 var dt = currentTick - lastTick;
@@ -662,23 +670,23 @@ function listen(eventName, fn) {
 // 		y: y,
 // 		w: w,
 // 		h: h,
-// 		angle: 0,
+// 		a: 0,
 // 		img: img
 // 	};
 // 	if (moveable) {
-// 		entity.xDirection = 0;
-// 		entity.yDirection = 0;
-// 		entity.xAccel = 0;
-// 		entity.yAccel = 1;
-// 		entity.maxAccel = 5;
+// 		entity.xd = 0;
+// 		entity.yd = 0;
+// 		entity.xa = 0;
+// 		entity.ya = 1;
+// 		entity.maxa = 5;
 // 	}
 // 	if (moveable) {
-// 		entity.jumpForce = 7;
-// 		entity.jumpHeight = 50;
-// 		entity.jumpStart = 0;
-// 		entity.jumping = 0;
-// 		entity.jumpsUsed = 0;
-// 		entity.maxJumps = 3;
+// 		entity.jf = 7;
+// 		entity.jh = 50;
+// 		entity.js = 0;
+// 		entity.j = 0;
+// 		entity.ju = 0;
+// 		entity.mj = 3;
 // 	}
 // 	return (entity);
 // }
@@ -699,11 +707,11 @@ function getByType(id) {
 
 
 function DOMLoaded() {
-	playerCanvas = getByType("player");
-	bdCanvas = getByType("bd");
-	tileCanvas = getByType("tile");
-	minimapCanvas = getByType("minimap");
-	miniMapIconsCanvas = getByType("minimapIcons");
+	playerCanvas = getByType("p");
+	bdCanvas = getByType("b");
+	tileCanvas = getByType("t");
+	minimapCanvas = getByType("m");
+	miniMapIconsCanvas = getByType("i");
 	playerContext = playerCanvas.getContext("2d");
 	bdContext = bdCanvas.getContext("2d");
 	tileContext = tileCanvas.getContext("2d");
@@ -772,7 +780,7 @@ function eachFrame() {
 	playerContext.fillStyle = "#000000";
 	for (var i = 0; i < entities.length; i++) {
 		var entity = entities[i];
-		var red = (15 - ((15) * (player.health / player.maxHealth))).toString(16);
+		var red = (15 - ((15) * (player.ῼ / player.mῼ))).toString(16);
 		playerContext.fillStyle = '#' + red + red + '0000';
 		playerContext.fillRect(entity.x - viewPortX, entity.y - viewPortY, entity.w, entity.h);
 	}
@@ -850,14 +858,14 @@ function handleKeyDown(event) {
 
 	if (keymap[event.keyCode] !== event.type) {
 		if (event.keyCode === keys.space) {
-			player.jumping = 1;
+			player.j = 1;
 		}
 	}
 	keymap[event.keyCode] = event.type;
 	if (event.keyCode === keys.d) {
-		player.xDirection = 1;
+		player.xd = 1;
 	} else if (event.keyCode === keys.a) {
-		player.xDirection = -1;
+		player.xd = -1;
 	}
 }
 
@@ -870,17 +878,17 @@ function handleKeyUp(event) {
 
 	if (keymap[event.keyCode] !== event.type) {
 		if (event.keyCode === keys.space) {
-			player.jumping = 0;
+			player.j = 0;
 		}
 	}
 	keymap[event.keyCode] = event.type;
 	if (event.keyCode === keys.d || event.keyCode === keys.a) {
 		if (keymap[keys.d] && keymap[keys.a]) {
 			if (keymap[keys.d] === event.type && keymap[keys.a] === event.type) {
-				player.xDirection = 0;
+				player.xd = 0;
 			}
 		} else {
-			player.xDirection = 0;
+			player.xd = 0;
 		}
 	}
 }
@@ -1013,64 +1021,64 @@ function handleKeyUp(event) {
 // }
 
 function handleXMovement(entity) {
-	entity.xAccel = entity.xAccel + (entity.xDirection / 60 * dt);
-	if (entity.xAccel > entity.maxAccel) {
-		entity.xAccel = entity.maxAccel;
+	entity.xa = entity.xa + (entity.xd / 60 * dt);
+	if (entity.xa > entity.maxa) {
+		entity.xa = entity.maxa;
 	}
-	if (entity.xAccel < -entity.maxAccel) {
-		entity.xAccel = -entity.maxAccel;
+	if (entity.xa < -entity.maxa) {
+		entity.xa = -entity.maxa;
 	}
-	if (entity.xDirection === 0) {
-		if (entity.xAccel > 0) {
-			entity.xAccel = entity.xAccel + ((-1 * 2 / 60) * dt);
-		} else if (entity.xAccel < 0) {
-			entity.xAccel = entity.xAccel + ((1 * 2 / 60) * dt);
+	if (entity.xd === 0) {
+		if (entity.xa > 0) {
+			entity.xa = entity.xa + ((-1 * 2 / 60) * dt);
+		} else if (entity.xa < 0) {
+			entity.xa = entity.xa + ((1 * 2 / 60) * dt);
 		}
-		if ((entity.xAccel < ((1 / 60) * dt) && entity.xAccel > ((-1 / 60) * dt)) || entity.yDirection === 1 || entity.yDirection === -1) {
-			entity.xAccel = 0;
+		if ((entity.xa < ((1 / 60) * dt) && entity.xa > ((-1 / 60) * dt)) || entity.yd === 1 || entity.yd === -1) {
+			entity.xa = 0;
 		}
 	}
-	entity.x = entity.x + entity.xAccel;
+	entity.x = entity.x + entity.xa;
 }
 
 function handleJump(entity) {
-	if (entity.jumping && (entity.yDirection !== -1 && entity.jumpsUsed < entity.maxJumps)) {
-		if (entity.maxJumps > 1 && entity.jumpsUsed === 0 && entity.yDirection === 1) {
-			entity.jumpsUsed++;
+	if (entity.j && (entity.yd !== -1 && entity.ju < entity.mj)) {
+		if (entity.mj > 1 && entity.ju === 0 && entity.yd === 1) {
+			entity.ju++;
 		}
-		if ((entity.jumpsUsed === 0 && entity.yDirection === 0) || entity.jumpsUsed > 0 || entity.maxJumps > 1) {
-			entity.yDirection = -1;
-			entity.yAccel = -entity.jumpForce;
-			entity.jumpStart = entity.y;
-			entity.jumpsUsed++;
+		if ((entity.ju === 0 && entity.yd === 0) || entity.ju > 0 || entity.mj > 1) {
+			entity.yd = -1;
+			entity.ya = -entity.jf;
+			entity.js = entity.y;
+			entity.ju++;
 		}
-		entity.heightTraveled = 0;
+		entity.ht = 0;
 
 	}
-	if (entity.yDirection === 0 || !entity.jumping || entity.heightTraveled > entity.jumpHeight) {
-		entity.yDirection = 1;
+	if (entity.yd === 0 || !entity.j || entity.ht > entity.jh) {
+		entity.yd = 1;
 	}
-	if (entity.yDirection === 1) {
-		entity.jumping = 0;
-		entity.yAccel = entity.yAccel + ((entity.jumpForce / 2) / 60 * dt); // falling
+	if (entity.yd === 1) {
+		entity.j = 0;
+		entity.ya = entity.ya + ((entity.jf / 2) / 60 * dt); // falling
 	}
 
-	if (entity.yDirection === 0) {
-		if (entity.yAccel > 0) {
-			entity.yAccel = entity.yAccel + ((-1 / 60) * dt);
-		} else if (entity.yAccel < 0) {
-			entity.yAccel = entity.yAccel + ((1 / 60) * dt);
+	if (entity.yd === 0) {
+		if (entity.ya > 0) {
+			entity.ya = entity.ya + ((-1 / 60) * dt);
+		} else if (entity.ya < 0) {
+			entity.ya = entity.ya + ((1 / 60) * dt);
 		}
-		if (entity.yAccel < ((1 / 60) * dt) && entity.yAccel > ((-1 / 60) * dt)) {
-			entity.yAccel = 0;
+		if (entity.ya < ((1 / 60) * dt) && entity.ya > ((-1 / 60) * dt)) {
+			entity.ya = 0;
 		}
 	}
-	if (entity.yAccel > entity.maxAccel) {
-		entity.yAccel = 10;
+	if (entity.ya > entity.maxa) {
+		entity.ya = 10;
 	}
-	entity.heightTraveled -= entity.yAccel;
-	entity.heightTraveled = round(entity.heightTraveled);
-	entity.y = entity.y + entity.yAccel;
+	entity.ht -= entity.ya;
+	entity.ht = round(entity.ht);
+	entity.y = entity.y + entity.ya;
 }
 
 function testFalling(entity) {
@@ -1083,14 +1091,14 @@ function testFalling(entity) {
 	} else {
 		falling = currentMap[bottomRight] !== 0 || currentMap[bottomLeft] !== 0;
 	}
-	if ((falling || entity.y + entity.h > height * 16) && entity.yDirection === 1) {
+	if ((falling || entity.y + entity.h > height * 16) && entity.yd === 1) {
 		// console.log("STOP FALL")
 		entity.y = modulus(entity.y) * 16;
-		entity.yAccel = 0;
-		entity.yDirection = 0;
-		entity.jumpsUsed = 0;
-		entity.jumping = 0;
-		entity.heightTraveled = 0;
+		entity.ya = 0;
+		entity.yd = 0;
+		entity.ju = 0;
+		entity.j = 0;
+		entity.ht = 0;
 	}
 }
 
@@ -1098,19 +1106,19 @@ function testJumping(entity) {
 	var xAlignment = entity.x % 16;
 	var aboveLeft = coordinate(modulus(entity.x), modulus(entity.y - (entity.h / 2)), currentMapTiles);
 	var aboveRight = coordinate(modulus(entity.x + entity.w), modulus(entity.y - (entity.h / 2)), currentMapTiles);
-	var jumping = false;
+	var j = false;
 	if (xAlignment === 0) {
-		jumping = currentMap[aboveLeft] !== 0;
+		j = currentMap[aboveLeft] !== 0;
 	} else {
-		jumping = currentMap[aboveLeft] !== 0 || currentMap[aboveRight] !== 0;
+		j = currentMap[aboveLeft] !== 0 || currentMap[aboveRight] !== 0;
 	}
-	if (jumping && entity.jumping === 1) {
+	if (j && entity.j === 1) {
 		// console.log("STOP JUMP")
 		entity.y = modulus(entity.y) * 16;
-		entity.yAccel = -1;
-		entity.yDirection = 1;
-		entity.jumping = 0;
-		entity.heightTraveled = 0;
+		entity.ya = -1;
+		entity.yd = 1;
+		entity.j = 0;
+		entity.ht = 0;
 	}
 }
 
@@ -1140,23 +1148,23 @@ function testWalking(entity) {
 		}
 	}
 	if (xAlignment === 0) {
-		if ((walkRight || entity.x + entity.w > width * 16 || entity.x < 0) && entity.xAccel > 0) {
+		if ((walkRight || entity.x + entity.w > width * 16 || entity.x < 0) && entity.xa > 0) {
 			// console.log("STOP 1")
 			entity.x = modulus(entity.x) * 16;
-			// entity.xDirection = 0;
-			entity.xAccel = 0;
+			// entity.xd = 0;
+			entity.xa = 0;
 		}
 	} else {
-		if ((walkRight || entity.x + entity.w > width * 16 || entity.x < 0) && entity.xAccel > 0) {
+		if ((walkRight || entity.x + entity.w > width * 16 || entity.x < 0) && entity.xa > 0) {
 			// console.log("STOP 1")
 			entity.x = modulus(entity.x) * 16;
-			// entity.xDirection = 0;
-			entity.xAccel = 0;
-		} else if ((walkLeft || entity.x + entity.w > width * 16 || entity.x < 0) && entity.xAccel < 0) {
+			// entity.xd = 0;
+			entity.xa = 0;
+		} else if ((walkLeft || entity.x + entity.w > width * 16 || entity.x < 0) && entity.xa < 0) {
 			// console.log("STOP -1")
 			entity.x = modulus(entity.x + entity.w) * 16;
-			// entity.xDirection = 0;
-			entity.xAccel = 0;
+			// entity.xd = 0;
+			entity.xa = 0;
 		}
 	}
 }
@@ -1533,22 +1541,22 @@ function testDoors() {
 		if (door.dir === "W") {
 			translatedY += Math.floor(1 / 2);
 		}
-		if (window.performance.now() - player.doorCooldown > 400) {
-			if (player.x <= 0 && player.xDirection === -1 && door.dir === "W" && translatedX === playerX && translatedY === playerY) {
+		if (window.performance.now() - player.dc > 400) {
+			if (player.x <= 0 && player.xd === -1 && door.dir === "W" && translatedX === playerX && translatedY === playerY) {
 				// console.log("Collision with left door");
 				movePlayer(door.r2, "E", door.y);
 			}
-			if (player.y <= 0 && player.yDirection === -1 && door.dir === "N" && translatedX === playerX && translatedY === playerY) {
+			if (player.y <= 0 && player.yd === -1 && door.dir === "N" && translatedX === playerX && translatedY === playerY) {
 				// console.log("Collision with top door");
 				movePlayer(door.r2, "S", door.x);
 			}
-			if (player.x + player.w >= roomWidth && player.xDirection === 1 && door.dir === "E" && translatedX === playerX2 && translatedY === playerY) {
+			if (player.x + player.w >= roomWidth && player.xd === 1 && door.dir === "E" && translatedX === playerX2 && translatedY === playerY) {
 				// console.log("Collision with right door");
 				movePlayer(door.r2, "W", door.y);
 			}
-			if (player.y + player.h >= roomHeight && player.yDirection !== 0  && Math.abs(player.yAccel) > 5 && door.dir === "S" && translatedX === playerX && (translatedY === playerY2 || translatedY === playerY)) {
-				// console.log(player.yAccel)
-			// console.log(window.performance.now() - player.doorCooldown)
+			if (player.y + player.h >= roomHeight && player.yd !== 0 && Math.abs(player.ya) > 5 && door.dir === "S" && translatedX === playerX && (translatedY === playerY2 || translatedY === playerY)) {
+				// console.log(player.ya)
+				// console.log(window.performance.now() - player.dc)
 				// console.log("Collision with bottom door");
 				movePlayer(door.r2, "N", door.x);
 			}
@@ -1569,8 +1577,12 @@ function enterRoom(room) {
 	width = room.map.width * 10;
 	realMapHeight = room.map.height * 10 * 16;
 	realMapWidth = room.map.width * 10 * 16;
-	player.doorCooldown = window.performance.now();
+	player.dc = window.performance.now();
+	document.title = currentRoom.c.name;
+	history.pushState(null, null, "#"+document.title);
 }
+
+
 var viewPortX = 0;
 var viewPortY = 0;
 var miniViewPortX = 0;
@@ -1620,27 +1632,32 @@ var rColors = [{
 	bg: "#BBBBBB",
 	bd: "#A0A0A0",
 	o: "#CFCFCF",
-	l: "#FFFFFF"
+	l: "#FFFFFF",
+	name:"Dungeon"
 }, {
 	bd: "#990000",
 	bg: "#FF3333",
 	o: "#FF0000",
-	l: "#FF0000"
+	l: "#FF0000",
+	name:"Fire"
 }, {
 	bd: "#006600",
 	bg: "#00BB00",
 	o: "#00BB00",
-	l: "#00FF00"
+	l: "#00FF00",
+	name:"Air"
 }, {
 	bd: "#000066",
 	bg: "#3333FF",
 	o: "#0000FF",
-	l: "#0000FF"
+	l: "#0000FF",
+	name:"Water"
 }, {
 	bg: "#9F9F9F",
 	bd: "#555555",
 	o: "#555555",
-	l: "#000000"
+	l: "#000000",
+	name:"Earth"
 }];
 
 function startAt(x, y, r) {

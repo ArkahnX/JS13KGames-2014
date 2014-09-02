@@ -3,6 +3,7 @@ var getElementById = 0;
 var querySelector = 1;
 var querySelectorAll = 2;
 var runGameLoop = true;
+var animate = true;
 var frameEvent = new CustomEvent("frame");
 var currentTick = window.performance.now();
 var lastTick = window.performance.now();
@@ -31,7 +32,7 @@ var player = {
 	health: 5,
 	doorCooldown: window.performance.now(),
 	maxHealth: 5,
-	keys:[]
+	keys: []
 }
 var dt = currentTick - lastTick;
 var entities = [player];
@@ -98,11 +99,11 @@ function getByType(id) {
 
 
 function DOMLoaded() {
-	playerCanvas = getByType("player");
-	borderCanvas = getByType("border");
-	tileCanvas = getByType("tile");
-	minimapCanvas = getByType("minimap");
-	miniMapIconsCanvas = getByType("minimapIcons");
+	playerCanvas = getByType("p");
+	borderCanvas = getByType("b");
+	tileCanvas = getByType("t");
+	minimapCanvas = getByType("m");
+	miniMapIconsCanvas = getByType("i");
 	playerContext = playerCanvas.getContext("2d");
 	borderContext = borderCanvas.getContext("2d");
 	tileContext = tileCanvas.getContext("2d");
@@ -121,11 +122,6 @@ function DOMLoaded() {
 	}
 	doors();
 	enterRoom(world.rooms[0]);
-	currentRoom.startRoom = true;
-	currentRoom.startPositionX = random(0, (currentRoom.mapW * segmentsPerRoom) - 1);
-	currentRoom.startPositionY = random(0, (currentRoom.mapH * segmentsPerRoom) - 1);
-	player.x = currentRoom.startPositionX * roomSize * tileSize + (roomSize / 2 * tileSize);
-	player.y = currentRoom.startPositionY * roomSize * tileSize + (2 * tileSize);
 	loop();
 }
 
@@ -145,35 +141,30 @@ function resizeCanvas() {
 
 
 function eachFrame() {
-	for (var i = 0; i < entities.length; i++) {
-		var entity = entities[i];
-		handleXMovement(entity);
-		entity.x = round(entity.x);
-		entity.y = round(entity.y);
-		testWalking(entity);
-		testJumping(entity);
-		handleJump(entity);
-		testDoors();
-		testFalling(entity);
-	}
-	parseViewPort();
-	borderContext.strokeStyle = currentRoom.mapColor.border;
-	borderContext.lineWidth = 2;
-	playerContext.clearRect(0, 0, playerCanvas.width, playerCanvas.height);
-	borderContext.clearRect(0, 0, borderCanvas.width, borderCanvas.height);
-	tileContext.fillStyle = currentRoom.mapColor.border;
-	tileContext.fillRect(0, 0, tileCanvas.width, tileCanvas.height);
-	tileContext.fillStyle = currentRoom.mapColor.background;
-	// optimize
-	tileContext.clearRect(0 - viewPortX, 0 - viewPortY, realMapWidth, realMapHeight);
-	drawMap();
-	drawWorld();
-	playerContext.fillStyle = "#000000";
-	for (var i = 0; i < entities.length; i++) {
-		var entity = entities[i];
-		var red = (15 - ((15) * (player.health / player.maxHealth))).toString(16);
-		playerContext.fillStyle = '#' + red + red + '0000';
-		playerContext.fillRect(entity.x - viewPortX, entity.y - viewPortY, entity.w, entity.h);
+	if (runGameLoop) {
+		for (var i = 0; i < entities.length; i++) {
+			var entity = entities[i];
+			handleXMovement(entity);
+			entity.x = round(entity.x);
+			entity.y = round(entity.y);
+			testWalking(entity);
+			testJumping(entity);
+			handleJump(entity);
+			testDoors();
+			testFalling(entity);
+		}
+		parseViewPort();
+		borderContext.strokeStyle = currentRoom.mapColor.border;
+		borderContext.lineWidth = 2;
+		playerContext.clearRect(0, 0, playerCanvas.width, playerCanvas.height);
+		borderContext.clearRect(0, 0, borderCanvas.width, borderCanvas.height);
+		tileContext.fillStyle = currentRoom.mapColor.border;
+		tileContext.fillRect(0, 0, tileCanvas.width, tileCanvas.height);
+		tileContext.fillStyle = currentRoom.mapColor.background;
+		// optimize
+		tileContext.clearRect(0 - viewPortX, 0 - viewPortY, realMapWidth, realMapHeight);
+		drawMap();
+		drawWorld();
 	}
 }
 
@@ -184,7 +175,7 @@ function loop() {
 	dt = currentTick - lastTick;
 	lastTick = currentTick;
 	document.dispatchEvent(frameEvent);
-	if (runGameLoop) {
+	if (animate) {
 		requestAnimationFrame(loop);
 	}
 }
@@ -195,6 +186,7 @@ listen("keyup", handleKeyUp);
 listen("resize", resizeCanvas);
 listen("DOMContentLoaded", DOMLoaded);
 listen("frame", eachFrame);
+listen("frame", transition);
 window.addEventListener("resize", trigger);
 document.addEventListener("DOMContentLoaded", trigger);
 document.addEventListener("mousedown", trigger);

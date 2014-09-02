@@ -38,5 +38,20 @@ module.exports = {
 	other:"o",
 	lock:"l",
 	frontiers:"f",
-
+	xDirection:"xd",
+	yDirection:"yd",
+	xAccel:"xa",
+	yAccel:"ya",
+	maxAccel:"ma",
+	jumpForce:"jf",
+	jumpHeight:"jh",
+	jumpStart:"js",
+	jumping:"j",
+	jumpsUsed:"ju",
+	heightTraveled:"ht",
+	maxJumps:"mj",
+	angle:"a",
+	health:"ῼ",
+	doorCooldown:"dc",
+	maxHealth:"mῼ"
 };

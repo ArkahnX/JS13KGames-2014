@@ -35,7 +35,6 @@ function drawMap() {
 				if (topTile === 0) {
 					hasFloor = 1;
 				}
-				// drawTile(x, y, currentMap, currentMapTiles, startX, rectWidth, hasFloor);
 			}
 			if (currentMap[coordinate(x, y, currentMapTiles)] === 0 || x === mapX2 - 1) {
 				drawRect(x, y, currentMap, currentMapTiles, startX, rectWidth, hasFloor);
@@ -44,6 +43,15 @@ function drawMap() {
 				rectWidth = 0;
 				startX = -currentMapTiles * tileSize * 2;
 				hasFloor = 0;
+			}
+		}
+	}
+
+	for (var y = mapY1; y < mapY2; y++) {
+		for (var x = mapX1; x < mapX2; x++) {
+			if (currentMap[coordinate(x, y, currentMapTiles)] > 1) {
+				tileContext.fillStyle = regionColors[currentMap[coordinate(x, y, currentMapTiles)] - 1].background;
+				drawRect(x, y, currentMap, currentMapTiles, (x * tileSize) - viewPortX, tileSize, true);
 			}
 		}
 	}
@@ -199,8 +207,8 @@ function drawWorld() {
 	miniMapPlayerX = (currentRoom.mapX * miniMapSize) + (modulus(modulus(modulus(player.x), roomSize), segmentsPerRoom) * miniMapSize) - miniViewPortX;
 	miniMapPlayerY = (currentRoom.mapY * miniMapSize) + (modulus(modulus(modulus(player.y), roomSize), segmentsPerRoom) * miniMapSize) - miniViewPortY;
 	if (currentRoom.mapX + modulus(modulus(modulus(player.x), roomSize), segmentsPerRoom) !== lastPlayerX || currentRoom.mapY + modulus(modulus(modulus(player.y), roomSize), segmentsPerRoom) !== lastPlayerY || lastRoomLength !== world.rooms.length) {
-		minimapCanvas.width = 500;
-		minimapCanvas.height = 500;
+		minimapCanvas.width = 150;
+		minimapCanvas.height = 150;
 		minimapContext.clearRect(0, 0, minimapCanvas.width, minimapCanvas.height);
 		drawnDoors.length = 0;
 		minimapContext.lineWidth = 2;
@@ -234,6 +242,13 @@ function drawWorld() {
 	lastPlayerX = currentRoom.mapX + modulus(modulus(modulus(player.x), roomSize), segmentsPerRoom);
 	lastPlayerY = currentRoom.mapY + modulus(modulus(modulus(player.y), roomSize), segmentsPerRoom);
 	lastRoomLength = world.rooms.length;
+	playerContext.fillStyle = "#000000";
+	for (var i = 0; i < entities.length; i++) {
+		var entity = entities[i];
+		var red = (15 - ((15) * (player.health / player.maxHealth))).toString(16);
+		playerContext.fillStyle = '#' + red + red + '0000';
+		playerContext.fillRect(entity.x - viewPortX, entity.y - viewPortY, entity.w, entity.h);
+	}
 }
 
 function forEachRoom(fillStyle, strokeStyle, fn) {

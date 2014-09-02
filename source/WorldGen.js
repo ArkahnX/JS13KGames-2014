@@ -6,27 +6,32 @@ var regionColors = [{
 	background: "#BBBBBB",
 	border: "#A0A0A0",
 	other: "#CFCFCF",
-	lock: "#FFFFFF"
+	lock: "#FFFFFF",
+	name:"Dungeon"
 }, {
 	border: "#990000",
 	background: "#FF3333",
 	other: "#FF0000",
-	lock: "#FF0000"
+	lock: "#FF0000",
+	name:"Fire"
 }, {
 	border: "#006600",
 	background: "#00BB00",
 	other: "#00BB00",
-	lock: "#00FF00"
+	lock: "#00FF00",
+	name:"Air"
 }, {
 	border: "#000066",
 	background: "#3333FF",
 	other: "#0000FF",
-	lock: "#0000FF"
+	lock: "#0000FF",
+	name:"Water"
 }, {
 	background: "#9F9F9F",
 	border: "#555555",
 	other: "#555555",
-	lock: "#000000"
+	lock: "#000000",
+	name:"Earth"
 }];
 
 function startAt(x, y, region) {
