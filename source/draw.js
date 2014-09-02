@@ -72,7 +72,7 @@ function drawRect(x, y, map, currentMapTiles, startX, rectWidth, hasFloor) {
 	var canvasX = startX;
 	var canvasY = (y * tileSize) - viewPortY;
 	if (hasFloor === 1) {
-		tileContext.fillRect(canvasX, canvasY - 5, rectWidth, 21);
+		tileContext.fillRect(canvasX, canvasY - (tileSize * 3.5), rectWidth, tileSize + (tileSize * 3.5));
 	} else {
 		tileContext.fillRect(canvasX, canvasY, rectWidth, tileSize);
 	}

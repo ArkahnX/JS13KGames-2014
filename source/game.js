@@ -11,7 +11,7 @@ var keymap = {};
 
 var player = {
 	x: 151,
-	y: 16 * 3,
+	y: tileSize * 3,
 	w: tileSize,
 	h: tileSize * 2,
 	img: null,

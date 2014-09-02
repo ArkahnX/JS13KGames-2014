@@ -1,4 +1,231 @@
 
+// javascript-astar
+// http://github.com/bgrins/javascript-astar
+// Freely distributable under the MIT License.
+// Implements the astar search algorithm in javascript using a binary heap.
+var astar = {
+	init: function(grid) {
+		for (var x = 0, xl = grid[LENGTH]; x < xl; x++) {
+			for (var y = 0, yl = grid[x][LENGTH]; y < yl; y++) {
+				var node = grid[x][y];
+				node.f = 0;
+				node.g = 0;
+				node.h = 0;
+				node[COST] = node[SPEED];
+				node.visited = false;
+				node.closed = false;
+				node.parent = NULL;
+			}
+		}
+	},
+	heap: function() {
+		return new BinaryHeap(function(node) {
+			return node.f;
+		});
+	},
+	search: function(grid, start, end) {
+		astar.init(grid);
+		heuristic = astar.manhattan;
+
+		var openHeap = astar.heap();
+
+		openHeap[PUSH](start);
+
+		while (openHeap.size() > 0) {
+
+			// Grab the lowest f(x) to process next.  Heap keeps this sorted for us.
+			var currentNode = openHeap.pop();
+
+			// End case -- result has been found, return the traced path.
+			if (currentNode === end) {
+				var curr = currentNode;
+				var ret = [];
+				while (curr.parent) {
+					ret[PUSH](curr);
+					curr = curr.parent;
+				}
+				return ret.reverse();
+			}
+
+			// Normal case -- move currentNode from open to closed, process each of its neighbors.
+			currentNode.closed = true;
+
+			// Find all neighbors for the current node.
+			var neighbors = astar.neighbors(grid, currentNode);
+
+			for (var i = 0, il = neighbors[LENGTH]; i < il; i++) {
+				var neighbor = neighbors[i];
+
+				if (neighbor.closed || neighbor[SPEED] === 0) {
+					// Not a valid node to process, skip to next neighbor.
+					continue;
+				}
+
+				// The g score is the shortest distance from start to current node.
+				// We need to check if the path we have arrived at this neighbor is the shortest one we have seen yet.
+				var gScore = currentNode.g + neighbor[COST];
+				var beenVisited = neighbor.visited;
+
+				if (!beenVisited || gScore < neighbor.g) {
+
+					// Found an optimal (so far) path to this node.  Take score for node to see how good it is.
+					neighbor.visited = true;
+					neighbor.parent = currentNode;
+					neighbor.h = neighbor.h || heuristic(neighbor.x, neighbor.y, end.x, end.y);
+					neighbor.g = gScore;
+					neighbor.f = neighbor.g + neighbor.h;
+
+					if (!beenVisited) {
+						// Pushing to heap will put it in proper place based on the 'f' value.
+						openHeap[PUSH](neighbor);
+					} else {
+						// Already seen the node, but since it has been rescored we need to reorder it in the heap
+						openHeap.rescoreElement(neighbor);
+					}
+				}
+			}
+		}
+
+		// No result was found - empty array signifies failure to find path.
+		return [];
+	},
+	manhattan: function(pos0X, pos0Y, pos1X, pos1Y) {
+		// See list of heuristics: http://theory.stanford.edu/~amitp/GameProgramming/Heuristics.html
+		var d1 = WINDOW[MATH].abs(pos1X - pos0X);
+		var d2 = WINDOW[MATH].abs(pos1Y - pos0Y);
+		return d1 + d2;
+	},
+	neighbors: function(grid, node) {
+		var ret = [];
+		var x = node.x;
+		var y = node.y;
+
+		// West
+		if (grid[x - 1] && grid[x - 1][y]) {
+			ret[PUSH](grid[x - 1][y]);
+		}
+
+		// East
+		if (grid[x + 1] && grid[x + 1][y]) {
+			ret[PUSH](grid[x + 1][y]);
+		}
+
+		// South
+		if (grid[x] && grid[x][y - 1]) {
+			ret[PUSH](grid[x][y - 1]);
+		}
+
+		// North
+		if (grid[x] && grid[x][y + 1]) {
+			ret[PUSH](grid[x][y + 1]);
+		}
+
+		return ret;
+	}
+};
+
+function BinaryHeap(scoreFunction) {
+	this.content = [];
+	this.scoreFunction = scoreFunction;
+}
+
+BinaryHeap.prototype = {
+	push: function(element) {
+		// Add the new element to the end of the array.
+		this.content[PUSH](element);
+
+		// Allow it to sink down.
+		this.sinkDown(this.content[LENGTH] - 1);
+	},
+	pop: function() {
+		// Store the first element so we can return it later.
+		var result = this.content[0];
+		// Get the element at the end of the array.
+		var end = this.content.pop();
+		// If there are any elements left, put the end element at the
+		// start, and let it bubble up.
+		if (this.content[LENGTH] > 0) {
+			this.content[0] = end;
+			this.bubbleUp(0);
+		}
+		return result;
+	},
+	size: function() {
+		return this.content[LENGTH];
+	},
+	rescoreElement: function(node) {
+		this.sinkDown(this.content.indexOf(node));
+	},
+	sinkDown: function(n) {
+		// Fetch the element that has to be sunk.
+		var element = this.content[n];
+
+		// When at 0, an element can not sink any further.
+		while (n > 0) {
+
+			// Compute the parent element's index, and fetch it.
+			var parentN = ((n + 1) >> 1) - 1,
+				parent = this.content[parentN];
+			// Swap the elements if the parent is greater.
+			if (this.scoreFunction(element) < this.scoreFunction(parent)) {
+				this.content[parentN] = element;
+				this.content[n] = parent;
+				// Update 'n' to continue at the new position.
+				n = parentN;
+			}
+
+			// Found a parent that is less, no need to sink any further.
+			else {
+				break;
+			}
+		}
+	},
+	bubbleUp: function(n) {
+		// Look up the target element and its score.
+		var length = this.content[LENGTH],
+			element = this.content[n],
+			elemScore = this.scoreFunction(element);
+
+		while (true) {
+			// Compute the indices of the child elements.
+			var child2N = (n + 1) << 1,
+				child1N = child2N - 1;
+			// This is used to store the new position of the element,
+			// if any.
+			var swap = NULL;
+			// If the first child exists (is inside the array)...
+			if (child1N < length) {
+				// Look it up and compute its score.
+				var child1 = this.content[child1N],
+					child1Score = this.scoreFunction(child1);
+
+				// If the score is less than our element's, we need to swap.
+				if (child1Score < elemScore) swap = child1N;
+			}
+
+			// Do the same checks for the other child.
+			if (child2N < length) {
+				var child2 = this.content[child2N],
+					child2Score = this.scoreFunction(child2);
+				if (child2Score < (swap === NULL ? elemScore : child1Score)) {
+					swap = child2N;
+				}
+			}
+
+			// If the element needs to be moved, swap it, and continue.
+			if (swap !== NULL) {
+				this.content[n] = this.content[swap];
+				this.content[swap] = element;
+				n = swap;
+			}
+
+			// Otherwise, we are done.
+			else {
+				break;
+			}
+		}
+	}
+};
 function drawMap() {
 	var startTime = window.performance.now();
 	var mapX1 = modulus(viewPortX) - 1;
@@ -22,6 +249,7 @@ function drawMap() {
 		var startX = -currentMapTiles * 16 * 2;
 		var hasFloor = 0;
 		var topTile;
+		tileContext.fillStyle = currentRoom.mapColor.background;
 		for (var x = mapX1; x < mapX2; x++) {
 			if (currentMap[coordinate(x, y, currentMapTiles)] !== 0) {
 				rectWidth += 1 * 16;
@@ -45,6 +273,15 @@ function drawMap() {
 				rectWidth = 0;
 				startX = -currentMapTiles * 16 * 2;
 				hasFloor = 0;
+			}
+		}
+	}
+
+	for (var y = mapY1; y < mapY2; y++) {
+		for (var x = mapX1; x < mapX2; x++) {
+			if (currentMap[coordinate(x, y, currentMapTiles)] > 1) {
+				tileContext.fillStyle = regionColors[currentMap[coordinate(x, y, currentMapTiles)] - 1].background;
+				drawRect(x, y, currentMap, currentMapTiles, (x * 16) - viewPortX, 16, true);
 			}
 		}
 	}
@@ -202,27 +439,43 @@ var lastRoomLength = 0;
 
 function drawWorld() {
 	parseMinimapViewport();
-	miniMapPlayerX = (currentRoom.mapX * 16) + (modulus(modulus(modulus(player.x), 10), 3) * 16) - miniViewPortX;
-	miniMapPlayerY = (currentRoom.mapY * 16) + (modulus(modulus(modulus(player.y), 10), 3) * 16) - miniViewPortY;
-	if (currentRoom.mapX + modulus(modulus(modulus(player.x), 10), 3) !== lastPlayerX || currentRoom.mapY + modulus(modulus(modulus(player.y), 10), 3) !== lastPlayerY || lastRoomLength !== world.rooms.length) {
-		minimapCanvas.width = 150;
-		minimapCanvas.height = 150;
+	miniMapPlayerX = (currentRoom.mapX * 16) + (modulus(modulus(modulus(player.x), 10), 1) * 16) - miniViewPortX;
+	miniMapPlayerY = (currentRoom.mapY * 16) + (modulus(modulus(modulus(player.y), 10), 1) * 16) - miniViewPortY;
+	if (currentRoom.mapX + modulus(modulus(modulus(player.x), 10), 1) !== lastPlayerX || currentRoom.mapY + modulus(modulus(modulus(player.y), 10), 1) !== lastPlayerY || lastRoomLength !== world.rooms.length) {
+		minimapCanvas.width = 500;
+		minimapCanvas.height = 500;
 		minimapContext.clearRect(0, 0, minimapCanvas.width, minimapCanvas.height);
 		drawnDoors.length = 0;
 		minimapContext.lineWidth = 2;
+		minimapContext.fillStyle = "#000";
+		for (var r = 0; r < world.regions.length; r++) {
+			for (var i = 0; i < world.regions[r].rooms.length; i++) {
+				room = world.regions[r].rooms[i];
+				roomX = (room.mapX * 16) - miniViewPortX;
+				roomY = (room.mapY * 16) - miniViewPortY;
+				if (roomX + (room.mapW * 16) > 0 && roomY + (room.mapH * 16) > 0 && roomX < minimapCanvas.width && roomY < minimapCanvas.height) {
+					minimapContext.beginPath();
+					minimapContext.rect(roomX, roomY, room.mapW * 16, room.mapH * 16);
+					minimapContext.fill();
+					minimapContext.closePath();
+				}
+			}
+		}
 		forEachRoom("background", "border", function(room, roomX, roomY) {
-			minimapContext.beginPath();
-			minimapContext.rect(roomX, roomY, room.mapW * 16, room.mapH * 16);
-			minimapContext.fill();
-			minimapContext.stroke();
-			minimapContext.closePath();
+			if (room.visited) {
+				minimapContext.beginPath();
+				minimapContext.rect(roomX, roomY, room.mapW * 16, room.mapH * 16);
+				minimapContext.fill();
+				minimapContext.stroke();
+				minimapContext.closePath();
+			}
 		});
 		forEachRoom(0, "background", drawDoors);
 		forEachRoom(0, 0, drawIcons);
 	}
 	drawPlayer();
-	lastPlayerX = currentRoom.mapX + modulus(modulus(modulus(player.x), 10), 3);
-	lastPlayerY = currentRoom.mapY + modulus(modulus(modulus(player.y), 10), 3);
+	lastPlayerX = currentRoom.mapX + modulus(modulus(modulus(player.x), 10), 1);
+	lastPlayerY = currentRoom.mapY + modulus(modulus(modulus(player.y), 10), 1);
 	lastRoomLength = world.rooms.length;
 }
 
@@ -248,34 +501,39 @@ function forEachRoom(fillStyle, strokeStyle, fn) {
 var lockColors = []
 
 function drawIcons(room) {
-	var door = null;
-	for (var i = 0; i < room.doors.length; i++) {
-		door = room.doors[i];
-		var color = regionColors[door.doorType].lock;
-		if (door.doorType > 0) {
-			switch (door.dir) {
-				case "N":
-					drawCircle(16 * door.mapX + 5, 16 * door.mapY, color);
-					continue;
-				case "S":
-					drawCircle(16 * door.mapX + 5, 16 * door.mapY + 16, color);
-					continue;
-				case "W":
-					drawCircle(16 * door.mapX - 3, 16 * door.mapY + 8, color);
-					continue;
-				case "E":
-					drawCircle(16 * door.mapX + 13, 16 * door.mapY + 8, color);
-					continue;
-				default:
-					continue;
+	if (room.visited) {
+		var door = null;
+		for (var i = 0; i < room.doors.length; i++) {
+			door = room.doors[i];
+			var color = regionColors[door.doorType].lock;
+			// console.log(door.doorType, regionColors[door.doorType])
+			if (door.doorType > 0) {
+				switch (door.dir) {
+					case "N":
+						drawCircle(16 * door.mapX + 5, 16 * door.mapY, color);
+						continue;
+					case "S":
+						drawCircle(16 * door.mapX + 5, 16 * door.mapY + 16, color);
+						continue;
+					case "W":
+						drawCircle(16 * door.mapX - 3, 16 * door.mapY + 8, color);
+						continue;
+					case "E":
+						drawCircle(16 * door.mapX + 13, 16 * door.mapY + 8, color);
+						continue;
+					default:
+						continue;
+				}
 			}
 		}
-	}
-	// this.iconStamp.frame = 16 + room.specialType;
-	// stamp(this.iconStamp, this.16 * (room.mapX + room.mapW / 2) - 4, this.16 * (room.mapY + room.mapH / 2) - 4);
-	var color = regionColors[room.specialType].lock;
-	if (room.specialType > 0) {
-		drawCircle(16 * (room.mapX + room.mapW / 2) - 3, 16 * (room.mapY + room.mapH / 2), "rgba(0,0,0,0)", color);
+		// this.iconStamp.frame = 16 + room.specialType;
+		// stamp(this.iconStamp, this.16 * (room.mapX + room.mapW / 2) - 4, this.16 * (room.mapY + room.mapH / 2) - 4);
+		var color = regionColors[room.specialType].lock;
+		// console.log(room.mapX, room.mapY)
+		if (room.specialType > 0) {
+			// console.log(room.specialType, regionColors[room.specialType])
+			drawCircle(16 * (room.mapX + room.mapW / 2) - 3, 16 * (room.mapY + room.mapH / 2), "rgba(0,0,0,0)", color);
+		}
 	}
 }
 
@@ -296,32 +554,34 @@ function drawCircle(centerX, centerY, color, border) {
 var drawnDoors = [];
 
 function drawDoors(room) {
-	var door = null;
-	// var color = room.region.color.background;
-	// minimapContext.lineWidth = 2;
-	// minimapContext.strokeStyle = color;
-	// minimapContext.fillStyle = color;
-	for (var e = 0; e < room.doors.length; e++) {
-		door = room.doors[e];
-		var ID = room.mapX + "-" + room.mapY + "-" + door.room2.mapX + "-" + door.room2.mapY;
-		var ID2 = door.room2.mapX + "-" + door.room2.mapY + "-" + room.mapX + "-" + room.mapY;
-		if (drawnDoors.indexOf(ID2) === -1 && drawnDoors.indexOf(ID) === -1) {
-			var doorX = 16 * door.mapX;
-			var doorY = 16 * door.mapY;
+	if (room.visited) {
+		var door = null;
+		// var color = room.region.color.background;
+		// minimapContext.lineWidth = 2;
+		// minimapContext.strokeStyle = color;
+		// minimapContext.fillStyle = color;
+		for (var e = 0; e < room.doors.length; e++) {
+			door = room.doors[e];
+			var ID = room.mapX + "-" + room.mapY + "-" + door.room2.mapX + "-" + door.room2.mapY;
+			var ID2 = door.room2.mapX + "-" + door.room2.mapY + "-" + room.mapX + "-" + room.mapY;
+			if (drawnDoors.indexOf(ID2) === -1 && drawnDoors.indexOf(ID) === -1) {
+				var doorX = 16 * door.mapX;
+				var doorY = 16 * door.mapY;
 
-			if (door.dir === "N") {
-				drawLine2(doorX + 4, doorY, doorX + 16 - 4, doorY);
+				if (door.dir === "N") {
+					drawLine2(doorX + 4, doorY, doorX + 16 - 4, doorY);
+				}
+				if (door.dir === "S") {
+					drawLine2(doorX + 4, 16 * (door.mapY + 1), doorX + 16 - 4, 16 * (door.mapY + 1));
+				}
+				if (door.dir === "W") {
+					drawLine2(doorX, doorY + 4, doorX, doorY + 16 - 4);
+				}
+				if (door.dir === "E") {
+					drawLine2(16 * (door.mapX + 1), doorY + 4, 16 * (door.mapX + 1), doorY + 16 - 4);
+				}
+				drawnDoors.push(ID);
 			}
-			if (door.dir === "S") {
-				drawLine2(doorX + 4, 16 * (door.mapY + 1), doorX + 16 - 4, 16 * (door.mapY + 1));
-			}
-			if (door.dir === "W") {
-				drawLine2(doorX, doorY + 4, doorX, doorY + 16 - 4);
-			}
-			if (door.dir === "E") {
-				drawLine2(16 * (door.mapX + 1), doorY + 4, 16 * (door.mapX + 1), doorY + 16 - 4);
-			}
-			drawnDoors.push(ID);
 		}
 	}
 }
@@ -340,8 +600,8 @@ var lastFrame = 0;
 
 function drawPlayer() {
 	if (!initPlayerCanvas) {
-		miniMapIconsCanvas.width = 150;
-		miniMapIconsCanvas.height = 150;
+		miniMapIconsCanvas.width = minimapCanvas.width;
+		miniMapIconsCanvas.height = minimapCanvas.height;
 		miniMapIconsContext.lineWidth = 1;
 		initPlayerCanvas = true;
 	}
@@ -362,550 +622,6 @@ function drawPlayer() {
 	miniMapIconsContext.stroke();
 	miniMapIconsContext.closePath();
 	lastFrame = frame;
-}
-//NameSpace
-var EasyStar = EasyStar || {};
-
-/**
-* A simple Node that represents a single tile on the grid.
-* @param {Object} parent The parent node.
-* @param {Number} x The x position on the grid.
-* @param {Number} y The y position on the grid.
-* @param {Number} costSoFar How far this node is in moves*cost from the start.
-* @param {Number} simpleDistanceToTarget Manhatten distance to the end point.
-**/
-EasyStar.Node = function(parent, x, y, costSoFar, simpleDistanceToTarget) {
-	this.parent = parent;
-	this.x = x;
-	this.y = y;
-	this.costSoFar = costSoFar;
-	this.simpleDistanceToTarget = simpleDistanceToTarget;
-
-	/**
-	* @return {Number} Best guess distance of a cost using this node.
-	**/
-	this.bestGuessDistance = function() {
-		return this.costSoFar + this.simpleDistanceToTarget;
-	}
-};
-
-//Constants
-EasyStar.Node.OPEN_LIST = 0;
-EasyStar.Node.CLOSED_LIST = 1;
-/**
-* This is an improved Priority Queue data type implementation that can be used to sort any object type.
-* It uses a technique called a binary heap.
-*
-* For more on binary heaps see: http://en.wikipedia.org/wiki/Binary_heap
-*
-* @param {String} criteria The criteria by which to sort the objects.
-* This should be a property of the objects you're sorting.
-*
-* @param {Number} heapType either PriorityQueue.MAX_HEAP or PriorityQueue.MIN_HEAP.
-**/
-EasyStar.PriorityQueue = function(criteria,heapType) {
-	this.length = 0; //The current length of heap.
-	var queue = [];
-	var isMax = false;
-
-	//Constructor
-	if (heapType==EasyStar.PriorityQueue.MAX_HEAP) {
-		isMax = true;
-	} else if (heapType==EasyStar.PriorityQueue.MIN_HEAP) {
-		isMax = false;
-	} else {
-		throw heapType + " not supported.";
-	}
-
-	/**
-	* Inserts the value into the heap and sorts it.
-	*
-	* @param value The object to insert into the heap.
-	**/
-	this.insert = function(value) {
-		if (!value.hasOwnProperty(criteria)) {
-			throw "Cannot insert " + value + " because it does not have a property by the name of " + criteria + ".";
-		}
-		queue.push(value);
-		this.length++;
-		bubbleUp(this.length-1);
-	}
-
-	/**
-	* Peeks at the highest priority element.
-	*
-	* @return the highest priority element
-	**/
-	this.getHighestPriorityElement = function() {
-		return queue[0];
-	}
-
-	/**
-	* Removes and returns the highest priority element from the queue.
-	*
-	* @return the highest priority element
-	**/
-	this.shiftHighestPriorityElement = function() {
-		if (this.length === 0) {
-			throw ("There are no more elements in your priority queue.");
-		} else if (this.length === 1) {
-			var onlyValue = queue[0];
-			queue = [];
-                        this.length = 0;
-			return onlyValue;
-		}
-		var oldRoot = queue[0];
-		var newRoot = queue.pop();
-		this.length--;
-		queue[0] = newRoot;
-		swapUntilQueueIsCorrect(0);
-		return oldRoot;
-	}
-
-	var bubbleUp = function(index) {
-		if (index===0) {
-			return;
-		}
-		var parent = getParentOf(index);
-		if (evaluate(index,parent)) {
-			swap(index,parent);
-			bubbleUp(parent);
-		} else {
-			return;
-		}
-	}
-
-	var swapUntilQueueIsCorrect = function(value) {
-		var left = getLeftOf(value);
-		var right = getRightOf(value);
-		if (evaluate(left,value)) {
-			swap(value,left);
-			swapUntilQueueIsCorrect(left);
-		} else if (evaluate(right,value)) {
-			swap(value,right);
-			swapUntilQueueIsCorrect(right);
-		} else if (value==0) {
-			return;
-		} else {
-			swapUntilQueueIsCorrect(0);
-		}
-	}
-
-	var swap = function(self,target) {
-		var placeHolder = queue[self];
-		queue[self] = queue[target];
-		queue[target] = placeHolder;
-	}
-
-	var evaluate = function(self,target) {
-		if (queue[target]===undefined||queue[self]===undefined) {
-			return false;
-		}
-
-		var selfValue;
-		var targetValue;
-
-		//Check if the criteria should be the result of a function call.
-		if (typeof queue[self][criteria] === 'function') {
-			selfValue = queue[self][criteria]();
-			targetValue = queue[target][criteria]();
-		} else {
-			selfValue = queue[self][criteria];
-			targetValue = queue[target][criteria];
-		}
-
-		if (isMax) {
-			if (selfValue > targetValue) {
-				return true;
-			} else {
-				return false;
-			}
-		} else {
-			if (selfValue < targetValue) {
-				return true;
-			} else {
-				return false;
-			}
-		}
-	}
-
-	var getParentOf = function(index) {
-		return Math.floor(index/2)-1;
-	}
-
-	var getLeftOf = function(index) {
-		return index*2 + 1;
-	}
-
-	var getRightOf = function(index) {
-		return index*2 + 2;
-	}
-};
-
-//Constants
-EasyStar.PriorityQueue.MAX_HEAP = 0;
-EasyStar.PriorityQueue.MIN_HEAP = 1;
-
-/**
- * Represents a single instance of EasyStar.
- * A path that is in the queue to eventually be found.
- */
-EasyStar.instance = function() {
-	this.isDoneCalculating = true;
-	this.pointsToAvoid = {};
-	this.startX;
-	this.callback;
-	this.startY;
-	this.endX;
-	this.endY;
-	this.nodeHash = {};
-	this.openList;
-};
-/**
-*	EasyStar.js
-*	github.com/prettymuchbryce/EasyStarJS
-*	Licensed under the MIT license.
-*
-*	Implementation By Bryce Neal (@prettymuchbryce)
-**/
-EasyStar.js = function() {
-	var STRAIGHT_COST = 10;
-	var DIAGONAL_COST = 14;
-	var pointsToAvoid = {};
-	var collisionGrid;
-	var costMap = {};
-	var iterationsSoFar;
-	var instances = [];
-	var iterationsPerCalculation = Number.MAX_VALUE;
-	var acceptableTiles;
-	var diagonalsEnabled = false;
-
-	/**
-	* Sets the collision grid that EasyStar uses.
-	*
-	* @param {Array|Number} tiles An array of numbers that represent
-	* which tiles in your grid should be considered
-	* acceptable, or "walkable".
-	**/
-	this.setAcceptableTiles = function(tiles) {
-		if (tiles instanceof Array) {
-			//Array
-			acceptableTiles = tiles;
-		} else if (!isNaN(parseFloat(tiles)) && isFinite(tiles)) {
-			//Number
-			acceptableTiles = [tiles];
-		}
-	};
-
-	/**
-	 * Enable diagonal pathfinding.
-	 */
-	this.enableDiagonals = function() {
-		diagonalsEnabled = true;
-	}
-
-	/**
-	 * Disable diagonal pathfinding.
-	 */
-	this.disableDiagonals = function() {
-		diagonalsEnabled = false;
-	}
-
-	/**
-	* Sets the collision grid that EasyStar uses.
-	*
-	* @param {Array} grid The collision grid that this EasyStar instance will read from.
-	* This should be a 2D Array of Numbers.
-	**/
-	this.setGrid = function(grid) {
-		collisionGrid = grid;
-
-		//Setup cost map
-		for (var y = 0; y < collisionGrid.length; y++) {
-			for (var x = 0; x < collisionGrid[0].length; x++) {
-				if (!costMap[collisionGrid[y][x]]) {
-					costMap[collisionGrid[y][x]] = 1
-				}
-			}
-		}
-	};
-
-	/**
-	* Sets the tile cost for a particular tile type.
-	*
-	* @param {Number} The tile type to set the cost for.
-	* @param {Number} The multiplicative cost associated with the given tile.
-	**/
-	this.setTileCost = function(tileType, cost) {
-		costMap[tileType] = cost;
-	};
-
-	/**
-	* Sets the number of search iterations per calculation.
-	* A lower number provides a slower result, but more practical if you
-	* have a large tile-map and don't want to block your thread while
-	* finding a path.
-	*
-	* @param {Number} iterations The number of searches to prefrom per calculate() call.
-	**/
-	this.setIterationsPerCalculation = function(iterations) {
-		iterationsPerCalculation = iterations;
-	};
-
-	/**
-	* Avoid a particular point on the grid,
-	* regardless of whether or not it is an acceptable tile.
-	*
-	* @param {Number} x The x value of the point to avoid.
-	* @param {Number} y The y value of the point to avoid.
-	**/
-	this.avoidAdditionalPoint = function(x, y) {
-		pointsToAvoid[x + "_" + y] = 1;
-	};
-
-	/**
-	* Stop avoiding a particular point on the grid.
-	*
-	* @param {Number} x The x value of the point to stop avoiding.
-	* @param {Number} y The y value of the point to stop avoiding.
-	**/
-	this.stopAvoidingAdditionalPoint = function(x, y) {
-		delete pointsToAvoid[x + "_" + y];
-	};
-
-	/**
-	* Stop avoiding all additional points on the grid.
-	**/
-	this.stopAvoidingAllAdditionalPoints = function() {
-		pointsToAvoid = {};
-	};
-
-	/**
-	* Find a path.
-	*
-	* @param {Number} startX The X position of the starting point.
-	* @param {Number} startY The Y position of the starting point.
-	* @param {Number} endX The X position of the ending point.
-	* @param {Number} endY The Y position of the ending point.
-	* @param {Function} callback A function that is called when your path
-	* is found, or no path is found.
-	*
-	**/
-	this.findPath = function(startX, startY ,endX, endY, callback) {
-		//No acceptable tiles were set
-		if (acceptableTiles === undefined) {
-			throw new Error("You can't set a path without first calling setAcceptableTiles() on EasyStar.");
-		}
-		//No grid was set
-		if (collisionGrid === undefined) {
-			throw new Error("You can't set a path without first calling setGrid() on EasyStar.");
-		}
-
-		//Start or endpoint outside of scope.
-		if (startX < 0 || startY < 0 || endX < 0 || endX < 0 ||
-		startX > collisionGrid[0].length-1 || startY > collisionGrid.length-1 ||
-		endX > collisionGrid[0].length-1 || endY > collisionGrid.length-1) {
-			throw new Error("Your start or end point is outside the scope of your grid.");
-		}
-
-		//Start and end are the same tile.
-		if (startX===endX && startY===endY) {
-			callback([]);
-		}
-
-		//End point is not an acceptable tile.
-		var endTile = collisionGrid[endY][endX];
-		var isAcceptable = false;
-		for (var i = 0; i < acceptableTiles.length; i++) {
-			if (endTile === acceptableTiles[i]) {
-				isAcceptable = true;
-				break;
-			}
-		}
-
-		if (isAcceptable === false) {
-			callback(null);
-			return;
-		}
-
-		//Create the instance
-		var instance = new EasyStar.instance();
-		instance.openList = new EasyStar.PriorityQueue("bestGuessDistance",EasyStar.PriorityQueue.MIN_HEAP);
-		instance.isDoneCalculating = false;
-		instance.nodeHash = {};
-		instance.startX = startX;
-		instance.startY = startY;
-		instance.endX = endX;
-		instance.endY = endY;
-		instance.callback = callback;
-
-		instance.openList.insert(coordinateToNode(instance, instance.startX,
-			instance.startY, null, STRAIGHT_COST));
-
-		instances.push(instance);
-	};
-
-	/**
-	* This method steps through the A* Algorithm in an attempt to
-	* find your path(s). It will search 4 tiles for every calculation.
-	* You can change the number of calculations done in a call by using
-	* easystar.setIteratonsPerCalculation().
-	**/
-	this.calculate = function() {
-		if (instances.length === 0 || collisionGrid === undefined || acceptableTiles === undefined) {
-			return;
-		}
-		for (iterationsSoFar = 0; iterationsSoFar < iterationsPerCalculation; iterationsSoFar++) {
-			if (instances.length === 0) {
-				return;
-			}
-
-			//Couldn't find a path.
-			if (instances[0].openList.length===0) {
-				instances[0].callback(null);
-				instances.shift();
-				continue;
-			}
-
-			var searchNode = instances[0].openList.shiftHighestPriorityElement();
-			searchNode.list = EasyStar.Node.CLOSED_LIST;
-
-			if (searchNode.y > 0) {
-				checkAdjacentNode(instances[0], searchNode, 0, -1, STRAIGHT_COST *
-					costMap[collisionGrid[searchNode.y-1][searchNode.x]]);
-				if (instances[0].isDoneCalculating===true) {
-					instances.shift();
-					continue;
-				}
-			}
-			if (searchNode.x < collisionGrid[0].length-1) {
-				checkAdjacentNode(instances[0], searchNode, 1, 0, STRAIGHT_COST *
-					costMap[collisionGrid[searchNode.y][searchNode.x+1]]);
-				if (instances[0].isDoneCalculating===true) {
-					instances.shift();
-					continue;
-				}
-			}
-			if (searchNode.y < collisionGrid.length-1) {
-				checkAdjacentNode(instances[0], searchNode, 0, 1, STRAIGHT_COST *
-					costMap[collisionGrid[searchNode.y+1][searchNode.x]]);
-				if (instances[0].isDoneCalculating===true) {
-					instances.shift();
-					continue;
-				}
-			}
-			if (searchNode.x > 0) {
-				checkAdjacentNode(instances[0], searchNode, -1, 0, STRAIGHT_COST *
-					costMap[collisionGrid[searchNode.y][searchNode.x-1]]);
-				if (instances[0].isDoneCalculating===true) {
-					instances.shift();
-					continue;
-				}
-			}
-			if (diagonalsEnabled) {
-				if (searchNode.x > 0 && searchNode.y > 0) {
-					checkAdjacentNode(instances[0], searchNode, -1, -1,  DIAGONAL_COST *
-						costMap[collisionGrid[searchNode.y-1][searchNode.x-1]]);
-					if (instances[0].isDoneCalculating===true) {
-						instances.shift();
-						continue;
-					}
-				}
-				if (searchNode.x < collisionGrid[0].length-1 && searchNode.y < collisionGrid.length-1) {
-					checkAdjacentNode(instances[0], searchNode, 1, 1, DIAGONAL_COST *
-						costMap[collisionGrid[searchNode.y+1][searchNode.x+1]]);
-					if (instances[0].isDoneCalculating===true) {
-						instances.shift();
-						continue;
-					}
-				}
-				if (searchNode.x < collisionGrid[0].length-1 && searchNode.y > 0) {
-					checkAdjacentNode(instances[0], searchNode, 1, -1, DIAGONAL_COST *
-						costMap[collisionGrid[searchNode.y-1][searchNode.x+1]]);
-					if (instances[0].isDoneCalculating===true) {
-						instances.shift();
-						continue;
-					}
-				}
-				if (searchNode.x > 0 && searchNode.y < collisionGrid.length-1) {
-					checkAdjacentNode(instances[0], searchNode, -1, 1, DIAGONAL_COST *
-						costMap[collisionGrid[searchNode.y+1][searchNode.x-1]]);
-					if (instances[0].isDoneCalculating===true) {
-						instances.shift();
-						continue;
-					}
-				}
-			}
-		}
-	};
-
-	//Private methods follow
-
-	var checkAdjacentNode = function(instance, searchNode, x, y, cost) {
-		var adjacentCoordinateX = searchNode.x+x;
-		var adjacentCoordinateY = searchNode.y+y;
-
-		if (pointsToAvoid[adjacentCoordinateX + "_" + adjacentCoordinateY] === undefined) {
-			if (instance.endX === adjacentCoordinateX && instance.endY === adjacentCoordinateY) {
-				instance.isDoneCalculating = true;
-				var path = [];
-				var pathLen = 0;
-				path[pathLen] = {x: adjacentCoordinateX, y: adjacentCoordinateY};
-				pathLen++;
-				path[pathLen] = {x: searchNode.x, y:searchNode.y};
-				pathLen++;
-				var parent = searchNode.parent;
-				while (parent!=null) {
-					path[pathLen] = {x: parent.x, y:parent.y};
-					pathLen++;
-					parent = parent.parent;
-				}
-				path.reverse();
-				instance.callback(path);
-			}
-
-			for (var i = 0; i < acceptableTiles.length; i++) {
-				if (collisionGrid[adjacentCoordinateY][adjacentCoordinateX] === acceptableTiles[i]) {
-
-					var node = coordinateToNode(instance, adjacentCoordinateX,
-						adjacentCoordinateY, searchNode, cost);
-
-					if (node.list === undefined) {
-						node.list = EasyStar.Node.OPEN_LIST;
-						instance.openList.insert(node);
-					} else if (node.list === EasyStar.Node.OPEN_LIST) {
-						if (searchNode.costSoFar + cost < node.costSoFar) {
-							node.costSoFar = searchNode.costSoFar + cost;
-							node.parent = searchNode;
-						}
-					}
-					break;
-				}
-			}
-
-		}
-	};
-
-	//Helpers
-
-	var coordinateToNode = function(instance, x, y, parent, cost) {
-		if (instance.nodeHash[x + "_" + y]!==undefined) {
-			return instance.nodeHash[x + "_" + y];
-		}
-		var simpleDistanceToTarget = getDistance(x, y, instance.endX, instance.endY);
-		if (parent!==null) {
-			var costSoFar = parent.costSoFar + cost;
-		} else {
-			costSoFar = simpleDistanceToTarget;
-		}
-		var node = new EasyStar.Node(parent,x,y,costSoFar,simpleDistanceToTarget);
-		instance.nodeHash[x + "_" + y] = node;
-		return node;
-	};
-
-	var getDistance = function(x1,y1,x2,y2) {
-		return Math.sqrt(Math.abs(x2-x1)*Math.abs(x2-x1) + Math.abs(y2-y1)*Math.abs(y2-y1)) * STRAIGHT_COST;
-	};
 }
 var playerCanvas, tileCanvas, borderCanvas, playerContext, tileContext, borderContext, minimapContext, minimapCanvas, miniMapIconsContext, miniMapIconsCanvas;
 var getElementById = 0;
@@ -939,7 +655,8 @@ var player = {
 	angle: 0,
 	health: 5,
 	doorCooldown: window.performance.now(),
-	maxHealth: 5
+	maxHealth: 5,
+	keys:[]
 }
 var dt = currentTick - lastTick;
 var entities = [player];
@@ -1023,9 +740,17 @@ function DOMLoaded() {
 		for (var i = 0; i < rooms; i++) {
 			addRoomToWorld();
 		}
-		addRegion();
+		if (r + 1 < regionColors.length) {
+			addRegion();
+		}
 	}
 	doors();
+	enterRoom(world.rooms[0]);
+	currentRoom.startRoom = true;
+	currentRoom.startPositionX = random(0, (currentRoom.mapW * 1) - 1);
+	currentRoom.startPositionY = random(0, (currentRoom.mapH * 1) - 1);
+	player.x = currentRoom.startPositionX * 10 * 16 + (10 / 2 * 16);
+	player.y = currentRoom.startPositionY * 10 * 16 + (2 * 16);
 	loop();
 }
 
@@ -1502,20 +1227,20 @@ function cloneRoom(room) {
 	};
 }
 
-roomList.push(smallRoom(0,  blankArray));
-roomList.push(smallRoom(1,  room1));
-roomList.push(smallRoom(2,  room2));
-roomList.push(smallRoom(3,  room3));
-roomList.push(smallRoom(4,  room4));
-roomList.push(smallRoom(5,  room5));
-roomList.push(smallRoom(6,  room6));
-roomList.push(smallRoom(7,  room7));
-roomList.push(smallRoom(8,  room8));
-roomList.push(smallRoom(9,  room9));
-roomList.push(smallRoom(10,  room10));
-roomList.push(smallRoom(11,  room11));
-roomList.push(smallRoom(12,  room12));
-roomList.push(smallRoom(13,  room13));
+roomList.push(smallRoom(0, blankArray));
+roomList.push(smallRoom(1, room1));
+roomList.push(smallRoom(2, room2));
+roomList.push(smallRoom(3, room3));
+roomList.push(smallRoom(4, room4));
+roomList.push(smallRoom(5, room5));
+roomList.push(smallRoom(6, room6));
+roomList.push(smallRoom(7, room7));
+roomList.push(smallRoom(8, room8));
+roomList.push(smallRoom(9, room9));
+roomList.push(smallRoom(10, room10));
+roomList.push(smallRoom(11, room11));
+roomList.push(smallRoom(12, room12));
+roomList.push(smallRoom(13, room13));
 
 function BigRoom(width, height, worldRoom, roomCreator) {
 	var array = [];
@@ -1528,10 +1253,17 @@ function BigRoom(width, height, worldRoom, roomCreator) {
 	array = roomCreator(array, width, height, topSize);
 	var room;
 	var rooms = {};
+	var northDoor, eastDoor, southDoor, westDoor;
 	for (var y = 0; y < topSize * 10; y++) {
 		for (var x = 0; x < topSize * 10; x++) {
-			var arrayIndex = coordinate(Math.floor(x / 10), Math.floor(y / 10), topSize);
-			var roomId = Math.floor(x / 10) + "-" + Math.floor(y / 10);
+			var roomX = Math.floor(x / 10);
+			var roomY = Math.floor(y / 10);
+			northDoor = getDoor(worldRoom, roomX, roomY, "N");
+			eastDoor = getDoor(worldRoom, roomX, roomY, "E");
+			southDoor = getDoor(worldRoom, roomX, roomY, "S");
+			westDoor = getDoor(worldRoom, roomX, roomY, "W");
+			var arrayIndex = coordinate(roomX, roomY, topSize);
+			var roomId = roomX + "-" + roomY;
 			if (x % 10 === 0 || y % 10 === 0) {
 				if (!rooms[roomId]) {
 					room = cloneRoom(roomList[array[arrayIndex]]);
@@ -1542,6 +1274,41 @@ function BigRoom(width, height, worldRoom, roomCreator) {
 			var mapCoord = coordinate(x, y, topSize * 10);
 			var roomCoord = coordinate(x % 10, y % 10, 10);
 			map[mapCoord] = room.map[roomCoord];
+			if (x === 0) {
+				// console.log(roomX, roomY, worldRoom)
+			}
+			// top walls
+			if ((y === 0 && northDoor === null && x < width * 10)) {
+				map[mapCoord] = 1;
+			}
+			// left walls
+			if ((x === 0 && westDoor === null && y < height * 10)) {
+				map[mapCoord] = 1;
+			}
+			// bottom walls
+			if ((y === height * 10 - 1 && southDoor === null && x < width * 10)) {
+				map[mapCoord] = 1;
+			}
+			// right walls
+			if ((x === width * 10 - 1 && eastDoor === null && y < height * 10)) {
+				map[mapCoord] = 1;
+			}
+			// top walls
+			if ((y === 0 && northDoor !== null && x < width * 10 && northDoor.doorType > 0 && map[mapCoord] === 0)) {
+				map[mapCoord] = northDoor.doorType + 1;
+			}
+			// left walls
+			if ((x === 0 && westDoor !== null && y < height * 10 && westDoor.doorType > 0 && map[mapCoord] === 0)) {
+				map[mapCoord] = westDoor.doorType + 1;
+			}
+			// bottom walls
+			if ((y === height * 10 - 1 && southDoor !== null && x < width * 10 && southDoor.doorType > 0 && map[mapCoord] === 0)) {
+				map[mapCoord] = southDoor.doorType + 1;
+			}
+			// right walls
+			if ((x === width * 10 - 1 && eastDoor !== null && y < height * 10 && eastDoor.doorType > 0 && map[mapCoord] === 0)) {
+				map[mapCoord] = eastDoor.doorType + 1;
+			}
 		}
 	}
 	// currentMapTiles = topSize * 10;
@@ -1693,7 +1460,7 @@ function setRoom(startX, startY, currentX, currentY, arraySize, array, validRoom
 }
 
 function playerSizedRoom(room) {
-	room.map = BigRoom(room.mapW * 3, room.mapH * 3, room, function(array, roomsX, roomsY, arraySize) {
+	room.map = BigRoom(room.mapW * 1, room.mapH * 1, room, function(array, roomsX, roomsY, arraySize) {
 		var currentX = 0;
 		var currentY = 0;
 		for (var i = 0; i < arraySize * arraySize; i++) {
@@ -1728,28 +1495,28 @@ function movePlayer(room, direction, position) {
 				match = position === door.mapY;
 			}
 			if (match) {
-				var translatedX = ((door.mapX - room.mapX) * 3);
-				var translatedY = ((door.mapY - room.mapY) * 3);
+				var translatedX = ((door.mapX - room.mapX) * 1);
+				var translatedY = ((door.mapY - room.mapY) * 1);
 				// console.log(player.x, player.y)
 				if (door.dir === "N") {
-					translatedX += Math.floor(3 / 2);
+					translatedX += Math.floor(1 / 2);
 					player.y = 0;
 					player.x = (player.x % (10 * 16)) + (translatedX * 10 * 16);
 				}
 				if (door.dir === "E") {
-					translatedY += Math.floor(3 / 2);
-					translatedX += 3;
-					player.x = (room.mapW * 10 * 16 * 3) - (player.w);
+					translatedY += Math.floor(1 / 2);
+					translatedX += 1;
+					player.x = (room.mapW * 10 * 16 * 1) - (player.w);
 					player.y = (player.y % (10 * 16)) + (translatedY * 10 * 16);
 				}
 				if (door.dir === "S") {
-					translatedX += Math.floor(3 / 2);
-					translatedY += 3;
-					player.y = (room.mapH * 10 * 16 * 3) - (player.h);
+					translatedX += Math.floor(1 / 2);
+					translatedY += 1;
+					player.y = (room.mapH * 10 * 16 * 1) - (player.h);
 					player.x = (player.x % (10 * 16)) + (translatedX * 10 * 16);
 				}
 				if (door.dir === "W") {
-					translatedY += Math.floor(3 / 2);
+					translatedY += Math.floor(1 / 2);
 					player.x = 0;
 					player.y = (player.y % (10 * 16)) + (translatedY * 10 * 16);
 				}
@@ -1761,27 +1528,27 @@ function movePlayer(room, direction, position) {
 function testDoors() {
 	for (var i = 0; i < currentRoom.doors.length; i++) {
 		var door = currentRoom.doors[i];
-		var translatedX = ((door.mapX - currentRoom.mapX) * 3);
-		var translatedY = ((door.mapY - currentRoom.mapY) * 3);
+		var translatedX = ((door.mapX - currentRoom.mapX) * 1);
+		var translatedY = ((door.mapY - currentRoom.mapY) * 1);
 		var playerX = modulus(modulus(player.x), 10);
 		var playerX2 = modulus(modulus(player.x + player.w), 10);
 		var playerY = modulus(modulus(player.y), 10);
 		var playerY2 = modulus(modulus(player.y + player.h), 10);
-		var roomWidth = currentRoom.mapW * 10 * 16 * 3;
-		var roomHeight = currentRoom.mapH * 10 * 16 * 3;
+		var roomWidth = currentRoom.mapW * 10 * 16 * 1;
+		var roomHeight = currentRoom.mapH * 10 * 16 * 1;
 		if (door.dir === "N") {
-			translatedX += Math.floor(3 / 2);
+			translatedX += Math.floor(1 / 2);
 		}
 		if (door.dir === "E") {
-			translatedY += Math.floor(3 / 2);
-			translatedX += 3;
+			translatedY += Math.floor(1 / 2);
+			translatedX += 1;
 		}
 		if (door.dir === "S") {
-			translatedX += Math.floor(3 / 2);
-			translatedY += 3;
+			translatedX += Math.floor(1 / 2);
+			translatedY += 1;
 		}
 		if (door.dir === "W") {
-			translatedY += Math.floor(3 / 2);
+			translatedY += Math.floor(1 / 2);
 		}
 		if (window.performance.now() - player.doorCooldown > 400) {
 			if (player.x <= 0 && player.xDirection === -1 && door.dir === "W" && translatedX === playerX && translatedY === playerY) {
@@ -1811,6 +1578,8 @@ function enterRoom(room) {
 		playerSizedRoom(room);
 	}
 	currentRoom = room;
+	collectKey(room);
+	currentRoom.visited = true;
 	currentMapTiles = room.map.tiles;
 	currentMap = room.map.map;
 	mapHeight = room.map.height * 10;
@@ -1873,8 +1642,8 @@ function parseMinimapViewport() {
 	var canvas = minimapContext.canvas;
 	var deadZoneX = canvas.width / 2;
 	var deadZoneY = canvas.height / 2;
-	var mapX = ((currentRoom.mapX + (modulus(modulus(modulus(player.x), 10), 3))) * 16);
-	var mapY = ((currentRoom.mapY + (modulus(modulus(modulus(player.y), 10), 3))) * 16);
+	var mapX = ((currentRoom.mapX + (modulus(modulus(modulus(player.x), 10), 1))) * 16);
+	var mapY = ((currentRoom.mapY + (modulus(modulus(modulus(player.y), 10), 1))) * 16);
 	if (mapX - miniViewPortX + deadZoneX > canvas.width) {
 		miniViewPortX = mapX - (canvas.width - deadZoneX);
 	} else if (mapX - deadZoneX < miniViewPortX) {
@@ -1929,22 +1698,22 @@ var regionColors = [{
 	border: "#990000",
 	background: "#FF3333",
 	other: "#FF0000",
-	lock: "#FF6666"
+	lock: "#FF0000"
 }, {
 	border: "#006600",
 	background: "#00BB00",
 	other: "#00BB00",
-	lock: "#66FF66"
+	lock: "#00FF00"
 }, {
 	border: "#000066",
 	background: "#3333FF",
 	other: "#0000FF",
-	lock: "#6666FF"
+	lock: "#0000FF"
 }, {
 	background: "#9F9F9F",
 	border: "#555555",
 	other: "#555555",
-	lock: "#B0B0B0"
+	lock: "#000000"
 }];
 
 function startAt(x, y, region) {
@@ -2240,12 +2009,11 @@ function getRoom(x, y) {
 	return null;
 }
 
-function getDoor(room, x, y) {
+function getDoor(room, x, y, dir) {
 	var door = null;
-	var i = 0;
-	while (i < room.doors.length) {
-		door = world.rooms[i];
-		if (door.mapX === x && door.mapY === y) {
+	for (var i = 0; i < room.doors.length; i++) {
+		door = room.doors[i];
+		if (door.dir === dir && door.mapX === room.mapX + x && door.mapY === room.mapY + y) {
 			return door;
 		}
 	}
@@ -2381,7 +2149,7 @@ function Room(x, y, width, height, region) {
 		startPositionX: 0,
 		startPositionY: 0,
 		startRoom: false,
-		visited:false,
+		visited: false,
 		doors: [],
 		map: null
 	};
@@ -2413,48 +2181,56 @@ function clearDoorTypes() {
 
 function assignDoorTypes() {
 	var door = null;
-	var array = [];
 	var region1 = null;
 	var region2 = null;
-	var room1 = null;
-	var room2 = null;
-	var array1 = [];
-	var array2 = [];
-	var array3 = [];
-	array3.push(world.regions[0]);
-	var i = 0;
-	while (array3.length > 0) {
-		i++;
-		array.length = 0;
-		region1 = array3.shift();
-		array2.push(region1);
-		room1 = getRandom(region1.rooms);
-		room1.specialType = i % regionColors.length;
+	var room = null;
+	for (var i = 0; i < world.regions.length; i++) {
+		region1 = world.regions[i];
+		getRandom(region1.rooms).specialType = (i + 1) % regionColors.length;
 		for (var e = 0; e < region1.rooms.length; e++) {
-			room2 = region1.rooms[e];
-			for (var r = 0; r < room2.doors.length; r++) {
-				door = room2.doors[r];
-				region2 = other(door, room2).region;
+			room = region1.rooms[e];
+			for (var r = 0; r < room.doors.length; r++) {
+				door = room.doors[r];
+				region2 = other(door, room).region;
 				if (region2 !== region1) {
-					if (door.doorType <= 0) {
-						if (array.indexOf(region2) >= 0) {
-							array1.push(door);
-						} else {
-							door.doorType = i % regionColors.length;
-							array.push(region2);
-							if (array2.indexOf(region2) === -1 && array3.indexOf(region2) === -1) {
-								array3.push(region2);
-							}
-						}
+					if (door.doorType === 0) {
+						door.doorType = (i + 1) % regionColors.length;
 					}
 				}
 			}
 		}
 	}
-	for (var t = 0; t < array1.length; t++) {
-		door = array1[t];
-		if (door.doorType <= 0) {
-			door.doorType = parseInt(Math.random() * (i % regionColors.length)) + 1;
+}
+
+function collectKey(room) {
+	if(player.keys.indexOf(room.specialType) === -1) {
+		player.keys.push(room.specialType);
+		unlockRooms();
+	}
+}
+
+function unlockRooms() {
+	for (var i = 0; i < world.rooms.length; i++) {
+		var hasDoor = false;
+		var room = world.rooms[i];
+		if (player.keys.indexOf(room.specialType) > -1) {
+			room.specialType = 0;
+		}
+		for (var e = 0; e < room.doors.length; e++) {
+			var door = room.doors[e];
+			if (player.keys.indexOf(door.doorType) > -1) {
+				door.doorType = 0;
+				hasDoor = true;
+			}
+		}
+		if (hasDoor && room.map !== null) {
+			for (var r = 0; r < room.map.map.length; r++) {
+				if (room.map.map[r] > 1) {
+					if (player.keys.indexOf(room.map.map[r] - 1)) {
+						room.map.map[r] = 0;
+					}
+				}
+			}
 		}
 	}
 }
@@ -2478,12 +2254,6 @@ function create() {
 	world.height = 48;
 	startAt(40, 24, nextRegion());
 	createRooms(1);
-	enterRoom(world.rooms[0]);
-	currentRoom.startRoom = true;
-	currentRoom.startPositionX = random(0, (currentRoom.mapW * 3) - 1);
-	currentRoom.startPositionY = random(0, (currentRoom.mapH * 3) - 1);
-	player.x = currentRoom.startPositionX * 10 * 16 + (10 / 2 * 16);
-	player.y = currentRoom.startPositionY * 10 * 16 + (2*16);
 }
 
 function nextRegion() {
@@ -2503,12 +2273,10 @@ function Region(color, maxWidth, maxHeight) {
 
 function startWorld() {
 	create();
-	drawWorld();
 }
 
 function addRoomToWorld() {
 	createRoom();
-	drawWorld();
 }
 
 function addRegion() {
@@ -2518,5 +2286,4 @@ function addRegion() {
 function doors() {
 	clearDoorTypes();
 	assignDoorTypes();
-	drawWorld();
 }

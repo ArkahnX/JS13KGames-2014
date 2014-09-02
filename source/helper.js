@@ -3,8 +3,8 @@ function random(min, max) {
 }
 
 function modulus(num, size) {
-	var mod = num % (size || 16);
-	return (num - mod) / (size || 16);
+	var mod = num % (size || tileSize);
+	return (num - mod) / (size || tileSize);
 }
 
 function coordinate(x, y, size) {

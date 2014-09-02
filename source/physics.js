@@ -60,7 +60,7 @@ function handleJump(entity) {
 }
 
 function testFalling(entity) {
-	var xAlignment = entity.x % 16;
+	var xAlignment = entity.x % tileSize;
 	var bottomLeft = coordinate(modulus(entity.x), modulus(entity.y + entity.h), currentMapTiles);
 	var bottomRight = coordinate(modulus(entity.x + entity.w), modulus(entity.y + entity.h), currentMapTiles);
 	var falling = false;
@@ -69,9 +69,9 @@ function testFalling(entity) {
 	} else {
 		falling = currentMap[bottomRight] !== 0 || currentMap[bottomLeft] !== 0;
 	}
-	if ((falling || entity.y + entity.h > mapHeight * 16) && entity.yDirection === FALLING) {
+	if ((falling || entity.y + entity.h > mapHeight * tileSize) && entity.yDirection === FALLING) {
 		// console.log("STOP FALL")
-		entity.y = modulus(entity.y) * 16;
+		entity.y = modulus(entity.y) * tileSize;
 		entity.yAccel = 0;
 		entity.yDirection = 0;
 		entity.jumpsUsed = 0;
@@ -81,7 +81,7 @@ function testFalling(entity) {
 }
 
 function testJumping(entity) {
-	var xAlignment = entity.x % 16;
+	var xAlignment = entity.x % tileSize;
 	var aboveLeft = coordinate(modulus(entity.x), modulus(entity.y - (entity.h / 2)), currentMapTiles);
 	var aboveRight = coordinate(modulus(entity.x + entity.w), modulus(entity.y - (entity.h / 2)), currentMapTiles);
 	var jumping = false;
@@ -92,7 +92,7 @@ function testJumping(entity) {
 	}
 	if (jumping && entity.jumping === 1) {
 		// console.log("STOP JUMP")
-		entity.y = modulus(entity.y) * 16;
+		entity.y = modulus(entity.y) * tileSize;
 		entity.yAccel = -1;
 		entity.yDirection = FALLING;
 		entity.jumping = 0;
@@ -101,8 +101,8 @@ function testJumping(entity) {
 }
 
 function testWalking(entity) {
-	var yAlignment = entity.y % 16;
-	var xAlignment = entity.x % 16;
+	var yAlignment = entity.y % tileSize;
+	var xAlignment = entity.x % tileSize;
 	var aboveLeft = coordinate(modulus(entity.x), modulus(entity.y - (entity.h / 2)), currentMapTiles);
 	var aboveRight = coordinate(modulus(entity.x + entity.w), modulus(entity.y - (entity.h / 2)), currentMapTiles);
 	var topLeft = coordinate(modulus(entity.x), modulus(entity.y), currentMapTiles);
@@ -117,7 +117,7 @@ function testWalking(entity) {
 		walkLeft = currentMap[midLeft] !== 0 || currentMap[topLeft] !== 0;
 		walkRight = currentMap[midRight] !== 0 || currentMap[topRight] !== 0;
 	} else {
-		if (modulus(entity.y + entity.h) * 16 > entity.y + entity.h) {
+		if (modulus(entity.y + entity.h) * tileSize > entity.y + entity.h) {
 			walkLeft = currentMap[midLeft] !== 0 || currentMap[topLeft] !== 0 || currentMap[aboveLeft] !== 0;
 			walkRight = currentMap[midRight] !== 0 || currentMap[topRight] !== 0 || currentMap[aboveRight] !== 0;
 		} else {
@@ -126,21 +126,21 @@ function testWalking(entity) {
 		}
 	}
 	if (xAlignment === 0) {
-		if ((walkRight || entity.x + entity.w > mapWidth * 16 || entity.x < 0) && entity.xAccel > 0) {
+		if ((walkRight || entity.x + entity.w > mapWidth * tileSize || entity.x < 0) && entity.xAccel > 0) {
 			// console.log("STOP RIGHT")
-			entity.x = modulus(entity.x) * 16;
+			entity.x = modulus(entity.x) * tileSize;
 			// entity.xDirection = IDLE;
 			entity.xAccel = 0;
 		}
 	} else {
-		if ((walkRight || entity.x + entity.w > mapWidth * 16 || entity.x < 0) && entity.xAccel > 0) {
+		if ((walkRight || entity.x + entity.w > mapWidth * tileSize || entity.x < 0) && entity.xAccel > 0) {
 			// console.log("STOP RIGHT")
-			entity.x = modulus(entity.x) * 16;
+			entity.x = modulus(entity.x) * tileSize;
 			// entity.xDirection = IDLE;
 			entity.xAccel = 0;
-		} else if ((walkLeft || entity.x + entity.w > mapWidth * 16 || entity.x < 0) && entity.xAccel < 0) {
+		} else if ((walkLeft || entity.x + entity.w > mapWidth * tileSize || entity.x < 0) && entity.xAccel < 0) {
 			// console.log("STOP LEFT")
-			entity.x = modulus(entity.x + entity.w) * 16;
+			entity.x = modulus(entity.x + entity.w) * tileSize;
 			// entity.xDirection = IDLE;
 			entity.xAccel = 0;
 		}
