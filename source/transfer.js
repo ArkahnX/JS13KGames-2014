@@ -28,23 +28,35 @@ function movePlayer(room, direction, position) {
 				if (door.dir === "N") {
 					translatedX += Math.floor(segmentsPerRoom / 2);
 					player.y = 0;
+					if (door.doorType !== 0) {
+						player.y = tileSize;
+					}
 					player.x = (player.x % (roomSize * tileSize)) + (translatedX * roomSize * tileSize);
 				}
 				if (door.dir === "E") {
 					translatedY += Math.floor(segmentsPerRoom / 2);
 					translatedX += segmentsPerRoom;
 					player.x = (room.mapW * roomSize * tileSize * segmentsPerRoom) - (player.w);
+					if (door.doorType !== 0) {
+						player.x -= tileSize;
+					}
 					player.y = (player.y % (roomSize * tileSize)) + (translatedY * roomSize * tileSize);
 				}
 				if (door.dir === "S") {
 					translatedX += Math.floor(segmentsPerRoom / 2);
 					translatedY += segmentsPerRoom;
 					player.y = (room.mapH * roomSize * tileSize * segmentsPerRoom) - (player.h);
+					if (door.doorType !== 0) {
+						player.y -= tileSize;
+					}
 					player.x = (player.x % (roomSize * tileSize)) + (translatedX * roomSize * tileSize);
 				}
 				if (door.dir === "W") {
 					translatedY += Math.floor(segmentsPerRoom / 2);
 					player.x = 0;
+					if (door.doorType !== 0) {
+						player.x = tileSize;
+					}
 					player.y = (player.y % (roomSize * tileSize)) + (translatedY * roomSize * tileSize);
 				}
 			}
