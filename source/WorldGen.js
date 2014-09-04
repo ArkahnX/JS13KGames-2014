@@ -1,4 +1,5 @@
-var world, currentRoom;
+var world = null;
+var currentRoom = null;
 
 var chanceOfAddingDoor = 0.2;
 var currentColorIndex = 0;

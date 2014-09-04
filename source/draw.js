@@ -1,4 +1,9 @@
 function drawMap() {
+	tileContext.fillStyle = currentRoom.mapColor.border;
+	tileContext.fillRect(0, 0, tileCanvas.width, tileCanvas.height);
+	tileContext.fillStyle = currentRoom.mapColor.background;
+	// optimize
+	tileContext.clearRect(0 - viewPortX, 0 - viewPortY, realMapWidth, realMapHeight);
 	var mapX1 = modulus(viewPortX) - 1;
 	var mapY1 = modulus(viewPortY) - 1;
 	var mapX2 = modulus(viewPortX) + modulus(playerCanvas.width) + 2;
@@ -242,13 +247,6 @@ function drawWorld() {
 	lastPlayerX = currentRoom.mapX + modulus(modulus(modulus(player.x), roomSize), segmentsPerRoom);
 	lastPlayerY = currentRoom.mapY + modulus(modulus(modulus(player.y), roomSize), segmentsPerRoom);
 	lastRoomLength = world.rooms.length;
-	playerContext.fillStyle = "#000000";
-	for (var i = 0; i < entities.length; i++) {
-		var entity = entities[i];
-		var red = (15 - ((15) * (player.health / player.maxHealth))).toString(16);
-		playerContext.fillStyle = '#' + red + red + '0000';
-		playerContext.fillRect(entity.x - viewPortX, entity.y - viewPortY, entity.w, entity.h);
-	}
 }
 
 function forEachRoom(fillStyle, strokeStyle, fn) {
@@ -367,6 +365,13 @@ function drawPlayer() {
 		miniMapIconsCanvas.height = minimapCanvas.height;
 		miniMapIconsContext.lineWidth = 1;
 		initPlayerCanvas = true;
+	}
+	playerContext.fillStyle = "#000000";
+	for (var i = 0; i < entities.length; i++) {
+		var entity = entities[i];
+		var red = (15 - ((15) * (player.health / player.maxHealth))).toString(16);
+		playerContext.fillStyle = '#' + red + red + '0000';
+		playerContext.fillRect(entity.x - viewPortX, entity.y - viewPortY, entity.w, entity.h);
 	}
 	miniMapIconsContext.clearRect(0, 0, miniMapIconsCanvas.width, miniMapIconsCanvas.height);
 	animationLoopProgress += 2 * (dt / 1000);

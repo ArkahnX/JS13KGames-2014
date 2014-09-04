@@ -121,7 +121,21 @@ function DOMLoaded() {
 		}
 	}
 	doors();
-	enterRoom(world.rooms[0]);
+	var direction = "N";
+	var door = world.rooms[0].doors[0];
+	var position = door.mapX;
+	if (door.dir === "N") {
+		direction = "S";
+	}
+	if (door.dir === "E") {
+		direction = "W";
+		position = door.mapY;
+	}
+	if (door.dir === "W") {
+		direction = "E";
+		position = door.mapY;
+	}
+	enterRoom(world.rooms[0], direction, position);
 	loop();
 }
 
@@ -158,11 +172,6 @@ function eachFrame() {
 		borderContext.lineWidth = 2;
 		playerContext.clearRect(0, 0, playerCanvas.width, playerCanvas.height);
 		borderContext.clearRect(0, 0, borderCanvas.width, borderCanvas.height);
-		tileContext.fillStyle = currentRoom.mapColor.border;
-		tileContext.fillRect(0, 0, tileCanvas.width, tileCanvas.height);
-		tileContext.fillStyle = currentRoom.mapColor.background;
-		// optimize
-		tileContext.clearRect(0 - viewPortX, 0 - viewPortY, realMapWidth, realMapHeight);
 		drawMap();
 		drawWorld();
 	}
