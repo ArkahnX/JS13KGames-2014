@@ -19,6 +19,12 @@ function movePlayer(room, direction, position) {
 				var translatedX = ((door.mapX - room.mapX) * segmentsPerRoom);
 				var translatedY = ((door.mapY - room.mapY) * segmentsPerRoom);
 				// console.log(player.x, player.y)
+				if (player.y === -1) {
+					player.y = translatedY * roomSize * tileSize + (roomSize / 2 * tileSize);
+				}
+				if (player.x === -1) {
+					player.x = translatedX * roomSize * tileSize + (roomSize / 2 * tileSize);
+				}
 				if (door.dir === "N") {
 					translatedX += Math.floor(segmentsPerRoom / 2);
 					player.y = 0;
@@ -102,28 +108,29 @@ document.body.appendChild(transitionCanvas);
 transitionCanvas.style.right = "initial";
 transitionCanvas.style.border = "1px solid black";
 var stage = 0;
+var FPS = 1;
 
 function transition() {
 	if (transitionBetweenRooms) {
 		if (currentRoom === null) {
-			stage = 2;
+			stage = FPS;
 		}
 		var width = playerCanvas.width;
 		var height = playerCanvas.height;
-		if (stage < 2) {
+		if (stage < FPS) {
 
-			var canvasWidth = width * stage / 2;
+			var canvasWidth = width * stage / FPS;
 			canvasWidth = width - canvasWidth;
-			var canvasHeight = height * stage / 2;
+			var canvasHeight = height * stage / FPS;
 			canvasHeight = height - canvasHeight;
 
 		}
-		if (stage >= 2) {
+		if (stage >= FPS) {
 			if (currentRoom !== transitionRoom) {
 				borderContext.clearRect(0, 0, width, height);
 				tileContext.clearRect(0, 0, width, height);
 				currentRoom = transitionRoom;
-				collectKey(transitionRoom);
+				// collectKey(transitionRoom);
 				currentRoom.visited = true;
 				currentMapTiles = transitionRoom.map.tiles;
 				currentMap = transitionRoom.map.map;
@@ -133,21 +140,20 @@ function transition() {
 				realMapWidth = transitionRoom.map.width * roomSize * tileSize;
 				movePlayer(transitionRoom, transitionDirection, transitionPosition);
 			}
-			var canvasWidth = width * (stage - 2) / 2;
-			var canvasHeight = height * (stage - 2) / 2;
+			var canvasWidth = width * (stage - FPS) / FPS;
+			var canvasHeight = height * (stage - FPS) / FPS;
 		}
 		transitionCanvas.width = width;
 		transitionCanvas.height = height;
 		transitionContext.clearRect(0, 0, width, height);
-		parseViewPort();
 		drawWorld();
 		drawMap();
 		transitionContext.drawImage(tileCanvas, 0, 0);
 		transitionContext.drawImage(borderCanvas, 0, 0);
 		transitionContext.drawImage(playerCanvas, 0, 0);
 		// if(stage > 3) {
-			// console.log(tileCanvas.toDataURL(), width, height);
-			// transitionBetweenRooms = false;
+		// console.log(tileCanvas.toDataURL(), width, height);
+		// transitionBetweenRooms = false;
 		// }
 		playerContext.clearRect(0, 0, width, height);
 		borderCanvas.style.display = "none";
@@ -155,16 +161,18 @@ function transition() {
 		// borderContext.clearRect(0, 0, width, height);
 		// tileContext.clearRect(0, 0, width, height);
 		transitionContext.globalCompositeOperation = "destination-in";
-		var startX = (width - canvasWidth) / 2;
-		var startY = (height - canvasHeight) / 2;
+		// var startX = ((width - canvasWidth) / 2);
+		// var startY = ((height - canvasHeight) / 2);
+		var startX = ((player.x + (player.w / 2)) - viewPortX) - ((canvasWidth) / 2);
+		var startY = ((player.y + (player.h / 2)) - viewPortY) - ((canvasHeight) / 2);
 		transitionContext.beginPath();
 		transitionContext.rect(startX, startY, canvasWidth, canvasHeight);
 		transitionContext.fillStyle = "black";
 		transitionContext.fill();
 		playerContext.drawImage(transitionCanvas, 0, 0);
 
-		stage += 2 * (dt / 1000);
-		if (stage > 4) {
+		stage += (FPS * 2) * (dt / 1000);
+		if (stage > FPS * 2) {
 			stage = 0;
 			runGameLoop = true;
 			transitionRoom = null;

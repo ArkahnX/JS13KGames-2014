@@ -8,31 +8,31 @@ var regionColors = [{
 	border: "#A0A0A0",
 	other: "#CFCFCF",
 	lock: "#FFFFFF",
-	name:"Dungeon"
+	name: "Dungeon"
 }, {
 	border: "#990000",
 	background: "#FF3333",
 	other: "#FF0000",
 	lock: "#FF0000",
-	name:"Fire"
+	name: "Fire"
 }, {
 	border: "#006600",
 	background: "#00BB00",
 	other: "#00BB00",
 	lock: "#00FF00",
-	name:"Air"
+	name: "Air"
 }, {
 	border: "#000066",
 	background: "#3333FF",
 	other: "#0000FF",
 	lock: "#0000FF",
-	name:"Water"
+	name: "Water"
 }, {
 	background: "#9F9F9F",
 	border: "#555555",
 	other: "#555555",
 	lock: "#000000",
-	name:"Earth"
+	name: "Earth"
 }];
 
 function startAt(x, y, region) {
@@ -498,14 +498,16 @@ function clearDoorTypes() {
 	}
 }
 
-function assignDoorTypes() {
+function assignDoorTypes() { // FIXME
 	var door = null;
 	var region1 = null;
 	var region2 = null;
 	var room = null;
 	for (var i = 0; i < world.regions.length; i++) {
 		region1 = world.regions[i];
-		getRandom(region1.rooms).specialType = (i + 1) % regionColors.length;
+		room = getRandom(region1.rooms);
+		room.specialType = (i + 1) % regionColors.length;
+
 		for (var e = 0; e < region1.rooms.length; e++) {
 			room = region1.rooms[e];
 			for (var r = 0; r < room.doors.length; r++) {
@@ -522,7 +524,7 @@ function assignDoorTypes() {
 }
 
 function collectKey(room) {
-	if(player.keys.indexOf(room.specialType) === -1) {
+	if (player.keys.indexOf(room.specialType) === -1) {
 		player.keys.push(room.specialType);
 		unlockRooms();
 	}
@@ -543,9 +545,22 @@ function unlockRooms() {
 			}
 		}
 		if (hasDoor && room.map !== null) {
+			if(room.specialType === 0) {
+				var index = room.map.map.indexOf(9);
+				if(index > -1) {
+					room.map.map[index] = 0;
+				}
+			}
+			// for (var r = 0; r < player.keys.length; r++) {
+			// 	var index = room.map.map.indexOf(player.keys[r] + 1);
+			// 	while (index > 0) {
+			// 		room.map.map[index] = 0;
+			// 	}
+			// }
 			for (var r = 0; r < room.map.map.length; r++) {
 				if (room.map.map[r] > 1) {
-					if (player.keys.indexOf(room.map.map[r] - 1)) {
+					console.log(player.keys.indexOf(room.map.map[r] - 1), player.keys, room.map.map[r] - 1)
+					if (player.keys.indexOf(room.map.map[r] - 1) > -1) {
 						room.map.map[r] = 0;
 					}
 				}

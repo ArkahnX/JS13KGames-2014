@@ -11,8 +11,8 @@ var events = {};
 var keymap = {};
 
 var player = {
-	x: 151,
-	y: tileSize * 3,
+	x: -1,
+	y: -1,
 	w: tileSize,
 	h: tileSize * 2,
 	img: null,
@@ -112,7 +112,8 @@ function DOMLoaded() {
 	resizeCanvas();
 	startWorld();
 	for (var r = 0; r < regionColors.length; r++) {
-		var rooms = random(10, 20);
+		// var rooms = random(10, 20);
+		var rooms = random(1, 2);
 		for (var i = 0; i < rooms; i++) {
 			addRoomToWorld();
 		}
@@ -121,18 +122,10 @@ function DOMLoaded() {
 		}
 	}
 	doors();
-	var direction = "N";
 	var door = world.rooms[0].doors[0];
+	var direction = door.dir;
 	var position = door.mapX;
-	if (door.dir === "N") {
-		direction = "S";
-	}
-	if (door.dir === "E") {
-		direction = "W";
-		position = door.mapY;
-	}
-	if (door.dir === "W") {
-		direction = "E";
+	if (door.dir === "E" || door.dir === "W") {
 		position = door.mapY;
 	}
 	enterRoom(world.rooms[0], direction, position);
@@ -167,9 +160,6 @@ function eachFrame() {
 			testDoors();
 			testFalling(entity);
 		}
-		parseViewPort();
-		borderContext.strokeStyle = currentRoom.mapColor.border;
-		borderContext.lineWidth = 2;
 		playerContext.clearRect(0, 0, playerCanvas.width, playerCanvas.height);
 		borderContext.clearRect(0, 0, borderCanvas.width, borderCanvas.height);
 		drawMap();

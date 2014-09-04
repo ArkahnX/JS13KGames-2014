@@ -65,9 +65,9 @@ function testFalling(entity) {
 	var bottomRight = coordinate(modulus(entity.x + entity.w), modulus(entity.y + entity.h), currentMapTiles);
 	var falling = false;
 	if (xAlignment === 0) {
-		falling = currentMap[bottomLeft];
+		falling = collision(currentMap[bottomLeft]);
 	} else {
-		falling = currentMap[bottomRight] !== 0 || currentMap[bottomLeft] !== 0;
+		falling = collision(currentMap[bottomRight]) || collision(currentMap[bottomLeft]);
 	}
 	if ((falling || entity.y + entity.h > mapHeight * tileSize) && entity.yDirection === FALLING) {
 		// console.log("STOP FALL")
@@ -86,9 +86,9 @@ function testJumping(entity) {
 	var aboveRight = coordinate(modulus(entity.x + entity.w), modulus(entity.y - (entity.h / 2)), currentMapTiles);
 	var jumping = false;
 	if (xAlignment === 0) {
-		jumping = currentMap[aboveLeft] !== 0;
+		jumping = collision(currentMap[aboveLeft]);
 	} else {
-		jumping = currentMap[aboveLeft] !== 0 || currentMap[aboveRight] !== 0;
+		jumping = collision(currentMap[aboveLeft]) || collision(currentMap[aboveRight]);
 	}
 	if (jumping && entity.jumping === 1) {
 		// console.log("STOP JUMP")
@@ -114,15 +114,15 @@ function testWalking(entity) {
 	var walkLeft = false;
 	var walkRight = false;
 	if (yAlignment === 0) {
-		walkLeft = currentMap[midLeft] !== 0 || currentMap[topLeft] !== 0;
-		walkRight = currentMap[midRight] !== 0 || currentMap[topRight] !== 0;
+		walkLeft = collision(currentMap[midLeft]) || collision(currentMap[topLeft]);
+		walkRight = collision(currentMap[midRight]) || collision(currentMap[topRight]);
 	} else {
 		if (modulus(entity.y + entity.h) * tileSize > entity.y + entity.h) {
-			walkLeft = currentMap[midLeft] !== 0 || currentMap[topLeft] !== 0 || currentMap[aboveLeft] !== 0;
-			walkRight = currentMap[midRight] !== 0 || currentMap[topRight] !== 0 || currentMap[aboveRight] !== 0;
+			walkLeft = collision(currentMap[midLeft]) || collision(currentMap[topLeft]) || collision(currentMap[aboveLeft]);
+			walkRight = collision(currentMap[midRight]) || collision(currentMap[topRight]) || collision(currentMap[aboveRight]);
 		} else {
-			walkLeft = currentMap[midLeft] !== 0 || currentMap[topLeft] !== 0 || currentMap[bottomLeft] !== 0;
-			walkRight = currentMap[midRight] !== 0 || currentMap[topRight] !== 0 || currentMap[bottomRight] !== 0;
+			walkLeft = collision(currentMap[midLeft]) || collision(currentMap[topLeft]) || collision(currentMap[bottomLeft]);
+			walkRight = collision(currentMap[midRight]) || collision(currentMap[topRight]) || collision(currentMap[bottomRight]);
 		}
 	}
 	if (xAlignment === 0) {
@@ -145,4 +145,11 @@ function testWalking(entity) {
 			entity.xAccel = 0;
 		}
 	}
+}
+
+function collision(block) {
+	if(block === 9) {
+		collectKey(currentRoom);
+	}
+	return block !== 0;
 }

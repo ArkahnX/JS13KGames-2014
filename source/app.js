@@ -227,6 +227,12 @@ BinaryHeap.prototype = {
 	}
 };*/
 function drawMap() {
+	parseViewPort();
+	tileContext.fillStyle = currentRoom.c.bd;
+	tileContext.fillRect(0, 0, tileCanvas.width, tileCanvas.height);
+	tileContext.fillStyle = currentRoom.c.bg;
+	// optimize
+	tileContext.clearRect(0 - viewPortX, 0 - viewPortY, realMapWidth, realMapHeight);
 	var x1 = modulus(viewPortX) - 1;
 	var y1 = modulus(viewPortY) - 1;
 	var x2 = modulus(viewPortX) + modulus(playerCanvas.width) + 2;
@@ -434,7 +440,7 @@ function drawWorld() {
 	parseMinimapViewport();
 	miniMapPlayerX = (currentRoom.x * 16) + (modulus(modulus(modulus(player.x), 10), 1) * 16) - miniViewPortX;
 	miniMapPlayerY = (currentRoom.y * 16) + (modulus(modulus(modulus(player.y), 10), 1) * 16) - miniViewPortY;
-	if (currentRoom.x + modulus(modulus(modulus(player.x), 10), 1) !== lastPlayerX || currentRoom.y + modulus(modulus(modulus(player.y), 10), 1) !== lastPlayerY || lastRoomLength !== world.rooms.length) {
+	if (miniMapPlayerX !== lastPlayerX || miniMapPlayerY !== lastPlayerY) {
 		minimapCanvas.width = 150;
 		minimapCanvas.height = 150;
 		minimapContext.clearRect(0, 0, minimapCanvas.width, minimapCanvas.height);
@@ -467,8 +473,8 @@ function drawWorld() {
 		forEachRoom(0, 0, drawIcons);
 	}
 	drawPlayer();
-	lastPlayerX = currentRoom.x + modulus(modulus(modulus(player.x), 10), 1);
-	lastPlayerY = currentRoom.y + modulus(modulus(modulus(player.y), 10), 1);
+	lastPlayerX = miniMapPlayerX;
+	lastPlayerY = miniMapPlayerY;
 	lastRoomLength = world.rooms.length;
 }
 
@@ -589,6 +595,13 @@ function drawPlayer() {
 		miniMapIconsContext.lineWidth = 1;
 		initPlayerCanvas = true;
 	}
+	playerContext.fillStyle = "#000000";
+	for (var i = 0; i < entities.length; i++) {
+		var entity = entities[i];
+		var red = (15 - ((15) * (player.ῼ / player.mῼ))).toString(16);
+		playerContext.fillStyle = '#' + red + red + '0000';
+		playerContext.fillRect(entity.x - viewPortX, entity.y - viewPortY, entity.w, entity.h);
+	}
 	miniMapIconsContext.clearRect(0, 0, miniMapIconsCanvas.width, miniMapIconsCanvas.height);
 	animationLoopProgress += 2 * (dt / 1000);
 	animationLoopProgress = animationLoopProgress % 2;
@@ -612,6 +625,7 @@ var getElementById = 0;
 var querySelector = 1;
 var querySelectorAll = 2;
 var runGameLoop = true;
+var animate = true;
 var frameEvent = new CustomEvent("frame");
 var currentTick = window.performance.now();
 var lastTick = window.performance.now();
@@ -619,8 +633,8 @@ var events = {};
 var keymap = {};
 
 var player = {
-	x: 151,
-	y: 16 * 3,
+	x: -1,
+	y: -1,
 	w: 16,
 	h: 16 * 2,
 	img: null,
@@ -640,7 +654,7 @@ var player = {
 	ῼ: 5,
 	dc: window.performance.now(),
 	mῼ: 5,
-	keys:[]
+	keys: []
 }
 var dt = currentTick - lastTick;
 var entities = [player];
@@ -729,12 +743,13 @@ function DOMLoaded() {
 		}
 	}
 	d();
-	enterRoom(world.rooms[0]);
-	currentRoom.sr = true;
-	currentRoom.sx = random(0, (currentRoom.w * 1) - 1);
-	currentRoom.sy = random(0, (currentRoom.h * 1) - 1);
-	player.x = currentRoom.sx * 10 * 16 + (10 / 2 * 16);
-	player.y = currentRoom.sy * 10 * 16 + (2 * 16);
+	var door = world.rooms[0].d[0];
+	var direction = door.dir;
+	var position = door.x;
+	if (door.dir === "E" || door.dir === "W") {
+		position = door.y;
+	}
+	enterRoom(world.rooms[0], direction, position);
 	loop();
 }
 
@@ -754,35 +769,24 @@ function resizeCanvas() {
 
 
 function eachFrame() {
-	for (var i = 0; i < entities.length; i++) {
-		var entity = entities[i];
-		handleXMovement(entity);
-		entity.x = round(entity.x);
-		entity.y = round(entity.y);
-		testWalking(entity);
-		testJumping(entity);
-		handleJump(entity);
-		testDoors();
-		testFalling(entity);
-	}
-	parseViewPort();
-	bdContext.strokeStyle = currentRoom.c.bd;
-	bdContext.lineWidth = 2;
-	playerContext.clearRect(0, 0, playerCanvas.width, playerCanvas.height);
-	bdContext.clearRect(0, 0, bdCanvas.width, bdCanvas.height);
-	tileContext.fillStyle = currentRoom.c.bd;
-	tileContext.fillRect(0, 0, tileCanvas.width, tileCanvas.height);
-	tileContext.fillStyle = currentRoom.c.bg;
-	// optimize
-	tileContext.clearRect(0 - viewPortX, 0 - viewPortY, realMapWidth, realMapHeight);
-	drawMap();
-	drawWorld();
-	playerContext.fillStyle = "#000000";
-	for (var i = 0; i < entities.length; i++) {
-		var entity = entities[i];
-		var red = (15 - ((15) * (player.ῼ / player.mῼ))).toString(16);
-		playerContext.fillStyle = '#' + red + red + '0000';
-		playerContext.fillRect(entity.x - viewPortX, entity.y - viewPortY, entity.w, entity.h);
+	if (runGameLoop) {
+		for (var i = 0; i < entities.length; i++) {
+			var entity = entities[i];
+			handleXMovement(entity);
+			entity.x = round(entity.x);
+			entity.y = round(entity.y);
+			testWalking(entity);
+			testJumping(entity);
+			handleJump(entity);
+			testDoors();
+			testFalling(entity);
+		}
+		bdContext.strokeStyle = currentRoom.c.bd;
+		bdContext.lineWidth = 2;
+		playerContext.clearRect(0, 0, playerCanvas.width, playerCanvas.height);
+		bdContext.clearRect(0, 0, bdCanvas.width, bdCanvas.height);
+		drawMap();
+		drawWorld();
 	}
 }
 
@@ -793,7 +797,7 @@ function loop() {
 	dt = currentTick - lastTick;
 	lastTick = currentTick;
 	document.dispatchEvent(frameEvent);
-	if (runGameLoop) {
+	if (animate) {
 		requestAnimationFrame(loop);
 	}
 }
@@ -804,6 +808,7 @@ listen("keyup", handleKeyUp);
 listen("resize", resizeCanvas);
 listen("DOMContentLoaded", DOMLoaded);
 listen("frame", eachFrame);
+listen("frame", transition);
 window.addEventListener("resize", trigger);
 document.addEventListener("DOMContentLoaded", trigger);
 document.addEventListener("mousedown", trigger);
@@ -1472,9 +1477,10 @@ function playerSizedRoom(room) {
 var currentMap = null;
 var width = 0;
 var height = 0;
+var transitionDirection = 0;
+var transitionPosition = 0;
 
 function movePlayer(room, direction, position) {
-	enterRoom(room);
 	for (var i = 0; i < room.d.length; i++) {
 		var match = false;
 		var door = room.d[i];
@@ -1489,6 +1495,12 @@ function movePlayer(room, direction, position) {
 				var translatedX = ((door.x - room.x) * 1);
 				var translatedY = ((door.y - room.y) * 1);
 				// console.log(player.x, player.y)
+				if (player.y === -1) {
+					player.y = translatedY * 10 * 16 + (10 / 2 * 16);
+				}
+				if (player.x === -1) {
+					player.x = translatedX * 10 * 16 + (10 / 2 * 16);
+				}
 				if (door.dir === "N") {
 					translatedX += Math.floor(1 / 2);
 					player.y = 0;
@@ -1544,45 +1556,122 @@ function testDoors() {
 		if (window.performance.now() - player.dc > 400) {
 			if (player.x <= 0 && player.xd === -1 && door.dir === "W" && translatedX === playerX && translatedY === playerY) {
 				// console.log("Collision with left door");
-				movePlayer(door.r2, "E", door.y);
+				enterRoom(door.r2, "E", door.y);
 			}
 			if (player.y <= 0 && player.yd === -1 && door.dir === "N" && translatedX === playerX && translatedY === playerY) {
 				// console.log("Collision with top door");
-				movePlayer(door.r2, "S", door.x);
+				enterRoom(door.r2, "S", door.x);
 			}
 			if (player.x + player.w >= roomWidth && player.xd === 1 && door.dir === "E" && translatedX === playerX2 && translatedY === playerY) {
 				// console.log("Collision with right door");
-				movePlayer(door.r2, "W", door.y);
+				enterRoom(door.r2, "W", door.y);
 			}
 			if (player.y + player.h >= roomHeight && player.yd !== 0 && Math.abs(player.ya) > 5 && door.dir === "S" && translatedX === playerX && (translatedY === playerY2 || translatedY === playerY)) {
 				// console.log(player.ya)
 				// console.log(window.performance.now() - player.dc)
 				// console.log("Collision with bottom door");
-				movePlayer(door.r2, "N", door.x);
+				enterRoom(door.r2, "N", door.x);
 			}
 		}
 	}
 }
 
-function enterRoom(room) {
+var transitionRoom = null;
+var transitionBetweenRooms = false;
+var transitionCanvas = document.createElement("canvas");
+var transitionContext = transitionCanvas.getContext("2d");
+document.body.appendChild(transitionCanvas);
+transitionCanvas.style.right = "initial";
+transitionCanvas.style.bd = "1px solid black";
+var stage = 0;
+var FPS = 1;
+
+function transition() {
+	if (transitionBetweenRooms) {
+		if (currentRoom === null) {
+			stage = FPS;
+		}
+		var width = playerCanvas.width;
+		var height = playerCanvas.height;
+		if (stage < FPS) {
+
+			var canvasWidth = width * stage / FPS;
+			canvasWidth = width - canvasWidth;
+			var canvasHeight = height * stage / FPS;
+			canvasHeight = height - canvasHeight;
+
+		}
+		if (stage >= FPS) {
+			if (currentRoom !== transitionRoom) {
+				bdContext.clearRect(0, 0, width, height);
+				tileContext.clearRect(0, 0, width, height);
+				currentRoom = transitionRoom;
+				collectKey(transitionRoom);
+				currentRoom.v = true;
+				currentMapTiles = transitionRoom.map.tiles;
+				currentMap = transitionRoom.map.map;
+				height = transitionRoom.map.height * 10;
+				width = transitionRoom.map.width * 10;
+				realMapHeight = transitionRoom.map.height * 10 * 16;
+				realMapWidth = transitionRoom.map.width * 10 * 16;
+				movePlayer(transitionRoom, transitionDirection, transitionPosition);
+			}
+			var canvasWidth = width * (stage - FPS) / FPS;
+			var canvasHeight = height * (stage - FPS) / FPS;
+		}
+		transitionCanvas.width = width;
+		transitionCanvas.height = height;
+		transitionContext.clearRect(0, 0, width, height);
+		drawWorld();
+		drawMap();
+		transitionContext.drawImage(tileCanvas, 0, 0);
+		transitionContext.drawImage(bdCanvas, 0, 0);
+		transitionContext.drawImage(playerCanvas, 0, 0);
+		// if(stage > 3) {
+		// console.log(tileCanvas.toDataURL(), width, height);
+		// transitionBetweenRooms = false;
+		// }
+		playerContext.clearRect(0, 0, width, height);
+		bdCanvas.style.display = "none";
+		tileCanvas.style.display = "none";
+		// bdContext.clearRect(0, 0, width, height);
+		// tileContext.clearRect(0, 0, width, height);
+		transitionContext.globalCompositeOperation = "destination-in";
+		// var startX = ((width - canvasWidth) / 2);
+		// var startY = ((height - canvasHeight) / 2);
+		var startX = ((player.x + (player.w / 2)) - viewPortX) - ((canvasWidth) / 2);
+		var startY = ((player.y + (player.h / 2)) - viewPortY) - ((canvasHeight) / 2);
+		transitionContext.beginPath();
+		transitionContext.rect(startX, startY, canvasWidth, canvasHeight);
+		transitionContext.fillStyle = "black";
+		transitionContext.fill();
+		playerContext.drawImage(transitionCanvas, 0, 0);
+
+		stage += (FPS * 2) * (dt / 1000);
+		if (stage > FPS * 2) {
+			stage = 0;
+			runGameLoop = true;
+			transitionRoom = null;
+			transitionBetweenRooms = false;
+			bdCanvas.style.display = "bl";
+			tileCanvas.style.display = "bl";
+			player.dc = window.performance.now();
+			document.title = currentRoom.c.name;
+			history.pushState(null, null, "#" + document.title);
+		}
+	}
+}
+
+function enterRoom(room, direction, position) {
+	transitionDirection = direction;
+	transitionPosition = position;
+	transitionBetweenRooms = true;
+	transitionRoom = room;
+	runGameLoop = false;
 	if (room.map === null) {
 		playerSizedRoom(room);
 	}
-	currentRoom = room;
-	collectKey(room);
-	currentRoom.v = true;
-	currentMapTiles = room.map.tiles;
-	currentMap = room.map.map;
-	height = room.map.height * 10;
-	width = room.map.width * 10;
-	realMapHeight = room.map.height * 10 * 16;
-	realMapWidth = room.map.width * 10 * 16;
-	player.dc = window.performance.now();
-	document.title = currentRoom.c.name;
-	history.pushState(null, null, "#"+document.title);
 }
-
-
 var viewPortX = 0;
 var viewPortY = 0;
 var miniViewPortX = 0;
@@ -1624,7 +1713,8 @@ function parseMinimapViewport() {
 	miniViewPortY = ~~ (0.5 + miniViewPortY);
 	miniViewPortY = ~~ (0.5 + miniViewPortY);
 }
-var world, currentRoom;
+var world = null;
+var currentRoom = null;
 
 var chanceOfAddingDoor = 0.2;
 var currentColorIndex = 0;

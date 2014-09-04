@@ -1,4 +1,7 @@
 function drawMap() {
+	borderContext.strokeStyle = currentRoom.mapColor.border;
+	borderContext.lineWidth = 2;
+	parseViewPort();
 	tileContext.fillStyle = currentRoom.mapColor.border;
 	tileContext.fillRect(0, 0, tileCanvas.width, tileCanvas.height);
 	tileContext.fillStyle = currentRoom.mapColor.background;
@@ -55,7 +58,11 @@ function drawMap() {
 	for (var y = mapY1; y < mapY2; y++) {
 		for (var x = mapX1; x < mapX2; x++) {
 			if (currentMap[coordinate(x, y, currentMapTiles)] > 1) {
-				tileContext.fillStyle = regionColors[currentMap[coordinate(x, y, currentMapTiles)] - 1].background;
+				if (currentMap[coordinate(x, y, currentMapTiles)] === 9) {
+					tileContext.fillStyle = regionColors[currentRoom.specialType].lock;
+				} else {
+					tileContext.fillStyle = regionColors[currentMap[coordinate(x, y, currentMapTiles)] - 1].background;
+				}
 				drawRect(x, y, currentMap, currentMapTiles, (x * tileSize) - viewPortX, tileSize, true);
 			}
 		}
@@ -201,52 +208,44 @@ function drawLine(startX, startY, endX, endY) {
 	borderContext.lineTo(endX, endY);
 }
 
-var lastPlayerX = 0;
-var lastPlayerY = 0;
 var miniMapPlayerX = 0;
 var miniMapPlayerY = 0;
-var lastRoomLength = 0;
 
 function drawWorld() {
 	parseMinimapViewport();
-	miniMapPlayerX = (currentRoom.mapX * miniMapSize) + (modulus(modulus(modulus(player.x), roomSize), segmentsPerRoom) * miniMapSize) - miniViewPortX;
-	miniMapPlayerY = (currentRoom.mapY * miniMapSize) + (modulus(modulus(modulus(player.y), roomSize), segmentsPerRoom) * miniMapSize) - miniViewPortY;
-	if (currentRoom.mapX + modulus(modulus(modulus(player.x), roomSize), segmentsPerRoom) !== lastPlayerX || currentRoom.mapY + modulus(modulus(modulus(player.y), roomSize), segmentsPerRoom) !== lastPlayerY || lastRoomLength !== world.rooms.length) {
-		minimapCanvas.width = 150;
-		minimapCanvas.height = 150;
-		minimapContext.clearRect(0, 0, minimapCanvas.width, minimapCanvas.height);
-		drawnDoors.length = 0;
-		minimapContext.lineWidth = 2;
-		minimapContext.fillStyle = "#000";
-		for (var r = 0; r < world.regions.length; r++) {
-			for (var i = 0; i < world.regions[r].rooms.length; i++) {
-				room = world.regions[r].rooms[i];
-				roomX = (room.mapX * miniMapSize) - miniViewPortX;
-				roomY = (room.mapY * miniMapSize) - miniViewPortY;
-				if (roomX + (room.mapW * miniMapSize) > 0 && roomY + (room.mapH * miniMapSize) > 0 && roomX < minimapCanvas.width && roomY < minimapCanvas.height) {
-					minimapContext.beginPath();
-					minimapContext.rect(roomX, roomY, room.mapW * miniMapSize, room.mapH * miniMapSize);
-					minimapContext.fill();
-					minimapContext.closePath();
-				}
-			}
-		}
-		forEachRoom("background", "border", function(room, roomX, roomY) {
-			if (room.visited) {
+	miniMapPlayerX = (currentRoom.mapX * miniMapSize) + (modulus(modulus(modulus(player.x), roomSize), segmentsPerRoom) * miniMapSize);
+	miniMapPlayerY = (currentRoom.mapY * miniMapSize) + (modulus(modulus(modulus(player.y), roomSize), segmentsPerRoom) * miniMapSize);
+	minimapCanvas.width = 150;
+	minimapCanvas.height = 150;
+	minimapContext.clearRect(0, 0, minimapCanvas.width, minimapCanvas.height);
+	drawnDoors.length = 0;
+	minimapContext.lineWidth = 2;
+	minimapContext.fillStyle = "#000";
+	for (var r = 0; r < world.regions.length; r++) {
+		for (var i = 0; i < world.regions[r].rooms.length; i++) {
+			room = world.regions[r].rooms[i];
+			roomX = (room.mapX * miniMapSize) - miniViewPortX;
+			roomY = (room.mapY * miniMapSize) - miniViewPortY;
+			if (roomX + (room.mapW * miniMapSize) > 0 && roomY + (room.mapH * miniMapSize) > 0 && roomX < minimapCanvas.width && roomY < minimapCanvas.height) {
 				minimapContext.beginPath();
 				minimapContext.rect(roomX, roomY, room.mapW * miniMapSize, room.mapH * miniMapSize);
 				minimapContext.fill();
-				minimapContext.stroke();
 				minimapContext.closePath();
 			}
-		});
-		forEachRoom(0, "background", drawDoors);
-		forEachRoom(0, 0, drawIcons);
+		}
 	}
+	forEachRoom("background", "border", function(room, roomX, roomY) {
+		if (room.visited) {
+			minimapContext.beginPath();
+			minimapContext.rect(roomX, roomY, room.mapW * miniMapSize, room.mapH * miniMapSize);
+			minimapContext.fill();
+			minimapContext.stroke();
+			minimapContext.closePath();
+		}
+	});
+	forEachRoom(0, "background", drawDoors);
+	forEachRoom(0, 0, drawIcons);
 	drawPlayer();
-	lastPlayerX = currentRoom.mapX + modulus(modulus(modulus(player.x), roomSize), segmentsPerRoom);
-	lastPlayerY = currentRoom.mapY + modulus(modulus(modulus(player.y), roomSize), segmentsPerRoom);
-	lastRoomLength = world.rooms.length;
 }
 
 function forEachRoom(fillStyle, strokeStyle, fn) {
@@ -385,7 +384,7 @@ function drawPlayer() {
 		miniMapIconsContext.strokeStyle = "rgba(200,200,255," + (0.8 * frame) + ")";
 	}
 	miniMapIconsContext.beginPath();
-	miniMapIconsContext.rect(miniMapPlayerX, miniMapPlayerY, miniMapSize, miniMapSize);
+	miniMapIconsContext.rect(miniMapPlayerX - miniViewPortX, miniMapPlayerY - miniViewPortY, miniMapSize, miniMapSize);
 	miniMapIconsContext.fill();
 	miniMapIconsContext.stroke();
 	miniMapIconsContext.closePath();

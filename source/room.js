@@ -298,4 +298,15 @@ function playerSizedRoom(room) {
 		}
 		return array;
 	});
+	if (room.specialType > 0) {
+		var randomW = random(1, room.mapW * segmentsPerRoom) - 1;
+		var randomH = random(1, room.mapH * segmentsPerRoom) - 1;
+		var randomX = random(1, roomSize - 1);
+		var randomY = random(1, roomSize - 1);
+		while (room.map.map[coordinate(randomX, randomY, room.map.tiles)] !== 0) {
+			randomX = random(1, roomSize - 1);
+			randomY = random(1, roomSize - 1);
+		}
+		room.map.map[coordinate(randomX, randomY, room.map.tiles)] = 9;
+	}
 }
