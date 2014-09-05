@@ -28,7 +28,7 @@ function movePlayer(room, direction, position) {
 				if (door.dir === "N") {
 					translatedX += Math.floor(segmentsPerRoom / 2);
 					player.y = 0;
-					if (door.doorType !== 0) {
+					if (door.doorType > -1) {
 						player.y = tileSize;
 					}
 					player.x = (player.x % (roomSize * tileSize)) + (translatedX * roomSize * tileSize);
@@ -37,7 +37,7 @@ function movePlayer(room, direction, position) {
 					translatedY += Math.floor(segmentsPerRoom / 2);
 					translatedX += segmentsPerRoom;
 					player.x = (room.mapW * roomSize * tileSize * segmentsPerRoom) - (player.w);
-					if (door.doorType !== 0) {
+					if (door.doorType > -1) {
 						player.x -= tileSize;
 					}
 					player.y = (player.y % (roomSize * tileSize)) + (translatedY * roomSize * tileSize);
@@ -46,7 +46,7 @@ function movePlayer(room, direction, position) {
 					translatedX += Math.floor(segmentsPerRoom / 2);
 					translatedY += segmentsPerRoom;
 					player.y = (room.mapH * roomSize * tileSize * segmentsPerRoom) - (player.h);
-					if (door.doorType !== 0) {
+					if (door.doorType > -1) {
 						player.y -= tileSize;
 					}
 					player.x = (player.x % (roomSize * tileSize)) + (translatedX * roomSize * tileSize);
@@ -54,7 +54,7 @@ function movePlayer(room, direction, position) {
 				if (door.dir === "W") {
 					translatedY += Math.floor(segmentsPerRoom / 2);
 					player.x = 0;
-					if (door.doorType !== 0) {
+					if (door.doorType > -1) {
 						player.x = tileSize;
 					}
 					player.y = (player.y % (roomSize * tileSize)) + (translatedY * roomSize * tileSize);
@@ -116,9 +116,9 @@ var transitionRoom = null;
 var transitionBetweenRooms = false;
 var transitionCanvas = document.createElement("canvas");
 var transitionContext = transitionCanvas.getContext("2d");
-document.body.appendChild(transitionCanvas);
-transitionCanvas.style.right = "initial";
-transitionCanvas.style.border = "1px solid black";
+// document.body.appendChild(transitionCanvas);
+// transitionCanvas.style.right = "initial";
+// transitionCanvas.style.border = "1px solid black";
 var stage = 0;
 var FPS = 1;
 
@@ -129,11 +129,13 @@ function transition() {
 		}
 		var width = playerCanvas.width;
 		var height = playerCanvas.height;
+		var canvasWidth = width;
+		var canvasHeight = height;
 		if (stage < FPS) {
 
-			var canvasWidth = width * stage / FPS;
+			canvasWidth = width * stage / FPS;
 			canvasWidth = width - canvasWidth;
-			var canvasHeight = height * stage / FPS;
+			canvasHeight = height * stage / FPS;
 			canvasHeight = height - canvasHeight;
 
 		}
@@ -151,9 +153,11 @@ function transition() {
 				realMapHeight = transitionRoom.map.height * roomSize * tileSize;
 				realMapWidth = transitionRoom.map.width * roomSize * tileSize;
 				movePlayer(transitionRoom, transitionDirection, transitionPosition);
+				document.title = currentRoom.mapColor.name;
+				history.pushState(null, null, "#" + document.title);
 			}
-			var canvasWidth = width * (stage - FPS) / FPS;
-			var canvasHeight = height * (stage - FPS) / FPS;
+			canvasWidth = width * (stage - FPS) / FPS;
+			canvasHeight = height * (stage - FPS) / FPS;
 		}
 		transitionCanvas.width = width;
 		transitionCanvas.height = height;
@@ -189,11 +193,9 @@ function transition() {
 			runGameLoop = true;
 			transitionRoom = null;
 			transitionBetweenRooms = false;
-			borderCanvas.style.display = "block";
-			tileCanvas.style.display = "block";
+			borderCanvas.style.display = "initial";
+			tileCanvas.style.display = "initial";
 			player.doorCooldown = window.performance.now();
-			document.title = currentRoom.mapColor.name;
-			history.pushState(null, null, "#" + document.title);
 		}
 	}
 }

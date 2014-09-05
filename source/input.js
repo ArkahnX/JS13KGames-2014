@@ -24,7 +24,6 @@ function handleKeyUp(event) {
 			event.preventDefault();
 		}
 	}
-
 	if (keymap[event.keyCode] !== event.type) {
 		if (event.keyCode === keys.space) {
 			player.jumping = IDLE;

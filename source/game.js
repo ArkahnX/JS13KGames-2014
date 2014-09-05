@@ -1,7 +1,4 @@
 var playerCanvas, tileCanvas, borderCanvas, playerContext, tileContext, borderContext, minimapContext, minimapCanvas, miniMapIconsContext, miniMapIconsCanvas;
-var getElementById = 0;
-var querySelector = 1;
-var querySelectorAll = 2;
 var runGameLoop = true;
 var animate = true;
 var frameEvent = new CustomEvent("frame");
@@ -33,7 +30,7 @@ var player = {
 	doorCooldown: window.performance.now(),
 	maxHealth: 5,
 	keys: []
-}
+};
 var dt = currentTick - lastTick;
 var entities = [player];
 var keys = {

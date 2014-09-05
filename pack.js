@@ -216,5 +216,5 @@ var minifiedCode = Minify(uglifiedCode);
 // var minifiedCode = packify(uglifiedCode);
 
 // fs.writeFileSync(rootDir + "build/" + folder + "/" + fileName + ".js", uglifiedCode);
-console.log("Wrote final build to " + rootDir + "build/build.js");
-fs.writeFileSync(rootDir + 'build/build.js', minifiedCode);
+console.log("Wrote final build to " + rootDir + "build/b.js");
+fs.writeFileSync(rootDir + 'build/b.js', minifiedCode);

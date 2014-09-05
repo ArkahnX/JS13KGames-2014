@@ -104,7 +104,7 @@ var options = {
 		loops: true, // optimize loops
 		unused: true, // drop unused variables/functions
 		hoist_funs: true, // hoist function declarations
-		hoist_vars: false, // hoist variable declarations
+		hoist_vars: true, // hoist variable declarations
 		if_return: true, // optimize if-s followed by return/continue
 		join_vars: true, // join var declarations
 		cascade: true, // try to cascade `right` into `left` in sequences
@@ -113,20 +113,20 @@ var options = {
 		global_defs: globals // global definitions
 	},
 	output: {
-		// indent_start: 0, // start indentation on every line (only when `beautify`)
-		// indent_level: 4, // indentation level (only when `beautify`)
-		// quote_keys: false, // quote all keys in object literals?
-		// space_colon: true, // add a space after colon signs?
+		indent_start: 0, // start indentation on every line (only when `beautify`)
+		indent_level: 4, // indentation level (only when `beautify`)
+		quote_keys: true, // quote all keys in object literals?
+		space_colon: true, // add a space after colon signs?
 		// ascii_only: false, // output ASCII-safe? (encodes Unicode characters as ASCII)
 		// inline_script: false, // escape "</script"?
-		// width: 80, // informative maximum line width (for beautified output)
+		width: 80, // informative maximum line width (for beautified output)
 		// max_line_len: 32000, // maximum line length (for non-beautified output)
 		// ie_proof: true, // output IE-safe code?
-		// beautify: false, // beautify output?
+		beautify: true, // beautify output?
 		// source_map: null, // output a source map
-		// bracketize: false, // use brackets every time?
+		bracketize: true, // use brackets every time?
 		// comments: false, // output comments?
-		// semicolons: true // use semicolons to separate statements? (otherwise, newlines)
+		semicolons: true // use semicolons to separate statements? (otherwise, newlines)
 	},
 	mangle: {
 		toplevel: true,
@@ -165,7 +165,7 @@ for (var attr in globals) {
 		data = data.replace(new RegExp(attr, "g"), globals[attr]);
 	}
 }
-fs.writeFileSync(rootDir + 'source/app.js', data);
+fs.writeFileSync(rootDir + 'source/app.js', "(function(window,document){\n"+data+"\n})(window,document);");
 options.parse.filename = rootDir + "source/app.js";
 var parseOptions = UglifyJS.defaults({}, options.parse);
 var compressOptions = UglifyJS.defaults({}, options.compress);
@@ -184,13 +184,18 @@ topLevelAst.figure_out_scope();
 var compressor = new UglifyJS.Compressor(compressOptions);
 var compressedAst = topLevelAst.transform(compressor);
 
+if (exists) {
+	// fs.truncateSync(rootDir + 'source/app.js');
+}
+// fs.writeFileSync(rootDir + 'source/app.js', compressedAst.print_to_string(outputOptions));
+
 // 3. Mangle
 compressedAst.figure_out_scope();
 compressedAst.compute_char_frequency();
 compressedAst.mangle_names(options.mangle);
 
 // 4. Generate output
-var uglifiedCode = compressedAst.print_to_string(outputOptions);
+var uglifiedCode = compressedAst.print_to_string(UglifyJS.defaults({},{}));
 var oldSize = getUTF8Size(fullCode);
 var newSize = getUTF8Size(uglifiedCode);
 var saved = ((1 - newSize / oldSize) * 100).toFixed(2);

@@ -2,7 +2,7 @@ var world = null;
 var currentRoom = null;
 
 var chanceOfAddingDoor = 0.2;
-var currentColorIndex = 0;
+var currentRegionColorIndex = 0;
 var regionColors = [{
 	background: "#BBBBBB",
 	border: "#A0A0A0",
@@ -49,9 +49,10 @@ function startNewRegion(region) {
 	var trapped = true;
 	var frontiers = getFrontiersForAllRooms();
 	var test = [];
+	var frontier = null;
 	while (trapped) {
 		var emptySides = 0;
-		var frontier = getRandom(frontiers);
+		frontier = getRandom(frontiers);
 		test.length = 0;
 		test.push(getRoom(frontier.x - 1, frontier.y), getRoom(frontier.x + 1, frontier.y), getRoom(frontier.x, frontier.y - 1), getRoom(frontier.x, frontier.y + 1));
 		for (var i = 0; i < 4; i++) {
@@ -169,6 +170,7 @@ function addDoorsAlongNorthWall(room) {
 	var object = null;
 	var thisRoom = null;
 	var door = null;
+	var door2 = null;
 	var array = [];
 	var mapX = room.mapX;
 	while (mapX < room.mapX + room.mapW) {
@@ -193,9 +195,12 @@ function addDoorsAlongNorthWall(room) {
 		}
 		if (!(Math.random() > chanceOfAddingDoor || indexOf(room.doors, object) >= 0) && !hasDoor) {
 			door = Door(object.x, object.y, "N", room, object.other);
+			door2 = Door(object.x, object.y - 1, "S", object.other, room);
 			room.doors.push(door);
+			door.other = door2;
+			door2.other = door;
 			// object.other.doors.push(door);
-			object.other.doors.push(Door(object.x, object.y - 1, "S", object.other, room));
+			object.other.doors.push(door2);
 			i++;
 		}
 	}
@@ -206,6 +211,7 @@ function addDoorsAlongSouthWall(room) {
 	var object = null;
 	var thisRoom = null;
 	var door = null;
+	var door2 = null;
 	var array = [];
 	var mapX = room.mapX;
 	while (mapX < room.mapX + room.mapW) {
@@ -230,9 +236,12 @@ function addDoorsAlongSouthWall(room) {
 		}
 		if (!(Math.random() > chanceOfAddingDoor || indexOf(room.doors, object) >= 0) && !hasDoor) {
 			door = Door(object.x, object.y, "S", room, object.other);
+			door2 = Door(object.x, object.y + 1, "N", object.other, room);
 			room.doors.push(door);
+			door.other = door2;
+			door2.other = door;
 			// object.other.doors.push(door);
-			object.other.doors.push(Door(object.x, object.y + 1, "N", object.other, room));
+			object.other.doors.push(door2);
 			i++;
 		}
 	}
@@ -243,6 +252,7 @@ function addDoorsAlongWestWall(room) {
 	var object = null;
 	var thisRoom = null;
 	var door = null;
+	var door2 = null;
 	var array = [];
 	var mapY = room.mapY;
 	while (mapY < room.mapY + room.mapH) {
@@ -267,9 +277,12 @@ function addDoorsAlongWestWall(room) {
 		}
 		if (!(Math.random() > chanceOfAddingDoor || indexOf(room.doors, object) >= 0) && !hasDoor) {
 			door = Door(object.x, object.y, "W", room, object.other);
+			door2 = Door(object.x - 1, object.y, "E", object.other, room);
 			room.doors.push(door);
+			door.other = door2;
+			door2.other = door;
 			// object.other.doors.push(door);
-			object.other.doors.push(Door(object.x - 1, object.y, "E", object.other, room));
+			object.other.doors.push(door2);
 			i++;
 		}
 	}
@@ -280,6 +293,7 @@ function addDoorsAlongEastWall(room) {
 	var object = null;
 	var thisRoom = null;
 	var door = null;
+	var door2 = null;
 	var array = [];
 	var mapY = room.mapY;
 	while (mapY < room.mapY + room.mapH) {
@@ -304,9 +318,12 @@ function addDoorsAlongEastWall(room) {
 		}
 		if (!(Math.random() > chanceOfAddingDoor || indexOf(room.doors, object) >= 0) && !hasDoor) {
 			door = Door(object.x, object.y, "E", room, object.other);
+			door2 = Door(object.x + 1, object.y, "W", object.other, room);
+			door.other = door2;
+			door2.other = door;
 			room.doors.push(door);
 			// object.other.doors.push(door);
-			object.other.doors.push(Door(object.x + 1, object.y, "W", object.other, room));
+			object.other.doors.push(door2);
 			i++;
 		}
 	}
@@ -353,7 +370,7 @@ function createRoom() {
 	try {
 		addRoom(growRoom(frontier.x, frontier.y));
 	} catch (e) {
-		console.log(world, frontier, e)
+		console.log(world, frontier, e);
 	}
 	// }
 }
@@ -366,7 +383,7 @@ function addRoom(room) {
 	array = removeFrontiers(array, room);
 	world.frontiers = addBorderingFrontiers(array, room);
 	if (world.frontiers.length === 0) {
-		console.log(array, room, addBorderingFrontiers(array, room))
+		console.log(array, room, addBorderingFrontiers(array, room));
 	}
 	room.mapColor = world.currentRegion.color;
 	world.rooms.push(room);
@@ -464,7 +481,7 @@ function Room(x, y, width, height, region) {
 		mapH: height,
 		mapColor: null,
 		region: region,
-		specialType: 0,
+		specialType: -1,
 		startPositionX: 0,
 		startPositionY: 0,
 		startRoom: false,
@@ -478,10 +495,11 @@ function Door(x, y, direction, room1, room2) {
 	return {
 		mapX: x,
 		mapY: y,
-		doorType: 0,
+		doorType: -1,
 		dir: direction,
 		room1: room1,
-		room2: room2
+		room2: room2,
+		other: null,
 	};
 }
 
@@ -490,10 +508,10 @@ function clearDoorTypes() {
 	var door = null;
 	for (var i = 0; i < world.rooms.length; i++) {
 		room = world.rooms[i];
-		room.specialType = 0;
+		room.specialType = -1;
 		for (var e = 0; e < room.doors.length; e++) {
 			door = room.doors[e];
-			door.doorType = 0;
+			door.doorType = -1;
 		}
 	}
 }
@@ -507,15 +525,15 @@ function assignDoorTypes() { // FIXME
 		region1 = world.regions[i];
 		room = getRandom(region1.rooms);
 		room.specialType = (i + 1) % regionColors.length;
-
+		console.log(region1.color, room.specialType)
 		for (var e = 0; e < region1.rooms.length; e++) {
 			room = region1.rooms[e];
 			for (var r = 0; r < room.doors.length; r++) {
 				door = room.doors[r];
 				region2 = other(door, room).region;
 				if (region2 !== region1) {
-					if (door.doorType === 0) {
-						door.doorType = (i + 1) % regionColors.length;
+					if (door.other.doorType === -1) {
+						door.other.doorType = (i + 1) % regionColors.length;
 					}
 				}
 			}
@@ -524,7 +542,7 @@ function assignDoorTypes() { // FIXME
 }
 
 function collectKey(room) {
-	if (player.keys.indexOf(room.specialType) === -1) {
+	if (player.keys.indexOf(room.specialType) === -1 && room.specialType > -1) {
 		player.keys.push(room.specialType);
 		unlockRooms();
 	}
@@ -535,22 +553,21 @@ function unlockRooms() {
 		var hasDoor = false;
 		var room = world.rooms[i];
 		if (player.keys.indexOf(room.specialType) > -1) {
-			room.specialType = 0;
+			room.specialType = -1;
+			var index = room.map.map.indexOf(9);
+			if (index > -1) {
+				room.map.map[index] = 0;
+			}
 		}
 		for (var e = 0; e < room.doors.length; e++) {
 			var door = room.doors[e];
 			if (player.keys.indexOf(door.doorType) > -1) {
-				door.doorType = 0;
+				door.doorType = -1;
 				hasDoor = true;
 			}
 		}
 		if (hasDoor && room.map !== null) {
-			if(room.specialType === 0) {
-				var index = room.map.map.indexOf(9);
-				if(index > -1) {
-					room.map.map[index] = 0;
-				}
-			}
+			if (room.specialType === -1) {}
 			// for (var r = 0; r < player.keys.length; r++) {
 			// 	var index = room.map.map.indexOf(player.keys[r] + 1);
 			// 	while (index > 0) {
@@ -559,7 +576,6 @@ function unlockRooms() {
 			// }
 			for (var r = 0; r < room.map.map.length; r++) {
 				if (room.map.map[r] > 1) {
-					console.log(player.keys.indexOf(room.map.map[r] - 1), player.keys, room.map.map[r] - 1)
 					if (player.keys.indexOf(room.map.map[r] - 1) > -1) {
 						room.map.map[r] = 0;
 					}

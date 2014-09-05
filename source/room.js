@@ -5,27 +5,14 @@ var realMapWidth = 0;
 var width = currentMapTiles;
 var height = currentMapTiles;
 var roomList = [];
-var bigRoomList = [];
 var blankArray = [];
 for (var i = 0; i < roomSize * roomSize; i++) {
 	blankArray[i] = 0;
 }
 
 
-
-var roomOne = "1111111111111111111111111111110000000000000000000000000000001111111111111111111111111111111111111111";
-var roomTwo = "1110001111111000111111100011111110001111111000111111100011111110001111111000111111100011111110001111";
-var roomThree = "1000000001110000001111100001110001001000000000000000000000000000000000000111100011111111111111111111";
-var roomFour = "1111111111111000011100000000000000000000000011000000011110000000000000000000000011000000111100000111";
-var roomFive = "1100000011110000001111000001111110000001111000000011110000001111100000111111000011111111111111111111";
-var roomSix = "1111111111100000000110000000001100000000110001100011100011101110000011111100000111110000011111100001";
-var roomSeven = "1111111111100000000100000000010000000011000110001100110001110110000111010000111111000011111000011111";
-var roomEight = "1100000011110000001111100000111000000111000000011100000011110000011111000011111111111111111111111111";
-var roomNine = "1110000011110000000100000000000000000000000011000000001100000000000000000000000011000000111100000111";
-var roomTen = "1111111111111000000011100000001220000000122000000012200000001111100000111110000011111000001111111111";
-var roomEleven = "1111111111000000111100000011110000002211000000221100000022110000111111000011111100001111111111111111";
-var roomTwelve = "1110000111100000000110000000011000110001100111100110000000011000000001100000000111122221111112222111";
-var roomThirteen = "1112222111111222211110000000011000000001100000000110011110011000000001100000000110000000011100000111";
+var smallRoomArray =
+	"1111111111111111111111111111110000000000000000000000000000001111111111111111111111111111111111111111,1100000011111000001111110000111100000011110000001111000000111100000111110000111111000000111100000011,1000000001110000001111100001110001001000000000000000000000000000000000000111100011111111111111111111,1111111111111000011100000000000000000000000011000000011110000000000000000000000011000000111100000111,1100000011110000001111000001111110000001111000000011110000001111100000111111000011111111111111111111,1111111111100000000110000000001100000000110001100011100011101110000011111100000111110000011111100001,1111111111100000000100000000010000000011000110001100110001110110000111010000111111000011111000011111,1100000011110000001111100000111000000111000000011100000011110000011111000011111111111111111111111111,1110000011110000000100000000000000000000000011000000001100000000000000000000000011000000111100000111,1100000011111000001100110000110000000011000000001100000000110000000111000000111111000000111100000011,1100000011111000001111110000001100000000110000000011000000001100000111110000111111000000111100000011".split(",");
 
 function smallRoom(RoomType, array) {
 	array = array.split("");
@@ -49,19 +36,9 @@ roomList.push({
 	map: blankArray,
 	type: 0
 });
-roomList.push(smallRoom(1, roomOne));
-roomList.push(smallRoom(2, roomTwo));
-roomList.push(smallRoom(3, roomThree));
-roomList.push(smallRoom(4, roomFour));
-roomList.push(smallRoom(5, roomFive));
-roomList.push(smallRoom(6, roomSix));
-roomList.push(smallRoom(7, roomSeven));
-roomList.push(smallRoom(8, roomEight));
-roomList.push(smallRoom(9, roomNine));
-roomList.push(smallRoom(10, roomTen));
-roomList.push(smallRoom(11, roomEleven));
-roomList.push(smallRoom(12, roomTwelve));
-roomList.push(smallRoom(13, roomThirteen));
+for (var i = 0; i < smallRoomArray.length; i++) {
+	roomList.push(smallRoom(i + 1, smallRoomArray[i]));
+}
 
 function BigRoom(width, height, worldRoom, roomCreator) {
 	var array = [];
@@ -95,9 +72,6 @@ function BigRoom(width, height, worldRoom, roomCreator) {
 			var mapCoord = coordinate(x, y, topSize * roomSize);
 			var roomCoord = coordinate(x % roomSize, y % roomSize, roomSize);
 			map[mapCoord] = room.map[roomCoord];
-			if (x === 0) {
-				// console.log(roomX, roomY, worldRoom)
-			}
 			// top walls
 			if ((y === 0 && northDoor === null && x < width * roomSize)) {
 				map[mapCoord] = 1;
@@ -115,20 +89,20 @@ function BigRoom(width, height, worldRoom, roomCreator) {
 				map[mapCoord] = 1;
 			}
 			// top walls
-			if ((y === 0 && northDoor !== null && x < width * roomSize && northDoor.doorType > 0 && map[mapCoord] === 0)) {
-				map[mapCoord] = northDoor.doorType + 1;
+			if ((y === 0 && northDoor !== null && x < width * roomSize && northDoor.doorType > -1 && map[mapCoord] === 0)) {
+				map[mapCoord] = northDoor.doorType + 2;
 			}
 			// left walls
-			if ((x === 0 && westDoor !== null && y < height * roomSize && westDoor.doorType > 0 && map[mapCoord] === 0)) {
-				map[mapCoord] = westDoor.doorType + 1;
+			if ((x === 0 && westDoor !== null && y < height * roomSize && westDoor.doorType > -1 && map[mapCoord] === 0)) {
+				map[mapCoord] = westDoor.doorType + 2;
 			}
 			// bottom walls
-			if ((y === height * roomSize - 1 && southDoor !== null && x < width * roomSize && southDoor.doorType > 0 && map[mapCoord] === 0)) {
-				map[mapCoord] = southDoor.doorType + 1;
+			if ((y === height * roomSize - 1 && southDoor !== null && x < width * roomSize && southDoor.doorType > -1 && map[mapCoord] === 0)) {
+				map[mapCoord] = southDoor.doorType + 2;
 			}
 			// right walls
-			if ((x === width * roomSize - 1 && eastDoor !== null && y < height * roomSize && eastDoor.doorType > 0 && map[mapCoord] === 0)) {
-				map[mapCoord] = eastDoor.doorType + 1;
+			if ((x === width * roomSize - 1 && eastDoor !== null && y < height * roomSize && eastDoor.doorType > -1 && map[mapCoord] === 0)) {
+				map[mapCoord] = eastDoor.doorType + 2;
 			}
 		}
 	}
@@ -284,9 +258,69 @@ function playerSizedRoom(room) {
 	room.map = BigRoom(room.mapW * segmentsPerRoom, room.mapH * segmentsPerRoom, room, function(array, roomsX, roomsY, arraySize) {
 		var currentX = 0;
 		var currentY = 0;
+		var roomID = 0;
 		for (var i = 0; i < arraySize * arraySize; i++) {
+			// var aboveRoom = array[coordinate(currentX, currentY - 1, arraySize)];
+			// var leftRoom = array[coordinate(currentX - 1, currentY, arraySize)];
+			// var rightRoom = array[coordinate(currentX + 1, currentY, arraySize)];
+			// var belowRoom = array[coordinate(currentX, currentY + 1, arraySize)];
+			// var roomX = Math.floor(currentX / roomSize);
+			// var roomY = Math.floor(currentY / roomSize);
+			var northDoor = getDoor(room, currentX, currentY, "N");
+			var eastDoor = getDoor(room, currentX, currentY, "E");
+			var southDoor = getDoor(room, currentX, currentY, "S");
+			var westDoor = getDoor(room, currentX, currentY, "W");
+			var horizontalRooms = [1, 3, 4, 9];
+			var verticalRooms = [2, 9, 10, 11];
+			// if (currentY - 1 < 0) {
+			// 	aboveRoom = -1;
+			// }
+			// if (currentX - 1 < 0) {
+			// 	leftRoom = -1;
+			// }
+			// if (currentY + 1 > roomsY - 1) {
+			// 	belowRoom = -1;
+			// }
+			// if (currentX + 1 > roomsX - 1) {
+			// 	rightRoom = -1;
+			// }
 			// setRoom(startX, startY, currentX, currentY, arraySize, array, validRooms, roomSelection, roomsX, roomsY);
-			array[coordinate(currentX, currentY, arraySize)] = 9;
+			if (currentX === 0 || currentY === 0 || currentX === roomsX - 1 || currentY === roomsY - 1) {
+				roomID = random(0, 11);
+			}
+			if (currentX === 0 || currentX === roomsX - 1) {
+				roomID = verticalRooms[random(0, 3)];
+			}
+			if ((currentY === 0 || currentY === roomsY - 1)) {
+				roomID = horizontalRooms[random(0, 3)];
+			}
+			if ((currentX === 0 && currentY === 0) || (currentX === roomsX - 1 && currentY === 0) || (currentX === roomsX - 1 && currentY === roomsY - 1) || (currentX === 0 && currentY === roomsY - 1)) {
+				roomID = 9;
+			}
+			if (room.mapW === 1) {
+				roomID = verticalRooms[random(0, 3)];
+			}
+			if (room.mapH === 1) {
+				roomID = horizontalRooms[random(0, 3)];
+			}
+			if (room.mapW === 2 || room.mapH === 2) {
+				if (currentX === 0 && currentY === 0) {
+					roomID = 6;
+				}
+				if (currentX === roomsX - 1 && currentY === 0) {
+					roomID = 7;
+				}
+				if (currentX === 0 && currentY === roomsY - 1) {
+					roomID = 5;
+				}
+				if (currentX === roomsX - 1 && currentY === roomsY - 1) {
+					roomID = 8;
+				}
+			}
+			if (northDoor || southDoor || eastDoor || westDoor) {
+				roomID = 9;
+			}
+			array[coordinate(currentX, currentY, arraySize)] = roomID;
 			currentX++;
 			if (currentX > roomsX - 1) {
 				currentX = 0;
@@ -298,7 +332,7 @@ function playerSizedRoom(room) {
 		}
 		return array;
 	});
-	if (room.specialType > 0) {
+	if (room.specialType > -1) {
 		var randomW = random(1, room.mapW * segmentsPerRoom) - 1;
 		var randomH = random(1, room.mapH * segmentsPerRoom) - 1;
 		var randomX = random(1, roomSize - 1);
@@ -307,6 +341,6 @@ function playerSizedRoom(room) {
 			randomX = random(1, roomSize - 1);
 			randomY = random(1, roomSize - 1);
 		}
-		room.map.map[coordinate(randomX, randomY, room.map.tiles)] = 9;
+		room.map.map[coordinate((randomW * roomSize) + randomX, (randomH * roomSize) + randomY, room.map.tiles)] = 9;
 	}
 }
