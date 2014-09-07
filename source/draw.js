@@ -58,13 +58,10 @@ function drawMap() {
 	for (var y = mapY1; y < mapY2; y++) {
 		for (var x = mapX1; x < mapX2; x++) {
 			if (currentMap[coordinate(x, y, currentMapTiles)] > 1) {
-				console.log()
 				if (currentMap[coordinate(x, y, currentMapTiles)] === 9 && currentRoom.specialType > -1) {
-					console.log(currentRoom.specialType)
 					tileContext.fillStyle = regionColors[currentRoom.specialType].lock;
 				} else if (currentMap[coordinate(x, y, currentMapTiles)] !== 9) {
 					tileContext.fillStyle = regionColors[currentMap[coordinate(x, y, currentMapTiles)] - 2].lock;
-					console.log(tileContext.fillStyle)
 				}
 				drawRect(y, (x * tileSize) - viewPortX, tileSize, true);
 			}
@@ -320,22 +317,24 @@ function drawIcons(room) {
 			door = room.doors[i];
 			if (door.doorType > -1) {
 				color = regionColors[door.doorType].lock;
-				switch (door.dir) {
-					case "N":
-						drawCircle(miniMapSize * door.mapX + 5, miniMapSize * door.mapY, color);
-						continue;
-					case "S":
-						drawCircle(miniMapSize * door.mapX + 5, miniMapSize * door.mapY + 16, color);
-						continue;
-					case "W":
-						drawCircle(miniMapSize * door.mapX - 3, miniMapSize * door.mapY + 8, color);
-						continue;
-					case "E":
-						drawCircle(miniMapSize * door.mapX + 13, miniMapSize * door.mapY + 8, color);
-						continue;
-					default:
-						continue;
+				var xModifier = 0;
+				var yModifier = 0;
+				if (door.dir === "N") {
+					xModifier = 5;
 				}
+				if (door.dir === "S") {
+					xModifier = 5;
+					yModifier = 16;
+				}
+				if (door.dir === "W") {
+					xModifier = -3;
+					yModifier = 8;
+				}
+				if (door.dir === "E") {
+					xModifier = 13;
+					yModifier = 8;
+				}
+				drawCircle(miniMapSize * door.mapX + xModifier, miniMapSize * door.mapY + yModifier, color);
 			}
 		}
 		if (room.specialType > -1) {

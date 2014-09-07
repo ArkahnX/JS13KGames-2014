@@ -443,31 +443,28 @@ function growRoom(x, y) {
 	var width = 1;
 	var height = 1;
 	while (var1++ < 25 && (width < world.currentRegion.maxW || height < world.currentRegion.maxH) && Math.random() < 0.9) {
-		switch (parseInt(Math.random() * 4)) {
-			case 0:
-				if (height < world.currentRegion.maxH && (canPlaceRoom(x, y - 1, width, height + 1))) {
-					y--;
-					height++;
-				}
-				continue;
-			case 1:
-				if (height < world.currentRegion.maxH && (canPlaceRoom(x, y, width, height + 1))) {
-					height++;
-				}
-				continue;
-			case 2:
-				if (width < world.currentRegion.maxW && (canPlaceRoom(x - 1, y, width + 1, height))) {
-					x--;
-					width++;
-				}
-				continue;
-			case 3:
-				if (width < world.currentRegion.maxW && (canPlaceRoom(x, y, width + 1, height))) {
-					width++;
-				}
-				continue;
-			default:
-				continue;
+		var growth = parseInt(Math.random() * 4);
+		if (growth === 0) {
+			if (height < world.currentRegion.maxH && (canPlaceRoom(x, y - 1, width, height + 1))) {
+				y--;
+				height++;
+			}
+		}
+		if (growth === 1) {
+			if (height < world.currentRegion.maxH && (canPlaceRoom(x, y, width, height + 1))) {
+				height++;
+			}
+		}
+		if (growth === 2) {
+			if (width < world.currentRegion.maxW && (canPlaceRoom(x - 1, y, width + 1, height))) {
+				x--;
+				width++;
+			}
+		}
+		if (growth === 3) {
+			if (width < world.currentRegion.maxW && (canPlaceRoom(x, y, width + 1, height))) {
+				width++;
+			}
 		}
 	}
 	return Room(x, y, width, height, world.currentRegion);
@@ -525,7 +522,6 @@ function assignDoorTypes() { // FIXME
 		region1 = world.regions[i];
 		room = getRandom(region1.rooms);
 		room.specialType = (i + 1) % regionColors.length;
-		console.log(region1.color, room.specialType)
 		for (var e = 0; e < region1.rooms.length; e++) {
 			room = region1.rooms[e];
 			for (var r = 0; r < room.doors.length; r++) {
