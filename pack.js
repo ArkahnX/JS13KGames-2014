@@ -44,7 +44,9 @@ var Minify = function(code, s) {
 			if (j < 1) delete O[x]
 		}
 		o = {};
-		for (x in O) o[x.split(e).join(c)] = 1;
+		for (x in O) {
+			o[x.split(e).join(c)] = 1;
+		}
 		O = o;
 		if (!e) break;
 		s = s.split(e).join(c) + c + e

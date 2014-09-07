@@ -10,10 +10,10 @@
  </layer>
  <layer name="1" width="10" height="10" visible="0">
   <data encoding="base64" compression="zlib">
-   eJxjZGBgYBwAPFBgIPxKCgYANnQARw==
+   eJxjZGBgYKQiHmmAmmEHwgAhIAAp
   </data>
  </layer>
- <layer name="2" width="10" height="10">
+ <layer name="2" width="10" height="10" visible="0">
   <data encoding="base64" compression="zlib">
    eJxjZGBgYGTADRixYGLVYVNLjFkDpY4c91PbfQAmLAAv
   </data>
@@ -30,22 +30,22 @@
  </layer>
  <layer name="5" width="10" height="10" visible="0">
   <data encoding="base64" compression="zlib">
-   eJxjZGBgYGTADRjRMCXq0NVQw0xK3UmpW3GpIxcDACWMADg=
+   eJxjZGBgYETC6ICRgPxAqEOXI8Y8dL3UVkctDAAluAA0
   </data>
  </layer>
  <layer name="6" width="10" height="10" visible="0">
   <data encoding="base64" compression="zlib">
-   eJxjZGBgYCQSEwLEqiNFLTZ1+MQIiRPyDyl+p0QdNrUgMQAlWAAv
+   eJxjZGBgYCQSEwNG1SHESQk/mBoAGFgAGg==
   </data>
  </layer>
- <layer name="7" width="10" height="10" visible="0">
+ <layer name="7" width="10" height="10">
   <data encoding="base64" compression="zlib">
-   eJxjZGBgYCQSEwLEqCFWHTY7iRHDp4YRjxpc6vCpwRc25KoBACNcAC8=
+   eJxjZGBgYCQCEwNopY6QWxjRaGLMo5Y6QuFDbDjC5AEczAAh
   </data>
  </layer>
  <layer name="8" width="10" height="10" visible="0">
   <data encoding="base64" compression="zlib">
-   eJxjZGBgYGTADRjRMLHqcKkl1Sx8gBx3EaMGmzpsamiBASP4ADg=
+   eJxjZGBgYETC6ICRgPxAqEOXw2UOMeqwqSFFHbUxACq4AD8=
   </data>
  </layer>
  <layer name="9" width="10" height="10" visible="0">
@@ -53,12 +53,12 @@
    eJxjZGBgYIRibIARDeMDhOSpAYhxBynqKAWE7CEm/JDlARGkABY=
   </data>
  </layer>
- <layer name="10" width="10" height="10">
+ <layer name="10" width="10" height="10" visible="0">
   <data encoding="base64" compression="zlib">
    eJxjZGBgYGTADRixYHzqcPEJiQ8GdYT8iK6GHPWE1AEAG/QAIw==
   </data>
  </layer>
- <layer name="11" width="10" height="10">
+ <layer name="11" width="10" height="10" visible="0">
   <data encoding="base64" compression="zlib">
    eJxjZGBgYGTADRixYGLVEWMuIUBPdcS4n1x/EqsOAB8cACc=
   </data>
