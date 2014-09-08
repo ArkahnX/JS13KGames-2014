@@ -155,6 +155,7 @@ function transition() {
 				movePlayer(transitionRoom, transitionDirection, transitionPosition);
 				document.title = currentRoom.mapColor.name;
 				history.pushState(null, null, "#" + document.title);
+				bullets.length = 0;
 			}
 			canvasWidth = width * (stage - FPS) / FPS;
 			canvasHeight = height * (stage - FPS) / FPS;

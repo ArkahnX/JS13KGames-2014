@@ -148,8 +148,37 @@ function testWalking(entity) {
 }
 
 function collision(block) {
-	if(block === 9) {
+	if (block === 9) {
 		collectKey(currentRoom);
 	}
 	return block !== 0;
+}
+
+function bulletPhysics(bullet) {
+	var destroy = false;
+	bullet.x += Math.cos(bullet.angle) * ((10 / 60) * dt);
+	bullet.y += Math.sin(bullet.angle) * ((10 / 60) * dt);
+	var mapX = modulus(bullet.x);
+	var mapY = modulus(bullet.y);
+	var coord = coordinate(mapX, mapY, currentMapTiles);
+	if (currentMap[coord] !== 0) {
+		// if (mapX !== 0 && mapY !== 0 && mapX !== mapWidth - 1 && mapY !== mapHeight - 1) {
+		// 	currentMap[coord] = 0;
+		// 	blocks++;
+		// }
+		if (currentMap[coord] > 1 && player.keys[selectedColor] === currentMap[coord] - 2) {
+			blocks[currentMap[coord] - 2]++;
+			currentMap[coord] = 0;
+		}
+		destroy = true;
+	}
+	if (bullet.x > mapWidth * tileSize || bullet.x < 0 || bullet.y > mapHeight * tileSize || bullet.y < 0) {
+		destroy = true;
+	}
+	if (destroy) {
+		var index = bullets.indexOf(bullet);
+		if (index > -1) {
+			bullets.splice(index, 1);
+		}
+	}
 }

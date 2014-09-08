@@ -680,8 +680,8 @@ function drawWorld() {
 	parseMinimapViewport();
 	miniMapPlayerX = (currentRoom.x * 16) + (modulus(modulus(modulus(player.x), 10), 1) * 16);
 	miniMapPlayerY = (currentRoom.y * 16) + (modulus(modulus(modulus(player.y), 10), 1) * 16);
-	minimapCanvas.width = 150;
-	minimapCanvas.height = 150;
+	minimapCanvas.width = 300;
+	minimapCanvas.height = 300;
 	minimapContext.clearRect(0, 0, minimapCanvas.width, minimapCanvas.height);
 	drawnDoors.length = 0;
 	minimapContext.lineWidth = 2;
@@ -837,6 +837,16 @@ var initPlayerCanvas = false;
 var lastFrame = 0;
 
 
+function fillKeys() {
+	for (var i = 0; i < player.keys.length; i++) {
+		playerContext.beginPath();
+		playerContext.fillStyle = rColors[player.keys[i]].l;
+		playerContext.rect(player.x - viewPortX, player.y - viewPortY + ((4 - i) * player.h / 5), player.w, player.h / 5);
+		playerContext.fill();
+		playerContext.closePath();
+	}
+}
+
 function drawPlayer() {
 	if (!initPlayerCanvas) {
 		miniMapIconsCanvas.width = minimapCanvas.width;
@@ -848,8 +858,19 @@ function drawPlayer() {
 	for (var i = 0; i < entities.length; i++) {
 		var entity = entities[i];
 		var red = (15 - ((15) * (player.ῼ / player.mῼ))).toString(16);
-		playerContext.fillStyle = '#' + red + red + '0000';
-		playerContext.fillRect(entity.x - viewPortX, entity.y - viewPortY, entity.w, entity.h);
+		playerContext.beginPath();
+		playerContext.fillStyle = 'rgba(0,0,0,0.1)';
+		playerContext.rect(entity.x - viewPortX, entity.y - viewPortY, entity.w, entity.h);
+		playerContext.fill();
+		playerContext.closePath();
+		fillKeys();
+		playerContext.beginPath();
+		playerContext.lineWidth = 1;
+		playerContext.strokeStyle = '#' + red + red + '0000';
+		playerContext.fillStyle = 'rgba(0,0,0,0)';
+		playerContext.rect(entity.x - viewPortX, entity.y - viewPortY, entity.w, entity.h);
+		playerContext.stroke();
+		playerContext.closePath();
 	}
 	miniMapIconsContext.clearRect(0, 0, miniMapIconsCanvas.width, miniMapIconsCanvas.height);
 	animationLoopProgress += 2 * (dt / 1000);
@@ -876,6 +897,45 @@ function drawPlayer() {
 	ctx.closePath();
 	lastFrame = frame;
 }
+
+function drawArrow() {
+	if (player.keys.length === 0) {
+		playerContext.fillStyle = '#000000';
+	} else {
+		playerContext.fillStyle = rColors[player.keys[selectedColor]].l;
+	}
+	playerContext.strokeStyle = '#000000';
+	playerContext.save();
+	playerContext.translate(player.x - viewPortX + (player.w / 2), player.y - viewPortY + (player.h / 2));
+	playerContext.rotate(aToPlayer);
+	playerContext.beginPath();
+	playerContext.moveTo(10 + player.w, 0);
+	playerContext.lineTo(0 + player.w, -10);
+	playerContext.lineTo(0 + player.w, 10);
+	playerContext.lineTo(10 + player.w, 0);
+	playerContext.fill();
+	playerContext.stroke();
+	playerContext.closePath();
+	playerContext.restore();
+}
+
+function drawBullets() {
+	for (var i = 0; i < bullets.length; i++) {
+		var bullet = bullets[i];
+		playerContext.fillStyle = rColors[bullet.key].l;
+		playerContext.save();
+		playerContext.translate(bullet.x - viewPortX, bullet.y - viewPortY);
+		playerContext.rotate(bullet.a);
+		playerContext.beginPath();
+		playerContext.rect(0, 0, 10, 2);
+		playerContext.fill();
+		// playerContext.moveTo(0, 0);
+		// playerContext.lineTo(-10, 0);
+		// playerContext.stroke();
+		playerContext.closePath();
+		playerContext.restore();
+	}
+}
 var playerCanvas, tileCanvas, bdCanvas, playerContext, tileContext, bdContext, minimapContext, minimapCanvas, miniMapIconsContext, miniMapIconsCanvas;
 var runGameLoop = true;
 var animate = true;
@@ -897,7 +957,7 @@ var player = {
 	ya: 0,
 	maxa: 5,
 	jf: 7,
-	jh: 50,
+	jh: 16 * 3.125,
 	js: 0,
 	j: 0,
 	ju: 0,
@@ -1005,6 +1065,9 @@ function DOMLoaded() {
 	}
 	enterRoom(world.rooms[0], direction, position);
 	loop();
+	var div = document.createElement("span");
+	div.innerHTML = "<p>A, D, to move</p><p>space to jump</p><p>mouse to aim</p><p>left click to take colors</p><p>right click to place colors</p><p>middle click to change colors</p>";
+	document.body.appendChild(div);
 }
 
 function resizeCanvas() {
@@ -1035,10 +1098,16 @@ function eachFrame() {
 			testDoors();
 			testFalling(entity);
 		}
+		processShot();
+		for(var i=0;i<bullets.length;i++) {
+			bulletPhysics(bullets[i]);
+		}
 		playerContext.clearRect(0, 0, playerCanvas.width, playerCanvas.height);
 		bdContext.clearRect(0, 0, bdCanvas.width, bdCanvas.height);
 		drawMap();
 		drawWorld();
+		drawArrow();
+		drawBullets();
 	}
 }
 
@@ -1061,6 +1130,10 @@ listen("resize", resizeCanvas);
 listen("DOMContentLoaded", DOMLoaded);
 listen("frame", eachFrame);
 listen("frame", transition);
+listen("mousemove", mousePosition);
+listen("mousedown", click);
+listen("mouseup", release);
+listen("contextmenu", place);
 window.addEventListener("resize", trigger);
 document.addEventListener("DOMContentLoaded", trigger);
 document.addEventListener("mousedown", trigger);
@@ -1068,6 +1141,9 @@ document.addEventListener("mouseup", trigger);
 document.addEventListener("keydown", trigger);
 document.addEventListener("keyup", trigger);
 document.addEventListener("frame", trigger);
+document.addEventListener("mousemove", trigger);
+document.addEventListener("contextmenu", trigger);
+
 function random(min, max) {
 	return Math.floor(Math.random() * (max - min + 1) + min);
 }
@@ -1146,6 +1222,78 @@ function handleKeyUp(event) {
 		} else {
 			player.xd = 0;
 		}
+	}
+}
+var mouseX = 0;
+var mouseY = 0;
+var aToPlayer = 0;
+var bullets = [];
+var lastShot = window.performance.now();
+var clicking = false;
+var delayBetweenShots = 150;
+var bls = [0,0,0,0,0];
+var mouseCanvasX = -1;
+var mouseCanvasY = -1;
+var selectedColor = 0;
+
+function mousePosition(event) {
+	if (event.target === playerCanvas) {
+		mouseCanvasX = event.layerX;
+		mouseCanvasY = event.layerY;
+	}
+	mouseX = event.clientX;
+	mouseY = event.clientY;
+	aToPlayer = Math.atan2(playerCanvas.offsetTop + player.y - viewPortY - mouseY, playerCanvas.offsetLeft + player.x - viewPortX - mouseX) + Math.PI;
+}
+
+function click(event) {
+	event.preventDefault();
+	if (event.which === 1) {
+		clicking = true;
+	}
+	if (event.which === 2) {
+		selectedColor++;
+		if(selectedColor > player.keys.length-1) {
+			selectedColor = 0;
+		}
+	}
+}
+
+function release(event) {
+	event.preventDefault();
+	if (event.which === 1) {
+		clicking = false;
+	}
+}
+
+function processShot() {
+	if (clicking) {
+		if (window.performance.now() - lastShot > delayBetweenShots && player.keys.length > 0) {
+			lastShot = window.performance.now();
+			bullets.push(Bullet(player.x + (player.w / 2) + (Math.cos(aToPlayer) * 10), player.y + (player.h / 2) + (Math.sin(aToPlayer) * 10), aToPlayer, player.keys[selectedColor]));
+		}
+	}
+}
+
+function place(event) {
+	event.preventDefault();
+	var x = mouseCanvasX + viewPortX;
+	var y = mouseCanvasY + viewPortY;
+	if (x >= 0 && x < mwidth * 16 && y >= 0 && y < mheight * 16) {
+		var coord = coordinate(modulus(x), modulus(y), currentMapTiles);
+		if(currentMap[coord] === 0 && bls[player.keys[selectedColor]] > 0) {
+			currentMap[coord] = 1;
+			bls[player.keys[selectedColor]]--;
+		}
+	}
+}
+
+function Bullet(x, y, a, key) {
+	return {
+		x: x,
+		y: y,
+		a: a,
+		key:key
 	}
 }
 function handleXMovement(entity) {
@@ -1298,10 +1446,39 @@ function testWalking(entity) {
 }
 
 function collision(bl) {
-	if(bl === 9) {
+	if (bl === 9) {
 		collectKey(currentRoom);
 	}
 	return bl !== 0;
+}
+
+function bulletPhysics(bullet) {
+	var destroy = false;
+	bullet.x += Math.cos(bullet.a) * ((10 / 60) * dt);
+	bullet.y += Math.sin(bullet.a) * ((10 / 60) * dt);
+	var x = modulus(bullet.x);
+	var y = modulus(bullet.y);
+	var coord = coordinate(x, y, currentMapTiles);
+	if (currentMap[coord] !== 0) {
+		// if (x !== 0 && y !== 0 && x !== mwidth - 1 && y !== mheight - 1) {
+		// 	currentMap[coord] = 0;
+		// 	bls++;
+		// }
+		if (currentMap[coord] > 1 && player.keys.indexOf(currentMap[coord] - 2) > -1) {
+			bls[currentMap[coord] - 2]++;
+			currentMap[coord] = 0;
+		}
+		destroy = true;
+	}
+	if (bullet.x > mwidth * 16 || bullet.x < 0 || bullet.y > mheight * 16 || bullet.y < 0) {
+		destroy = true;
+	}
+	if (destroy) {
+		var index = bullets.indexOf(bullet);
+		if (index > -1) {
+			bullets.splice(index, 1);
+		}
+	}
 }
 var currentMapTiles = 0;
 
@@ -1317,7 +1494,7 @@ for (var i = 0; i < 10 * 10; i++) {
 
 
 var smallRoomArray =
-	"1111111111111111111111111111110000000000000000000000000000001111111111111111111111111111111111111111,1100000011111000001111110000111100000011110000001111000000111100000111110000111111000000111100000011,1000000001110000001111100001110001001000000000000000000000000000000000000111100011111111111111111111,1111111111111000011100000000000000000000000011000000011110000000000000000000000011000000111100000111,1100000011110000001111000001111110000001111000000011110000001111100000111111000011111111111111111111,1111111111100000000110000000001100000000110001100011100011101110000011111100000111110000011111100001,1111111111100000000100000000010000000011000110001100110001110110000111010000111111000011111000011111,1100000011110000001111100000111000000111000000011100000011110000011111000011111111111111111111111111,1110000011110000000100000000000000000000000011000000001100000000000000000000000011000000111100000111,1100000011111000001100110000110000000011000000001100000000110000000111000000111111000000111100000011,1100000011111000001111110000001100000000110000000011000000001100000111110000111111000000111100000011".split(",");
+	"1111111111111111111100000000000000000000000000000000000000000000000000000000000011111111111111111111,1100000011111000001111110000111100000011110000001111000000111100000111110000111111000000111100000011,1000000001110000001111100001110001001000000000000000000000000000000000000111100011111111111111111111,1111111111111000011100000000000000000000000011000000011110000000000000000000000011000000111100000111,1111000011110000001111000000111100000011110001111111000000001100000000110000000011111111111111111111,1111111111100000000010000000001000000000100000000010000000001000000000100000000010000011111000000011,1111111111000000000100000000010000000001000000000100000000010000000001000000000110000000011100000001,1111000011110000001111000000111100000011110001111100000111110000111111000011111111111111111111111111,1110000011110000000100000000000000000000000011000000001100000000000000000000000011000000111100000111,1100000011111000001100110000110000000011000000001100000000110000000111000000111111000000111100000011,1100000011111000001111110000001100000000110000000011000000001100000111110000111111000000111100000011".split(",");
 
 function smallRoom(RoomType, array) {
 	array = array.split("");
@@ -1377,6 +1554,9 @@ function BigRoom(width, height, worldRoom, roomCreator) {
 			var mapCoord = coordinate(x, y, topSize * 10);
 			var roomCoord = coordinate(x % 10, y % 10, 10);
 			map[mapCoord] = room.map[roomCoord];
+			if (map[mapCoord] === 0 && room.type !== 9 && x < width * 10 && y < height * 10 && x < width * 10 && y < height * 10) {
+				map[mapCoord] = worldRoom.r.id + 2;
+			}
 			// top walls
 			if ((y === 0 && northDoor === null && x < width * 10)) {
 				map[mapCoord] = 1;
@@ -1608,20 +1788,20 @@ function playerSizedRoom(room) {
 			if (room.mh === 1) {
 				roomID = horizontalRooms[random(0, 3)];
 			}
-			if (room.mw === 2 || room.mh === 2) {
-				if (currentX === 0 && currentY === 0) {
-					roomID = 6;
-				}
-				if (currentX === roomsX - 1 && currentY === 0) {
-					roomID = 7;
-				}
-				if (currentX === 0 && currentY === roomsY - 1) {
-					roomID = 5;
-				}
-				if (currentX === roomsX - 1 && currentY === roomsY - 1) {
-					roomID = 8;
-				}
+			// if (room.mw === 2 || room.mh === 2) {
+			if (currentX === 0 && currentY === 0) {
+				roomID = 6;
 			}
+			if (currentX === roomsX - 1 && currentY === 0) {
+				roomID = 7;
+			}
+			if (currentX === 0 && currentY === roomsY - 1) {
+				roomID = 5;
+			}
+			if (currentX === roomsX - 1 && currentY === roomsY - 1) {
+				roomID = 8;
+			}
+			// }
 			if (northDoor || southDoor || eastDoor || westDoor) {
 				roomID = 9;
 			}
@@ -1642,9 +1822,12 @@ function playerSizedRoom(room) {
 		var randomH = random(1, room.mh * 1) - 1;
 		var randomX = random(1, 10 - 1);
 		var randomY = random(1, 10 - 1);
-		while (room.map.map[coordinate(randomX, randomY, room.map.tiles)] !== 0) {
+		while (room.map.map[coordinate((randomW * 10) + randomX, (randomH * 10) + randomY, room.map.tiles)] !== 0 && room.map.map[coordinate((randomW * 10) + randomX, (randomH * 10) + randomY, room.map.tiles)] !== room.r.id + 2) {
+			console.log(room.map.map[coordinate((randomW * 10) + randomX, (randomH * 10) + randomY, room.map.tiles)], room.r.id + 2)
 			randomX = random(1, 10 - 1);
 			randomY = random(1, 10 - 1);
+			randomW = random(1, room.mw * 1) - 1;
+			randomH = random(1, room.mh * 1) - 1;
 		}
 		room.map.map[coordinate((randomW * 10) + randomX, (randomH * 10) + randomY, room.map.tiles)] = 9;
 	}
@@ -1806,6 +1989,7 @@ function transition() {
 				movePlayer(transitionRoom, transitionDirection, transitionPosition);
 				document.title = currentRoom.c.name;
 				history.pushState(null, null, "#" + document.title);
+				bullets.length = 0;
 			}
 			canvasWidth = width * (stage - FPS) / FPS;
 			canvasHeight = height * (stage - FPS) / FPS;
@@ -2454,9 +2638,11 @@ function unlRooms() {
 		var room = world.rooms[i];
 		if (player.keys.indexOf(room.s) > -1) {
 			room.s = -1;
-			var index = room.map.map.indexOf(9);
-			if (index > -1) {
-				room.map.map[index] = 0;
+			if (room.map !== null) {
+				var index = room.map.map.indexOf(9);
+				if (index > -1) {
+					room.map.map[index] = 0;
+				}
 			}
 		}
 		for (var e = 0; e < room.d.length; e++) {
@@ -2507,16 +2693,17 @@ function create() {
 }
 
 function nextRegion() {
-	var r = Region(rColors[crColorIndex], parseInt(Math.random() * 3) + parseInt(Math.random() * 3) + 1, parseInt(Math.random() * 3) + parseInt(Math.random() * 3) + 1);
+	var r = Region(rColors[crColorIndex], parseInt(Math.random() * 3) + parseInt(Math.random() * 3) + 1, parseInt(Math.random() * 3) + parseInt(Math.random() * 3) + 1, crColorIndex);
 	crColorIndex = (crColorIndex + 1) % rColors.length;
 	return r;
 }
 
-function Region(color, maxWidth, maxHeight) {
+function Region(color, maxWidth, maxHeight, id) {
 	return {
 		color: color,
 		maxW: maxWidth,
 		maxH: maxHeight,
+		id: id,
 		rooms: []
 	};
 }

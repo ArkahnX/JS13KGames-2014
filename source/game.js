@@ -19,7 +19,7 @@ var player = {
 	yAccel: 0,
 	maxAccel: 5,
 	jumpForce: 7,
-	jumpHeight: 50,
+	jumpHeight: tileSize * 3.125,
 	jumpStart: 0,
 	jumping: 0,
 	jumpsUsed: 0,
@@ -127,6 +127,9 @@ function DOMLoaded() {
 	}
 	enterRoom(world.rooms[0], direction, position);
 	loop();
+	var div = document.createElement("span");
+	div.innerHTML = "<p>find 5 color circles</p><br><p>A, D, to move</p><p>space to jump</p><p>mouse to aim</p><p>left click to take colors</p><p>right click to place colors</p><p>middle click to change colors</p>";
+	document.body.appendChild(div);
 }
 
 function resizeCanvas() {
@@ -157,10 +160,16 @@ function eachFrame() {
 			testDoors();
 			testFalling(entity);
 		}
+		processShot();
+		for(var i=0;i<bullets.length;i++) {
+			bulletPhysics(bullets[i]);
+		}
 		playerContext.clearRect(0, 0, playerCanvas.width, playerCanvas.height);
 		borderContext.clearRect(0, 0, borderCanvas.width, borderCanvas.height);
 		drawMap();
 		drawWorld();
+		drawArrow();
+		drawBullets();
 	}
 }
 
@@ -183,6 +192,10 @@ listen("resize", resizeCanvas);
 listen("DOMContentLoaded", DOMLoaded);
 listen("frame", eachFrame);
 listen("frame", transition);
+listen("mousemove", mousePosition);
+listen("mousedown", click);
+listen("mouseup", release);
+listen("contextmenu", place);
 window.addEventListener("resize", trigger);
 document.addEventListener("DOMContentLoaded", trigger);
 document.addEventListener("mousedown", trigger);
@@ -190,3 +203,5 @@ document.addEventListener("mouseup", trigger);
 document.addEventListener("keydown", trigger);
 document.addEventListener("keyup", trigger);
 document.addEventListener("frame", trigger);
+document.addEventListener("mousemove", trigger);
+document.addEventListener("contextmenu", trigger);

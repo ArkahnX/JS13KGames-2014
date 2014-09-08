@@ -23,6 +23,8 @@ function drawMap() {
 	if (mapY2 > currentMapTiles) {
 		mapY2 = currentMapTiles;
 	}
+	var checkedRoom = {};
+
 	for (var y = mapY1; y < mapY2; y++) {
 		var rectWidth = 0;
 		var startX = -currentMapTiles * tileSize * 2;
@@ -64,6 +66,27 @@ function drawMap() {
 					tileContext.fillStyle = regionColors[currentMap[coordinate(x, y, currentMapTiles)] - 2].lock;
 				}
 				drawRect(y, (x * tileSize) - viewPortX, tileSize, true);
+			}
+		}
+	}
+
+	for (var x = 0; x < mapWidth / roomSize; x++) {
+		for (var y = 0; y < mapHeight / roomSize; y++) {
+			var northDoor = getDoor(currentRoom, x, y, "N");
+			var eastDoor = getDoor(currentRoom, x, y, "E");
+			var southDoor = getDoor(currentRoom, x, y, "S");
+			var westDoor = getDoor(currentRoom, x, y, "W");
+			if (northDoor) {
+				drawDoorArrow(northDoor, x, y);
+			}
+			if (eastDoor) {
+				drawDoorArrow(eastDoor, x, y);
+			}
+			if (southDoor) {
+				drawDoorArrow(southDoor, x, y);
+			}
+			if (westDoor) {
+				drawDoorArrow(westDoor, x, y);
 			}
 		}
 	}
@@ -276,6 +299,8 @@ function drawWorld() {
 	ctx.clearRect(0, 0, 16, 16);
 	forEachRoom("background", "border", function(room, roomX, roomY) {
 		if (room.visited) {
+			// roomX = roomX - (canvas.width/2);
+			// roomY = roomY - (canvas.height/2);
 			ctx.beginPath();
 			ctx.rect(roomX / miniMapSize * 2, roomY / miniMapSize * 2, room.mapW * 2, room.mapH * 2);
 			ctx.fill();
@@ -402,6 +427,16 @@ var initPlayerCanvas = false;
 var lastFrame = 0;
 
 
+function fillKeys() {
+	for (var i = 0; i < player.keys.length; i++) {
+		playerContext.beginPath();
+		playerContext.fillStyle = regionColors[player.keys[i]].lock;
+		playerContext.rect(player.x - viewPortX, player.y - viewPortY + ((4 - i) * player.h / 5), player.w, player.h / 5);
+		playerContext.fill();
+		playerContext.closePath();
+	}
+}
+
 function drawPlayer() {
 	if (!initPlayerCanvas) {
 		miniMapIconsCanvas.width = minimapCanvas.width;
@@ -413,8 +448,19 @@ function drawPlayer() {
 	for (var i = 0; i < entities.length; i++) {
 		var entity = entities[i];
 		var red = (15 - ((15) * (player.health / player.maxHealth))).toString(16);
-		playerContext.fillStyle = '#' + red + red + '0000';
-		playerContext.fillRect(entity.x - viewPortX, entity.y - viewPortY, entity.w, entity.h);
+		playerContext.beginPath();
+		playerContext.fillStyle = 'rgba(0,0,0,0.1)';
+		playerContext.rect(entity.x - viewPortX, entity.y - viewPortY, entity.w, entity.h);
+		playerContext.fill();
+		playerContext.closePath();
+		fillKeys();
+		playerContext.beginPath();
+		playerContext.lineWidth = 1;
+		playerContext.strokeStyle = '#' + red + red + '0000';
+		playerContext.fillStyle = 'rgba(0,0,0,0)';
+		playerContext.rect(entity.x - viewPortX, entity.y - viewPortY, entity.w, entity.h);
+		playerContext.stroke();
+		playerContext.closePath();
 	}
 	miniMapIconsContext.clearRect(0, 0, miniMapIconsCanvas.width, miniMapIconsCanvas.height);
 	animationLoopProgress += 2 * (dt / 1000);
@@ -440,4 +486,104 @@ function drawPlayer() {
 	ctx.stroke();
 	ctx.closePath();
 	lastFrame = frame;
+}
+
+function drawArrow() {
+	if (player.keys.length > 0) {
+		playerContext.fillStyle = regionColors[player.keys[selectedColor]].lock;
+		playerContext.strokeStyle = '#000000';
+		playerContext.save();
+		playerContext.translate(player.x - viewPortX + (player.w / 2), player.y - viewPortY + (player.h / 2));
+		playerContext.rotate(angleToPlayer);
+		playerContext.beginPath();
+		playerContext.moveTo(10 + player.w, 0);
+		playerContext.lineTo(0 + player.w, -10);
+		playerContext.lineTo(0 + player.w, 10);
+		playerContext.lineTo(10 + player.w, 0);
+		playerContext.fill();
+		playerContext.stroke();
+		playerContext.closePath();
+		playerContext.restore();
+	}
+}
+
+function drawBullets() {
+	for (var i = 0; i < bullets.length; i++) {
+		var bullet = bullets[i];
+		playerContext.fillStyle = regionColors[bullet.key].lock;
+		playerContext.save();
+		playerContext.translate(bullet.x - viewPortX, bullet.y - viewPortY);
+		playerContext.rotate(bullet.angle);
+		playerContext.beginPath();
+		playerContext.rect(0, 0, 10, 2);
+		playerContext.fill();
+		// playerContext.moveTo(0, 0);
+		// playerContext.lineTo(-10, 0);
+		// playerContext.stroke();
+		playerContext.closePath();
+		playerContext.restore();
+	}
+}
+
+function drawDoorArrow(door, doorX, doorY) {
+	if (door.doorType === -1) {
+		tileContext.fillStyle = '#000000';
+	} else {
+		tileContext.fillStyle = regionColors[door.doorType].lock;
+	}
+	tileContext.strokeStyle = '#000000';
+	tileContext.save();
+	var rotation = 0;
+	var xOffset = tileSize * roomSize;
+	var yOffset = (tileSize * roomSize) / 2;
+	if (door.dir === "N") {
+		rotation = 90;
+		yOffset = 0;
+		xOffset = (tileSize * roomSize) / 2;
+	}
+	if (door.dir === "W") {
+		rotation = 180;
+		xOffset = 0;
+		yOffset = (tileSize * roomSize) / 2;
+	}
+	if (door.dir === "S") {
+		rotation = 270;
+		xOffset = (tileSize * roomSize) / 2;
+		yOffset = tileSize * roomSize;
+	}
+	tileContext.translate((doorX * tileSize * roomSize) - viewPortX + xOffset, (doorY * tileSize * roomSize) - viewPortY + yOffset);
+	// tileContext.rotate(rotation * 180 / Math.PI);
+	tileContext.beginPath();
+	if (door.dir === "N") {
+		tileContext.moveTo(0, -20);
+		tileContext.lineTo(10, -10);
+		tileContext.lineTo(-10, -10);
+		tileContext.lineTo(0, -20);
+	}
+	if (door.dir === "W") {
+		tileContext.moveTo(-20, 0);
+		tileContext.lineTo(-10, -10);
+		tileContext.lineTo(-10, 10);
+		tileContext.lineTo(-20, 0);
+	}
+	if (door.dir === "S") {
+		tileContext.moveTo(0, 20);
+		tileContext.lineTo(10, 10);
+		tileContext.lineTo(-10, 10);
+		tileContext.lineTo(0, 20);
+	}
+	if (door.dir === "E") {
+		tileContext.moveTo(20, 0);
+		tileContext.lineTo(10, -10);
+		tileContext.lineTo(10, 10);
+		tileContext.lineTo(20, 0);
+	}
+	// tileContext.moveTo(10, 0);
+	// tileContext.lineTo(0, -10);
+	// tileContext.lineTo(0, 10);
+	// tileContext.lineTo(10, 0);
+	tileContext.fill();
+	tileContext.stroke();
+	tileContext.closePath();
+	tileContext.restore();
 }

@@ -7,31 +7,31 @@ var regionColors = [{
 	background: "#BBBBBB",
 	border: "#A0A0A0",
 	other: "#CFCFCF",
-	lock: "#FFFFFF",
+	lock: "#000000",
 	name: "Dungeon"
 }, {
 	border: "#990000",
 	background: "#FF3333",
 	other: "#FF0000",
-	lock: "#FF0000",
+	lock: "#FFFFFF",
 	name: "Fire"
 }, {
 	border: "#006600",
 	background: "#00BB00",
 	other: "#00BB00",
-	lock: "#00FF00",
+	lock: "#FF0000",
 	name: "Air"
 }, {
 	border: "#000066",
 	background: "#3333FF",
 	other: "#0000FF",
-	lock: "#0000FF",
+	lock: "#00FF00",
 	name: "Water"
 }, {
 	background: "#9F9F9F",
 	border: "#555555",
 	other: "#555555",
-	lock: "#000000",
+	lock: "#0000FF",
 	name: "Earth"
 }];
 
@@ -550,9 +550,11 @@ function unlockRooms() {
 		var room = world.rooms[i];
 		if (player.keys.indexOf(room.specialType) > -1) {
 			room.specialType = -1;
-			var index = room.map.map.indexOf(9);
-			if (index > -1) {
-				room.map.map[index] = 0;
+			if (room.map !== null) {
+				var index = room.map.map.indexOf(9);
+				if (index > -1) {
+					room.map.map[index] = 0;
+				}
 			}
 		}
 		for (var e = 0; e < room.doors.length; e++) {
@@ -603,16 +605,17 @@ function create() {
 }
 
 function nextRegion() {
-	var region = Region(regionColors[currentRegionColorIndex], parseInt(Math.random() * 3) + parseInt(Math.random() * 3) + 1, parseInt(Math.random() * 3) + parseInt(Math.random() * 3) + 1);
+	var region = Region(regionColors[currentRegionColorIndex], parseInt(Math.random() * 3) + parseInt(Math.random() * 3) + 1, parseInt(Math.random() * 3) + parseInt(Math.random() * 3) + 1, currentRegionColorIndex);
 	currentRegionColorIndex = (currentRegionColorIndex + 1) % regionColors.length;
 	return region;
 }
 
-function Region(color, maxWidth, maxHeight) {
+function Region(color, maxWidth, maxHeight, id) {
 	return {
 		color: color,
 		maxW: maxWidth,
 		maxH: maxHeight,
+		id: id,
 		rooms: []
 	};
 }
