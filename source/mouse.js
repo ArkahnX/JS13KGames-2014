@@ -4,8 +4,9 @@ var angleToPlayer = 0;
 var bullets = [];
 var lastShot = window.performance.now();
 var clicking = false;
+var placing = false;
 var delayBetweenShots = 150;
-var blocks = [0,0,0,0,0];
+var blocks = [0, 0, 0, 0, 0];
 var mouseCanvasX = -1;
 var mouseCanvasY = -1;
 var selectedColor = 0;
@@ -27,9 +28,12 @@ function click(event) {
 	}
 	if (event.which === 2) {
 		selectedColor++;
-		if(selectedColor > player.keys.length-1) {
+		if (selectedColor > player.keys.length - 1) {
 			selectedColor = 0;
 		}
+	}
+	if (event.which === 3) {
+		placing = true;
 	}
 }
 
@@ -37,6 +41,9 @@ function release(event) {
 	event.preventDefault();
 	if (event.which === 1) {
 		clicking = false;
+	}
+	if (event.which === 3) {
+		placing = false;
 	}
 }
 
@@ -51,13 +58,18 @@ function processShot() {
 
 function place(event) {
 	event.preventDefault();
-	var mapX = mouseCanvasX + viewPortX;
-	var mapY = mouseCanvasY + viewPortY;
-	if (mapX >= 0 && mapX < mapWidth * tileSize && mapY >= 0 && mapY < mapHeight * tileSize) {
-		var coord = coordinate(modulus(mapX), modulus(mapY), currentMapTiles);
-		if(currentMap[coord] === 0 && blocks[player.keys[selectedColor]] > 0) {
-			currentMap[coord] = 1;
-			blocks[player.keys[selectedColor]]--;
+}
+
+function placeBlock() {
+	if (placing) {
+		var mapX = mouseCanvasX + viewPortX;
+		var mapY = mouseCanvasY + viewPortY;
+		if (mapX >= 0 && mapX < mapWidth * tileSize && mapY >= 0 && mapY < mapHeight * tileSize) {
+			var coord = coordinate(modulus(mapX), modulus(mapY), currentMapTiles);
+			if (currentMap[coord] === 0 && blocks[player.keys[selectedColor]] > 0) {
+				currentMap[coord] = player.keys[selectedColor] + 2;
+				blocks[player.keys[selectedColor]]--;
+			}
 		}
 	}
 }
@@ -67,6 +79,6 @@ function Bullet(x, y, angle, key) {
 		x: x,
 		y: y,
 		angle: angle,
-		key:key
+		key: key
 	}
 }

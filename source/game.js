@@ -29,7 +29,7 @@ var player = {
 	health: 5,
 	doorCooldown: window.performance.now(),
 	maxHealth: 5,
-	keys: []
+	keys: [0,1,2,3,4]
 };
 var dt = currentTick - lastTick;
 var entities = [player];
@@ -161,6 +161,7 @@ function eachFrame() {
 			testFalling(entity);
 		}
 		processShot();
+		placeBlock();
 		for(var i=0;i<bullets.length;i++) {
 			bulletPhysics(bullets[i]);
 		}

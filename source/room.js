@@ -335,7 +335,7 @@ function playerSizedRoom(room) {
 		}
 		return array;
 	});
-	if (room.specialType > -1) {
+	if (room.specialType > -1 && player.keys.indexOf(room.specialType) === -1) {
 		var randomW = random(1, room.mapW * segmentsPerRoom) - 1;
 		var randomH = random(1, room.mapH * segmentsPerRoom) - 1;
 		var randomX = random(1, roomSize - 1);
