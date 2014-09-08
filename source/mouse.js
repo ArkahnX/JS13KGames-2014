@@ -12,13 +12,12 @@ var mouseCanvasY = -1;
 var selectedColor = 0;
 
 function mousePosition(event) {
-	if (event.target === playerCanvas) {
-		mouseCanvasX = event.layerX;
-		mouseCanvasY = event.layerY;
-	}
+	var rect = playerCanvas.getBoundingClientRect();
+	mouseCanvasX = event.clientX - rect.left;
+	mouseCanvasY = event.clientY - rect.top;
 	mouseX = event.clientX;
 	mouseY = event.clientY;
-	angleToPlayer = Math.atan2(playerCanvas.offsetTop + player.y - viewPortY - mouseY, playerCanvas.offsetLeft + player.x - viewPortX - mouseX) + Math.PI;
+	angleToPlayer = Math.atan2(player.y + (player.h / 2) - viewPortY - mouseCanvasY, player.x + (player.w / 2) - viewPortX - mouseCanvasX) + Math.PI;
 }
 
 function click(event) {
