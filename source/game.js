@@ -29,7 +29,8 @@ var player = {
 	health: 5,
 	doorCooldown: window.performance.now(),
 	maxHealth: 5,
-	keys: [0,1,2,3,4]
+	// keys: [0,1,2,3,4]
+	keys: []
 };
 var dt = currentTick - lastTick;
 var entities = [player];
@@ -107,28 +108,41 @@ function DOMLoaded() {
 	minimapContext = minimapCanvas.getContext("2d");
 	miniMapIconsContext = miniMapIconsCanvas.getContext("2d");
 	resizeCanvas();
-	startWorld();
+	create();
+	var previousRegion = null;
 	for (var r = 0; r < regionColors.length; r++) {
-		// var rooms = random(10, 20);
-		var rooms = random(1, 2);
+		var rooms = random(5, 10);
+		// var rooms = random(1, 2);
 		for (var i = 0; i < rooms; i++) {
-			addRoomToWorld();
+			createRoom();
 		}
+		// if (previousRegion) {
+		// 	while (world.regions[world.regions.length - 1].borders.indexOf(previousRegion) === -1) {
+		// 		createRoom();
+		// 	}
+		// }
 		if (r + 1 < regionColors.length) {
-			addRegion();
+			previousRegion = world.regions[world.regions.length - 1];
+			startNewRegion(nextRegion(),previousRegion);
+			// startNewRegion(nextRegion());
 		}
 	}
-	doors();
-	var door = world.rooms[0].doors[0];
+	var room = world.regions[0].rooms[0];
+	var door = room.doors[0];
 	var direction = door.dir;
 	var position = door.mapX;
+	room.startRoom = true;
+	room.startPositionX = position - room.mapX;
+	room.startPositionY = door.mapY - room.mapY;
 	if (door.dir === "E" || door.dir === "W") {
 		position = door.mapY;
 	}
-	enterRoom(world.rooms[0], direction, position);
+	clearDoorTypes();
+	assignDoorTypes();
+	enterRoom(room, direction, position);
 	loop();
 	var div = document.createElement("span");
-	div.innerHTML = "<p>find 5 color circles</p><br><p>A, D, to move</p><p>space to jump</p><p>mouse to aim</p><p>left click to take colors</p><p>right click to place colors</p><p>middle click to change colors</p>";
+	div.innerHTML = "<p>find 5 color circles</p><br><p>A, D, to move</p><p>space to jump</p><p>mouse to aim</p><p>left click to take colors</p><p>right click to place colors</p><p>middle click to change colors</p><p>hold tab for a larger minimap</p>";
 	document.body.appendChild(div);
 }
 
@@ -162,7 +176,7 @@ function eachFrame() {
 		}
 		processShot();
 		placeBlock();
-		for(var i=0;i<bullets.length;i++) {
+		for (var i = 0; i < bullets.length; i++) {
 			bulletPhysics(bullets[i]);
 		}
 		playerContext.clearRect(0, 0, playerCanvas.width, playerCanvas.height);

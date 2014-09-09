@@ -9,6 +9,9 @@ function handleKeyDown(event) {
 		if (event.keyCode === keys.space) {
 			player.jumping = FALLING;
 		}
+		if (event.keyCode === keys.tab) {
+			miniMapPixelSize = Math.min(modulus(window.innerHeight) * tileSize, modulus(window.innerWidth) * tileSize);
+		}
 	}
 	keymap[event.keyCode] = event.type;
 	if (event.keyCode === keys.d) {
@@ -30,6 +33,9 @@ function handleKeyUp(event) {
 		}
 	}
 	keymap[event.keyCode] = event.type;
+	if (event.keyCode === keys.tab) {
+		miniMapPixelSize = 150;
+	}
 	if (event.keyCode === keys.d || event.keyCode === keys.a) {
 		if (keymap[keys.d] && keymap[keys.a]) {
 			if (keymap[keys.d] === event.type && keymap[keys.a] === event.type) {

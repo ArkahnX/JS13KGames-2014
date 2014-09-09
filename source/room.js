@@ -72,8 +72,10 @@ function BigRoom(width, height, worldRoom, roomCreator) {
 			var mapCoord = coordinate(x, y, topSize * roomSize);
 			var roomCoord = coordinate(x % roomSize, y % roomSize, roomSize);
 			map[mapCoord] = room.map[roomCoord];
-			if (map[mapCoord] === 0 && room.type !== 9 && x < width * roomSize && y < height * roomSize && x < width * roomSize && y < height * roomSize) {
-				map[mapCoord] = worldRoom.region.id + 2;
+			if (worldRoom.region.id !== 0 && map[mapCoord] === 0 && room.type !== 9 && x < width * roomSize && y < height * roomSize && x < width * roomSize && y < height * roomSize) {
+				if (random(0, 1) === 1) {
+					map[mapCoord] = worldRoom.region.id + 2;
+				}
 			}
 			// top walls
 			if ((y === 0 && northDoor === null && x < width * roomSize)) {
@@ -336,17 +338,54 @@ function playerSizedRoom(room) {
 		return array;
 	});
 	if (room.specialType > -1 && player.keys.indexOf(room.specialType) === -1) {
-		var randomW = random(1, room.mapW * segmentsPerRoom) - 1;
-		var randomH = random(1, room.mapH * segmentsPerRoom) - 1;
-		var randomX = random(1, roomSize - 1);
-		var randomY = random(1, roomSize - 1);
-		while (room.map.map[coordinate((randomW * roomSize) + randomX, (randomH * roomSize) + randomY, room.map.tiles)] !== 0 && room.map.map[coordinate((randomW * roomSize) + randomX, (randomH * roomSize) + randomY, room.map.tiles)] !== room.region.id + 2) {
-			console.log(room.map.map[coordinate((randomW * roomSize) + randomX, (randomH * roomSize) + randomY, room.map.tiles)], room.region.id + 2)
-			randomX = random(1, roomSize - 1);
-			randomY = random(1, roomSize - 1);
-			randomW = random(1, room.mapW * segmentsPerRoom) - 1;
-			randomH = random(1, room.mapH * segmentsPerRoom) - 1;
+		var attempts = 0;
+		var found = false;
+		while (found === false && attempts < 5) {
+			if (room.startRoom) {
+				var randomW = room.startPositionX * segmentsPerRoom;
+				var randomH = room.startPositionY * segmentsPerRoom;
+				var randomX = random(1, roomSize - 1);
+				var randomY = random(1, roomSize - 1);
+			} else {
+				var randomW = random(1, room.mapW * segmentsPerRoom) - 1;
+				var randomH = random(1, room.mapH * segmentsPerRoom) - 1;
+				var randomX = random(1, roomSize - 1);
+				var randomY = random(1, roomSize - 1);
+			}
+			var coord = coordinate((randomW * roomSize) + randomX, (randomH * roomSize) + randomY, room.map.tiles);
+			var validPlacement = room.map.map[coord] === 0 || room.map.map[coord] === room.region.id + 2;
+			if (validPlacement) {
+				found = true;
+				room.map.map[coordinate((randomW * roomSize) + randomX, (randomH * roomSize) + randomY, room.map.tiles)] = 9;
+			}
+			attempts++;
 		}
-		room.map.map[coordinate((randomW * roomSize) + randomX, (randomH * roomSize) + randomY, room.map.tiles)] = 9;
+		if (!found) {
+			if (room.startRoom) {
+				var startX = room.startPositionX * segmentsPerRoom * roomSize;
+				var startY = room.startPositionY * segmentsPerRoom * roomSize;
+				for (var x = startX + 1; x < startX + roomSize - 1; x++) {
+					for (var y = startY + 1; y < startY + roomSize - 1; y++) {
+						var coord = coordinate(x, y, room.map.tiles);
+						var validPlacement = room.map.map[coord] === 0 || room.map.map[coord] === room.region.id + 2;
+						if (validPlacement) {
+							room.map.map[coord] = 9;
+						}
+					}
+				}
+			} else {
+				var startX = room.startPositionX * segmentsPerRoom * roomSize;
+				var startY = room.startPositionY * segmentsPerRoom * roomSize;
+				for (var x = 0 + 1; x < (room.mapW * segmentsPerRoom * roomSize) - 1; x++) {
+					for (var y = 0 + 1; y < (room.mapH * segmentsPerRoom * roomSize) - 1; y++) {
+						var coord = coordinate(x, y, room.map.tiles);
+						var validPlacement = room.map.map[coord] === 0 || room.map.map[coord] === room.region.id + 2;
+						if (validPlacement) {
+							room.map.map[coord] = 9;
+						}
+					}
+				}
+			}
+		}
 	}
 }

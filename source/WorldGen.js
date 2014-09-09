@@ -7,31 +7,31 @@ var regionColors = [{
 	background: "#BBBBBB",
 	border: "#A0A0A0",
 	other: "#CFCFCF",
-	lock: "#000000",
+	lock: "#FFFFFF",
 	name: "Dungeon"
 }, {
-	border: "#990000",
 	background: "#FF3333",
+	border: "#990000",
 	other: "#FF0000",
-	lock: "#FFFFFF",
+	lock: "#FFAAAA",
 	name: "Fire"
 }, {
-	border: "#006600",
 	background: "#00BB00",
+	border: "#006600",
 	other: "#00BB00",
-	lock: "#FF0000",
+	lock: "#AAFFAA",
 	name: "Air"
 }, {
-	border: "#000066",
 	background: "#3333FF",
+	border: "#000066",
 	other: "#0000FF",
-	lock: "#00FF00",
+	lock: "#AAAAFF",
 	name: "Water"
 }, {
 	background: "#9F9F9F",
 	border: "#555555",
 	other: "#555555",
-	lock: "#0000FF",
+	lock: "#000000",
 	name: "Earth"
 }];
 
@@ -45,37 +45,55 @@ function startAt(x, y, region) {
 	world.regions.push(region);
 }
 
-function startNewRegion(region) {
+function startNewRegion(region, previousRegion) {
 	var trapped = true;
-	var frontiers = getFrontiersForAllRooms();
+	var frontiers = getFrontiersForAllRooms(previousRegion);
 	var test = [];
 	var frontier = null;
+	var used = [];
 	while (trapped) {
 		var emptySides = 0;
-		frontier = getRandom(frontiers);
+		frontier = getRandom(frontiers, used);
 		test.length = 0;
-		test.push(getRoom(frontier.x - 1, frontier.y), getRoom(frontier.x + 1, frontier.y), getRoom(frontier.x, frontier.y - 1), getRoom(frontier.x, frontier.y + 1));
-		for (var i = 0; i < 4; i++) {
-			if (test[i] === null) {
-				emptySides++;
+		if (frontier) {
+			test.push(getRoom(frontier.x - 1, frontier.y), getRoom(frontier.x + 1, frontier.y), getRoom(frontier.x, frontier.y - 1), getRoom(frontier.x, frontier.y + 1));
+			for (var i = 0; i < 4; i++) {
+				if (test[i] === null) {
+					emptySides++;
+				}
 			}
+		} else {
+			trapped = false;
 		}
 		if (emptySides > 2) {
 			trapped = false;
 		}
 	}
-	startAt(frontier.x, frontier.y, region);
+	if (frontier) {
+		startAt(frontier.x, frontier.y, region);
+	}
 }
 
-function getRandom(array) {
+function getRandom(array, used) {
+	if (used.length === array.length) {
+		return false;
+	}
 	var index = random(0, array.length - 1);
+	while (used.indexOf(index) > -1) {
+		index = random(0, array.length - 1);
+	}
+	used.push(index);
 	return array[index];
 }
 
-function getFrontiersForAllRooms() {
+function getFrontiersForAllRooms(previousRegion) {
 	var results = [];
-	for (var i = 0; i < world.rooms.length; i++) {
-		results = addBorderingFrontiers(results, world.rooms[i]);
+	var rooms = world.rooms;
+	if (previousRegion) {
+		rooms = previousRegion.rooms;
+	}
+	for (var i = 0; i < rooms.length; i++) {
+		results = addBorderingFrontiers(results, rooms[i]);
 	}
 	return results;
 }
@@ -164,6 +182,18 @@ function addDoors(room) {
 		}
 		// console.log(times, stop)
 	}
+	for (var i = 0; i < room.doors.length; i++) {
+		var region1 = room.region;
+		var region2 = other(door, room).region;
+		if (region1 !== region2) {
+			if (region1.borders.indexOf(region2) === -1) {
+				region1.borders.push(region2);
+			}
+			if (region2.borders.indexOf(region1) === -1) {
+				region2.borders.push(region1);
+			}
+		}
+	}
 }
 
 function addDoorsAlongNorthWall(room) {
@@ -193,7 +223,7 @@ function addDoorsAlongNorthWall(room) {
 				hasDoor = true;
 			}
 		}
-		if (!(Math.random() > chanceOfAddingDoor || indexOf(room.doors, object) >= 0) && !hasDoor) {
+		if (!( Math.random() > chanceOfAddingDoor ||  indexOf(room.doors, object) >= 0) && !hasDoor) {
 			door = Door(object.x, object.y, "N", room, object.other);
 			door2 = Door(object.x, object.y - 1, "S", object.other, room);
 			room.doors.push(door);
@@ -234,7 +264,7 @@ function addDoorsAlongSouthWall(room) {
 				hasDoor = true;
 			}
 		}
-		if (!(Math.random() > chanceOfAddingDoor || indexOf(room.doors, object) >= 0) && !hasDoor) {
+		if (!( Math.random() > chanceOfAddingDoor ||  indexOf(room.doors, object) >= 0) && !hasDoor) {
 			door = Door(object.x, object.y, "S", room, object.other);
 			door2 = Door(object.x, object.y + 1, "N", object.other, room);
 			room.doors.push(door);
@@ -275,7 +305,7 @@ function addDoorsAlongWestWall(room) {
 				hasDoor = true;
 			}
 		}
-		if (!(Math.random() > chanceOfAddingDoor || indexOf(room.doors, object) >= 0) && !hasDoor) {
+		if (!( Math.random() > chanceOfAddingDoor ||  indexOf(room.doors, object) >= 0) && !hasDoor) {
 			door = Door(object.x, object.y, "W", room, object.other);
 			door2 = Door(object.x - 1, object.y, "E", object.other, room);
 			room.doors.push(door);
@@ -316,7 +346,7 @@ function addDoorsAlongEastWall(room) {
 				hasDoor = true;
 			}
 		}
-		if (!(Math.random() > chanceOfAddingDoor || indexOf(room.doors, object) >= 0) && !hasDoor) {
+		if (!( Math.random() > chanceOfAddingDoor ||  indexOf(room.doors, object) >= 0) && !hasDoor) {
 			door = Door(object.x, object.y, "E", room, object.other);
 			door2 = Door(object.x + 1, object.y, "W", object.other, room);
 			door.other = door2;
@@ -365,14 +395,11 @@ function createRooms(numberOfRooms) {
 }
 
 function createRoom() {
-	// if (world.frontiers.length > 0) {
-	var frontier = getRandom(world.frontiers);
-	try {
+	var used = [];
+	var frontier = getRandom(world.frontiers, used);
+	if(frontier) {
 		addRoom(growRoom(frontier.x, frontier.y));
-	} catch (e) {
-		console.log(world, frontier, e);
 	}
-	// }
 }
 
 function addRoom(room) {
@@ -382,9 +409,6 @@ function addRoom(room) {
 	var array = [];
 	array = removeFrontiers(array, room);
 	world.frontiers = addBorderingFrontiers(array, room);
-	if (world.frontiers.length === 0) {
-		console.log(array, room, addBorderingFrontiers(array, room));
-	}
 	room.mapColor = world.currentRegion.color;
 	world.rooms.push(room);
 	world.currentRegion.rooms.push(room);
@@ -519,17 +543,23 @@ function assignDoorTypes() { // FIXME
 	var region2 = null;
 	var room = null;
 	for (var i = 0; i < world.regions.length; i++) {
+		var used = [];
 		region1 = world.regions[i];
-		room = getRandom(region1.rooms);
-		room.specialType = (i + 1) % regionColors.length;
+		if (i !== 0) {
+			room = getRandom(region1.rooms, used);
+			room.specialType = (i + 1) % regionColors.length;
+		}
 		for (var e = 0; e < region1.rooms.length; e++) {
 			room = region1.rooms[e];
+			if (i === 0 && room.startRoom) {
+				room.specialType = (i + 1) % regionColors.length;
+			}
 			for (var r = 0; r < room.doors.length; r++) {
 				door = room.doors[r];
 				region2 = other(door, room).region;
 				if (region2 !== region1) {
 					if (door.other.doorType === -1) {
-						door.other.doorType = (i + 1) % regionColors.length;
+						door.other.doorType = (i) % regionColors.length;
 					}
 				}
 			}
@@ -545,6 +575,11 @@ function collectKey(room) {
 }
 
 function unlockRooms() {
+	for(var e=0;e<world.regions.length;e++) {
+		if(player.keys.indexOf(world.regions[e].id) > -1) {
+			world.regions[e].unlocked = true;
+		}
+	}
 	for (var i = 0; i < world.rooms.length; i++) {
 		var hasDoor = false;
 		var room = world.rooms[i];
@@ -572,13 +607,13 @@ function unlockRooms() {
 			// 		room.map.map[index] = 0;
 			// 	}
 			// }
-			for (var r = 0; r < room.map.map.length; r++) {
-				if (room.map.map[r] > 1) {
-					if (player.keys.indexOf(room.map.map[r] - 1) > -1) {
-						room.map.map[r] = 0;
-					}
-				}
-			}
+			// for (var r = 0; r < room.map.map.length; r++) {
+			// 	if (room.map.map[r] > 1) {
+			// 		if (player.keys.indexOf(room.map.map[r] - 1) > -1) {
+			// 			room.map.map[r] = 0;
+			// 		}
+			// 	}
+			// }
 		}
 	}
 }
@@ -616,23 +651,8 @@ function Region(color, maxWidth, maxHeight, id) {
 		maxW: maxWidth,
 		maxH: maxHeight,
 		id: id,
+		unlocked: false,
+		borders: [],
 		rooms: []
 	};
-}
-
-function startWorld() {
-	create();
-}
-
-function addRoomToWorld() {
-	createRoom();
-}
-
-function addRegion() {
-	startNewRegion(nextRegion());
-}
-
-function doors() {
-	clearDoorTypes();
-	assignDoorTypes();
 }

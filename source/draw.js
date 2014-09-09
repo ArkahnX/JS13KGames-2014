@@ -1,3 +1,5 @@
+var miniMapPixelSize = 150;
+
 function drawMap() {
 	borderContext.strokeStyle = currentRoom.mapColor.border;
 	borderContext.lineWidth = 2;
@@ -32,7 +34,7 @@ function drawMap() {
 		var topTile;
 		tileContext.fillStyle = currentRoom.mapColor.background;
 		for (var x = mapX1; x < mapX2; x++) {
-			if (currentMap[coordinate(x, y, currentMapTiles)] !== 0) {
+			if (currentMap[coordinate(x, y, currentMapTiles)] === 1) {
 				rectWidth += 1 * tileSize;
 				if (startX === -currentMapTiles * tileSize * 2) {
 					startX = (x * tileSize) - viewPortX;
@@ -46,10 +48,10 @@ function drawMap() {
 					hasFloor = 1;
 				}
 			}
-			if (currentMap[coordinate(x, y, currentMapTiles)] === 0 || x === mapX2 - 1) {
+			if (currentMap[coordinate(x, y, currentMapTiles)] !== 1 || x === mapX2 - 1) {
 				drawRect(y, startX, rectWidth, hasFloor);
 			}
-			if (currentMap[coordinate(x, y, currentMapTiles)] === 0 || x === mapX2 - 1) {
+			if (currentMap[coordinate(x, y, currentMapTiles)] !== 1 || x === mapX2 - 1) {
 				rectWidth = 0;
 				startX = -currentMapTiles * tileSize * 2;
 				hasFloor = 0;
@@ -62,10 +64,18 @@ function drawMap() {
 			if (currentMap[coordinate(x, y, currentMapTiles)] > 1) {
 				if (currentMap[coordinate(x, y, currentMapTiles)] === 9 && currentRoom.specialType > -1) {
 					tileContext.fillStyle = regionColors[currentRoom.specialType].lock;
+					tileContext.strokeStyle = regionColors[currentRoom.specialType].border;
+					var radius = 8;
+					tileContext.beginPath();
+					tileContext.arc((x * tileSize) + (tileSize / 2) - viewPortX, (y * tileSize) + (tileSize / 2) - viewPortY, radius, 0, 2 * Math.PI, false);
+					tileContext.fill();
+					tileContext.lineWidth = 2;
+					tileContext.stroke();
+					tileContext.closePath();
 				} else if (currentMap[coordinate(x, y, currentMapTiles)] !== 9) {
 					tileContext.fillStyle = regionColors[currentMap[coordinate(x, y, currentMapTiles)] - 2].lock;
+					drawRect(y, (x * tileSize) - viewPortX, tileSize, true);
 				}
-				drawRect(y, (x * tileSize) - viewPortX, tileSize, true);
 			}
 		}
 	}
@@ -100,7 +110,7 @@ function drawMap() {
 function drawRect(y, startX, rectWidth, hasFloor) {
 	var canvasX = startX;
 	var canvasY = (y * tileSize) - viewPortY;
-	if (hasFloor === 1) {
+	if (hasFloor) {
 		tileContext.fillRect(canvasX, canvasY - (tileSize * 0.3125), rectWidth, tileSize + (tileSize * 0.3125));
 	} else {
 		tileContext.fillRect(canvasX, canvasY, rectWidth, tileSize);
@@ -128,7 +138,7 @@ function parseVerticalLines(mapX1, mapY1, mapX2, mapY2, type) {
 					mainTile = -1;
 				}
 			}
-			if (currentMap[coordinate(x, y, currentMapTiles)] !== 0 && mainTile < 1) {
+			if ((currentMap[coordinate(x, y, currentMapTiles)] !== 0 && currentMap[coordinate(x, y, currentMapTiles)] !== 9) && mainTile < 1) {
 				rectSize += 1 * tileSize;
 				if (startPosition === -currentMapTiles * tileSize * 2) {
 					if (topTile === 0) {
@@ -138,7 +148,7 @@ function parseVerticalLines(mapX1, mapY1, mapX2, mapY2, type) {
 				}
 				// drawTile(x, y, currentMap, currentMapTiles, startPosition, rectSize, hasFloor);
 			}
-			if (currentMap[coordinate(x, y, currentMapTiles)] === 0 || y === mapY2 - 1 || mainTile > 0) {
+			if (currentMap[coordinate(x, y, currentMapTiles)] === 0 || currentMap[coordinate(x, y, currentMapTiles)] === 9 || y === mapY2 - 1 || mainTile > 0) {
 				borderContext.beginPath();
 				var canvasY = startPosition;
 				var canvasX = (x * tileSize) - viewPortX;
@@ -159,7 +169,7 @@ function parseVerticalLines(mapX1, mapY1, mapX2, mapY2, type) {
 				borderContext.closePath();
 				borderContext.stroke();
 			}
-			if (currentMap[coordinate(x, y, currentMapTiles)] === 0 || y === mapY2 - 1 || mainTile > 0) {
+			if (currentMap[coordinate(x, y, currentMapTiles)] === 0 || currentMap[coordinate(x, y, currentMapTiles)] === 9 || y === mapY2 - 1 || mainTile > 0) {
 				rectSize = 0;
 				startPosition = -currentMapTiles * tileSize * 2;
 				hasFloor = 0;
@@ -188,14 +198,14 @@ function parseHorizontalLines(mapX1, mapY1, mapX2, mapY2, type) {
 					mainTile = -1;
 				}
 			}
-			if (currentMap[coordinate(x, y, currentMapTiles)] !== 0 && mainTile < 1) {
+			if ((currentMap[coordinate(x, y, currentMapTiles)] !== 0 && currentMap[coordinate(x, y, currentMapTiles)] !== 9) && mainTile < 1) {
 				rectSize += 1 * tileSize;
 				if (startPosition === -currentMapTiles * tileSize * 2) {
 					startPosition = (x * tileSize) - viewPortX;
 				}
 				// drawTile(x, y, currentMap, currentMapTiles, startPosition, rectSize, hasFloor);
 			}
-			if (currentMap[coordinate(x, y, currentMapTiles)] === 0 || x === mapX2 - 1 || mainTile > 0) {
+			if (currentMap[coordinate(x, y, currentMapTiles)] === 0 || currentMap[coordinate(x, y, currentMapTiles)] === 9 || x === mapX2 - 1 || mainTile > 0) {
 				borderContext.beginPath();
 				var canvasX = startPosition;
 				var canvasY = (y * tileSize) - viewPortY;
@@ -214,7 +224,7 @@ function parseHorizontalLines(mapX1, mapY1, mapX2, mapY2, type) {
 				borderContext.closePath();
 				borderContext.stroke();
 			}
-			if (currentMap[coordinate(x, y, currentMapTiles)] === 0 || x === mapX2 - 1 || mainTile > 0) {
+			if (currentMap[coordinate(x, y, currentMapTiles)] === 0 || currentMap[coordinate(x, y, currentMapTiles)] === 9 || x === mapX2 - 1 || mainTile > 0) {
 				rectSize = 0;
 				startPosition = -currentMapTiles * tileSize * 2;
 				hasFloor = 0;
@@ -265,11 +275,11 @@ var miniMapPlayerX = 0;
 var miniMapPlayerY = 0;
 
 function drawWorld() {
+	minimapCanvas.width = miniMapPixelSize;
+	minimapCanvas.height = miniMapPixelSize;
 	parseMinimapViewport();
 	miniMapPlayerX = (currentRoom.mapX * miniMapSize) + (modulus(modulus(modulus(player.x), roomSize), segmentsPerRoom) * miniMapSize);
 	miniMapPlayerY = (currentRoom.mapY * miniMapSize) + (modulus(modulus(modulus(player.y), roomSize), segmentsPerRoom) * miniMapSize);
-	minimapCanvas.width = 150;
-	minimapCanvas.height = 150;
 	minimapContext.clearRect(0, 0, minimapCanvas.width, minimapCanvas.height);
 	drawnDoors.length = 0;
 	minimapContext.lineWidth = 2;
@@ -289,6 +299,15 @@ function drawWorld() {
 	}
 	forEachRoom("background", "border", function(room, roomX, roomY) {
 		if (room.visited) {
+			minimapContext.beginPath();
+			minimapContext.rect(roomX, roomY, room.mapW * miniMapSize, room.mapH * miniMapSize);
+			minimapContext.fill();
+			minimapContext.stroke();
+			minimapContext.closePath();
+		}
+	}, minimapContext);
+	forEachRoom("border", 0, function(room, roomX, roomY) {
+		if(room.region.unlocked && !room.visited) {
 			minimapContext.beginPath();
 			minimapContext.rect(roomX, roomY, room.mapW * miniMapSize, room.mapH * miniMapSize);
 			minimapContext.fill();
@@ -319,9 +338,13 @@ function forEachRoom(fillStyle, strokeStyle, fn, context) {
 	for (var r = 0; r < world.regions.length; r++) {
 		if (typeof fillStyle === "string") {
 			canvasContext.fillStyle = world.regions[r].color[fillStyle];
+		} else {
+			canvasContext.fillStyle = "rgba(0,0,0,0)";
 		}
 		if (typeof strokeStyle === "string") {
 			canvasContext.strokeStyle = world.regions[r].color[strokeStyle];
+		} else {
+			canvasContext.strokeStyle = "rgba(0,0,0,0)";
 		}
 		for (var i = 0; i < world.regions[r].rooms.length; i++) {
 			var room = world.regions[r].rooms[i];
@@ -338,10 +361,12 @@ function drawIcons(room) {
 	if (room.visited) {
 		var door = null;
 		var color = null;
+		var color2 = null;
 		for (var i = 0; i < room.doors.length; i++) {
 			door = room.doors[i];
 			if (door.doorType > -1) {
 				color = regionColors[door.doorType].lock;
+				color2 = regionColors[door.doorType].border;
 				var xModifier = 0;
 				var yModifier = 0;
 				if (door.dir === "N") {
@@ -359,12 +384,13 @@ function drawIcons(room) {
 					xModifier = 13;
 					yModifier = 8;
 				}
-				drawCircle(miniMapSize * door.mapX + xModifier, miniMapSize * door.mapY + yModifier, color);
+				drawCircle(miniMapSize * door.mapX + xModifier, miniMapSize * door.mapY + yModifier, color, color2);
 			}
 		}
 		if (room.specialType > -1) {
 			color = regionColors[room.specialType].lock;
-			drawCircle(miniMapSize * (room.mapX + room.mapW / 2) - 3, miniMapSize * (room.mapY + room.mapH / 2), "rgba(0,0,0,0)", color);
+			color2 = regionColors[room.specialType].border;
+			drawCircle(miniMapSize * (room.mapX + room.mapW / 2) - 3, miniMapSize * (room.mapY + room.mapH / 2), color2, color);
 		}
 	}
 }
@@ -438,12 +464,6 @@ function fillKeys() {
 }
 
 function drawPlayer() {
-	if (!initPlayerCanvas) {
-		miniMapIconsCanvas.width = minimapCanvas.width;
-		miniMapIconsCanvas.height = minimapCanvas.height;
-		miniMapIconsContext.lineWidth = 1;
-		initPlayerCanvas = true;
-	}
 	playerContext.fillStyle = "#000000";
 	for (var i = 0; i < entities.length; i++) {
 		var entity = entities[i];
@@ -462,7 +482,6 @@ function drawPlayer() {
 		playerContext.stroke();
 		playerContext.closePath();
 	}
-	miniMapIconsContext.clearRect(0, 0, miniMapIconsCanvas.width, miniMapIconsCanvas.height);
 	animationLoopProgress += 2 * (dt / 1000);
 	animationLoopProgress = animationLoopProgress % 2;
 	var frame = 1;
@@ -470,9 +489,20 @@ function drawPlayer() {
 		frame = 0;
 	}
 	if (lastFrame !== frame) {
-		miniMapIconsContext.fillStyle = "rgba(200,200,255," + (0.6 * frame) + ")";
-		miniMapIconsContext.strokeStyle = "rgba(200,200,255," + (0.8 * frame) + ")";
+		miniMapIconsContext.fillStyle = "rgba(255,255,0," + (0.6 * frame) + ")";
+		miniMapIconsContext.strokeStyle = "rgba(255,255,0," + (0.8 * frame) + ")";
 	}
+	if (miniMapIconsCanvas.width !== minimapCanvas.width) {
+		miniMapIconsCanvas.width = minimapCanvas.width;
+		miniMapIconsCanvas.height = minimapCanvas.height;
+		miniMapIconsContext.fillStyle = "rgba(255,255,0," + (0.6 * frame) + ")";
+		miniMapIconsContext.strokeStyle = "rgba(255,255,0," + (0.8 * frame) + ")";
+	}
+	if (!initPlayerCanvas) {
+		miniMapIconsContext.lineWidth = 1;
+		initPlayerCanvas = true;
+	}
+	miniMapIconsContext.clearRect(0, 0, miniMapIconsCanvas.width, miniMapIconsCanvas.height);
 	miniMapIconsContext.beginPath();
 	miniMapIconsContext.rect(miniMapPlayerX - miniViewPortX, miniMapPlayerY - miniViewPortY, miniMapSize, miniMapSize);
 	miniMapIconsContext.fill();
@@ -486,6 +516,7 @@ function drawPlayer() {
 	ctx.stroke();
 	ctx.closePath();
 	lastFrame = frame;
+	// drawFrontiers();
 }
 
 function drawArrow() {
@@ -511,6 +542,8 @@ function drawBullets() {
 	for (var i = 0; i < bullets.length; i++) {
 		var bullet = bullets[i];
 		playerContext.fillStyle = regionColors[bullet.key].lock;
+		playerContext.strokeStyle = regionColors[bullet.key].border;
+		playerContext.lineWidth = 1;
 		playerContext.save();
 		playerContext.translate(bullet.x - viewPortX, bullet.y - viewPortY);
 		playerContext.rotate(bullet.angle);
@@ -519,7 +552,7 @@ function drawBullets() {
 		playerContext.fill();
 		// playerContext.moveTo(0, 0);
 		// playerContext.lineTo(-10, 0);
-		// playerContext.stroke();
+		playerContext.stroke();
 		playerContext.closePath();
 		playerContext.restore();
 	}
@@ -531,7 +564,7 @@ function drawDoorArrow(door, doorX, doorY) {
 	} else {
 		tileContext.fillStyle = regionColors[door.doorType].lock;
 	}
-	tileContext.strokeStyle = '#000000';
+	tileContext.strokeStyle = '#FFFFFF';
 	tileContext.save();
 	var rotation = 0;
 	var xOffset = tileSize * roomSize;
@@ -586,4 +619,24 @@ function drawDoorArrow(door, doorX, doorY) {
 	tileContext.stroke();
 	tileContext.closePath();
 	tileContext.restore();
+}
+
+function drawFrontiers() {
+	var frontier = null;
+	var i = 0;
+	miniMapIconsContext.fillStyle = "rgba(255,255,255,0.3)";
+	// var frontiers = world.frontiers;
+	var frontiers = getFrontiersForAllRooms(world.regions[2]);
+	while (i < frontiers.length) {
+		frontier = frontiers[i];
+		miniMapIconsContext.fillRect(frontier.x * miniMapSize, frontier.y * miniMapSize, miniMapSize, miniMapSize);
+		// drawRectangle(Room(frontier.x, frontier.y, 1, 1, null));
+		miniMapIconsContext.beginPath();
+		// miniMapIconsContext.fillStyle = regionColors[player.keys[i]].lock;
+		miniMapIconsContext.rect((frontier.x * miniMapSize) - miniViewPortX, (frontier.y * miniMapSize) - miniViewPortY, miniMapSize, miniMapSize);
+		miniMapIconsContext.fill();
+		miniMapIconsContext.stroke();
+		miniMapIconsContext.closePath();
+		i++;
+	}
 }

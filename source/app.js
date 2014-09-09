@@ -433,6 +433,8 @@ function SoundGeneratorGenSound(soundGen, n, chnBuf, currentpos) {
 // 			}
 // 		}
 // 	};
+var miniMapPixelSize = 150;
+
 function drawMap() {
 	bdContext.strokeStyle = currentRoom.c.bd;
 	bdContext.lineWidth = 2;
@@ -458,6 +460,8 @@ function drawMap() {
 	if (y2 > currentMapTiles) {
 		y2 = currentMapTiles;
 	}
+	var checkedRoom = {};
+
 	for (var y = y1; y < y2; y++) {
 		var rectWidth = 0;
 		var startX = -currentMapTiles * 16 * 2;
@@ -465,7 +469,7 @@ function drawMap() {
 		var topTile;
 		tileContext.fillStyle = currentRoom.c.bg;
 		for (var x = x1; x < x2; x++) {
-			if (currentMap[coordinate(x, y, currentMapTiles)] !== 0) {
+			if (currentMap[coordinate(x, y, currentMapTiles)] === 1) {
 				rectWidth += 1 * 16;
 				if (startX === -currentMapTiles * 16 * 2) {
 					startX = (x * 16) - viewPortX;
@@ -479,10 +483,10 @@ function drawMap() {
 					hasFloor = 1;
 				}
 			}
-			if (currentMap[coordinate(x, y, currentMapTiles)] === 0 || x === x2 - 1) {
+			if (currentMap[coordinate(x, y, currentMapTiles)] !== 1 || x === x2 - 1) {
 				drawRect(y, startX, rectWidth, hasFloor);
 			}
-			if (currentMap[coordinate(x, y, currentMapTiles)] === 0 || x === x2 - 1) {
+			if (currentMap[coordinate(x, y, currentMapTiles)] !== 1 || x === x2 - 1) {
 				rectWidth = 0;
 				startX = -currentMapTiles * 16 * 2;
 				hasFloor = 0;
@@ -495,10 +499,39 @@ function drawMap() {
 			if (currentMap[coordinate(x, y, currentMapTiles)] > 1) {
 				if (currentMap[coordinate(x, y, currentMapTiles)] === 9 && currentRoom.s > -1) {
 					tileContext.fillStyle = rColors[currentRoom.s].l;
+					tileContext.strokeStyle = rColors[currentRoom.s].bd;
+					var radius = 8;
+					tileContext.beginPath();
+					tileContext.arc((x * 16) + (16 / 2) - viewPortX, (y * 16) + (16 / 2) - viewPortY, radius, 0, 2 * Math.PI, false);
+					tileContext.fill();
+					tileContext.lineWidth = 2;
+					tileContext.stroke();
+					tileContext.closePath();
 				} else if (currentMap[coordinate(x, y, currentMapTiles)] !== 9) {
 					tileContext.fillStyle = rColors[currentMap[coordinate(x, y, currentMapTiles)] - 2].l;
+					drawRect(y, (x * 16) - viewPortX, 16, true);
 				}
-				drawRect(y, (x * 16) - viewPortX, 16, true);
+			}
+		}
+	}
+
+	for (var x = 0; x < mwidth / 10; x++) {
+		for (var y = 0; y < mheight / 10; y++) {
+			var northDoor = getDoor(currentRoom, x, y, "N");
+			var eastDoor = getDoor(currentRoom, x, y, "E");
+			var southDoor = getDoor(currentRoom, x, y, "S");
+			var westDoor = getDoor(currentRoom, x, y, "W");
+			if (northDoor) {
+				drawDoorArrow(northDoor, x, y);
+			}
+			if (eastDoor) {
+				drawDoorArrow(eastDoor, x, y);
+			}
+			if (southDoor) {
+				drawDoorArrow(southDoor, x, y);
+			}
+			if (westDoor) {
+				drawDoorArrow(westDoor, x, y);
 			}
 		}
 	}
@@ -512,7 +545,7 @@ function drawMap() {
 function drawRect(y, startX, rectWidth, hasFloor) {
 	var canvasX = startX;
 	var canvasY = (y * 16) - viewPortY;
-	if (hasFloor === 1) {
+	if (hasFloor) {
 		tileContext.fillRect(canvasX, canvasY - (16 * 0.3125), rectWidth, 16 + (16 * 0.3125));
 	} else {
 		tileContext.fillRect(canvasX, canvasY, rectWidth, 16);
@@ -540,7 +573,7 @@ function parseVerticalLines(x1, y1, x2, y2, type) {
 					mainTile = -1;
 				}
 			}
-			if (currentMap[coordinate(x, y, currentMapTiles)] !== 0 && mainTile < 1) {
+			if ((currentMap[coordinate(x, y, currentMapTiles)] !== 0 && currentMap[coordinate(x, y, currentMapTiles)] !== 9) && mainTile < 1) {
 				rectSize += 1 * 16;
 				if (startPosition === -currentMapTiles * 16 * 2) {
 					if (topTile === 0) {
@@ -550,7 +583,7 @@ function parseVerticalLines(x1, y1, x2, y2, type) {
 				}
 				// drawTile(x, y, currentMap, currentMapTiles, startPosition, rectSize, hasFloor);
 			}
-			if (currentMap[coordinate(x, y, currentMapTiles)] === 0 || y === y2 - 1 || mainTile > 0) {
+			if (currentMap[coordinate(x, y, currentMapTiles)] === 0 || currentMap[coordinate(x, y, currentMapTiles)] === 9 || y === y2 - 1 || mainTile > 0) {
 				bdContext.beginPath();
 				var canvasY = startPosition;
 				var canvasX = (x * 16) - viewPortX;
@@ -571,7 +604,7 @@ function parseVerticalLines(x1, y1, x2, y2, type) {
 				bdContext.closePath();
 				bdContext.stroke();
 			}
-			if (currentMap[coordinate(x, y, currentMapTiles)] === 0 || y === y2 - 1 || mainTile > 0) {
+			if (currentMap[coordinate(x, y, currentMapTiles)] === 0 || currentMap[coordinate(x, y, currentMapTiles)] === 9 || y === y2 - 1 || mainTile > 0) {
 				rectSize = 0;
 				startPosition = -currentMapTiles * 16 * 2;
 				hasFloor = 0;
@@ -600,14 +633,14 @@ function parseHorizontalLines(x1, y1, x2, y2, type) {
 					mainTile = -1;
 				}
 			}
-			if (currentMap[coordinate(x, y, currentMapTiles)] !== 0 && mainTile < 1) {
+			if ((currentMap[coordinate(x, y, currentMapTiles)] !== 0 && currentMap[coordinate(x, y, currentMapTiles)] !== 9) && mainTile < 1) {
 				rectSize += 1 * 16;
 				if (startPosition === -currentMapTiles * 16 * 2) {
 					startPosition = (x * 16) - viewPortX;
 				}
 				// drawTile(x, y, currentMap, currentMapTiles, startPosition, rectSize, hasFloor);
 			}
-			if (currentMap[coordinate(x, y, currentMapTiles)] === 0 || x === x2 - 1 || mainTile > 0) {
+			if (currentMap[coordinate(x, y, currentMapTiles)] === 0 || currentMap[coordinate(x, y, currentMapTiles)] === 9 || x === x2 - 1 || mainTile > 0) {
 				bdContext.beginPath();
 				var canvasX = startPosition;
 				var canvasY = (y * 16) - viewPortY;
@@ -626,7 +659,7 @@ function parseHorizontalLines(x1, y1, x2, y2, type) {
 				bdContext.closePath();
 				bdContext.stroke();
 			}
-			if (currentMap[coordinate(x, y, currentMapTiles)] === 0 || x === x2 - 1 || mainTile > 0) {
+			if (currentMap[coordinate(x, y, currentMapTiles)] === 0 || currentMap[coordinate(x, y, currentMapTiles)] === 9 || x === x2 - 1 || mainTile > 0) {
 				rectSize = 0;
 				startPosition = -currentMapTiles * 16 * 2;
 				hasFloor = 0;
@@ -677,11 +710,11 @@ var miniMapPlayerX = 0;
 var miniMapPlayerY = 0;
 
 function drawWorld() {
+	minimapCanvas.width = miniMapPixelSize;
+	minimapCanvas.height = miniMapPixelSize;
 	parseMinimapViewport();
 	miniMapPlayerX = (currentRoom.x * 16) + (modulus(modulus(modulus(player.x), 10), 1) * 16);
 	miniMapPlayerY = (currentRoom.y * 16) + (modulus(modulus(modulus(player.y), 10), 1) * 16);
-	minimapCanvas.width = 300;
-	minimapCanvas.height = 300;
 	minimapContext.clearRect(0, 0, minimapCanvas.width, minimapCanvas.height);
 	drawnDoors.length = 0;
 	minimapContext.lineWidth = 2;
@@ -708,9 +741,20 @@ function drawWorld() {
 			minimapContext.closePath();
 		}
 	}, minimapContext);
+	forEachRoom("bd", 0, function(room, roomX, roomY) {
+		if(room.r.u && !room.v) {
+			minimapContext.beginPath();
+			minimapContext.rect(roomX, roomY, room.mw * 16, room.mh * 16);
+			minimapContext.fill();
+			minimapContext.stroke();
+			minimapContext.closePath();
+		}
+	}, minimapContext);
 	ctx.clearRect(0, 0, 16, 16);
 	forEachRoom("bg", "bd", function(room, roomX, roomY) {
 		if (room.v) {
+			// roomX = roomX - (canvas.width/2);
+			// roomY = roomY - (canvas.height/2);
 			ctx.beginPath();
 			ctx.rect(roomX / 16 * 2, roomY / 16 * 2, room.mw * 2, room.mh * 2);
 			ctx.fill();
@@ -729,9 +773,13 @@ function forEachRoom(fillStyle, strokeStyle, fn, context) {
 	for (var r = 0; r < world.r.length; r++) {
 		if (typeof fillStyle === "string") {
 			canvasContext.fillStyle = world.r[r].color[fillStyle];
+		} else {
+			canvasContext.fillStyle = "rgba(0,0,0,0)";
 		}
 		if (typeof strokeStyle === "string") {
 			canvasContext.strokeStyle = world.r[r].color[strokeStyle];
+		} else {
+			canvasContext.strokeStyle = "rgba(0,0,0,0)";
 		}
 		for (var i = 0; i < world.r[r].rooms.length; i++) {
 			var room = world.r[r].rooms[i];
@@ -748,10 +796,12 @@ function drawIcons(room) {
 	if (room.v) {
 		var door = null;
 		var color = null;
+		var color2 = null;
 		for (var i = 0; i < room.d.length; i++) {
 			door = room.d[i];
 			if (door.dt > -1) {
 				color = rColors[door.dt].l;
+				color2 = rColors[door.dt].bd;
 				var xModifier = 0;
 				var yModifier = 0;
 				if (door.dir === "N") {
@@ -769,12 +819,13 @@ function drawIcons(room) {
 					xModifier = 13;
 					yModifier = 8;
 				}
-				drawCircle(16 * door.x + xModifier, 16 * door.y + yModifier, color);
+				drawCircle(16 * door.x + xModifier, 16 * door.y + yModifier, color, color2);
 			}
 		}
 		if (room.s > -1) {
 			color = rColors[room.s].l;
-			drawCircle(16 * (room.x + room.mw / 2) - 3, 16 * (room.y + room.mh / 2), "rgba(0,0,0,0)", color);
+			color2 = rColors[room.s].bd;
+			drawCircle(16 * (room.x + room.mw / 2) - 3, 16 * (room.y + room.mh / 2), color2, color);
 		}
 	}
 }
@@ -848,12 +899,6 @@ function fillKeys() {
 }
 
 function drawPlayer() {
-	if (!initPlayerCanvas) {
-		miniMapIconsCanvas.width = minimapCanvas.width;
-		miniMapIconsCanvas.height = minimapCanvas.height;
-		miniMapIconsContext.lineWidth = 1;
-		initPlayerCanvas = true;
-	}
 	playerContext.fillStyle = "#000000";
 	for (var i = 0; i < entities.length; i++) {
 		var entity = entities[i];
@@ -872,7 +917,6 @@ function drawPlayer() {
 		playerContext.stroke();
 		playerContext.closePath();
 	}
-	miniMapIconsContext.clearRect(0, 0, miniMapIconsCanvas.width, miniMapIconsCanvas.height);
 	animationLoopProgress += 2 * (dt / 1000);
 	animationLoopProgress = animationLoopProgress % 2;
 	var frame = 1;
@@ -880,9 +924,20 @@ function drawPlayer() {
 		frame = 0;
 	}
 	if (lastFrame !== frame) {
-		miniMapIconsContext.fillStyle = "rgba(200,200,255," + (0.6 * frame) + ")";
-		miniMapIconsContext.strokeStyle = "rgba(200,200,255," + (0.8 * frame) + ")";
+		miniMapIconsContext.fillStyle = "rgba(255,255,0," + (0.6 * frame) + ")";
+		miniMapIconsContext.strokeStyle = "rgba(255,255,0," + (0.8 * frame) + ")";
 	}
+	if (miniMapIconsCanvas.width !== minimapCanvas.width) {
+		miniMapIconsCanvas.width = minimapCanvas.width;
+		miniMapIconsCanvas.height = minimapCanvas.height;
+		miniMapIconsContext.fillStyle = "rgba(255,255,0," + (0.6 * frame) + ")";
+		miniMapIconsContext.strokeStyle = "rgba(255,255,0," + (0.8 * frame) + ")";
+	}
+	if (!initPlayerCanvas) {
+		miniMapIconsContext.lineWidth = 1;
+		initPlayerCanvas = true;
+	}
+	miniMapIconsContext.clearRect(0, 0, miniMapIconsCanvas.width, miniMapIconsCanvas.height);
 	miniMapIconsContext.beginPath();
 	miniMapIconsContext.rect(miniMapPlayerX - miniViewPortX, miniMapPlayerY - miniViewPortY, 16, 16);
 	miniMapIconsContext.fill();
@@ -896,33 +951,34 @@ function drawPlayer() {
 	ctx.stroke();
 	ctx.closePath();
 	lastFrame = frame;
+	// drawFrontiers();
 }
 
 function drawArrow() {
-	if (player.keys.length === 0) {
-		playerContext.fillStyle = '#000000';
-	} else {
+	if (player.keys.length > 0) {
 		playerContext.fillStyle = rColors[player.keys[selectedColor]].l;
+		playerContext.strokeStyle = '#000000';
+		playerContext.save();
+		playerContext.translate(player.x - viewPortX + (player.w / 2), player.y - viewPortY + (player.h / 2));
+		playerContext.rotate(aToPlayer);
+		playerContext.beginPath();
+		playerContext.moveTo(10 + player.w, 0);
+		playerContext.lineTo(0 + player.w, -10);
+		playerContext.lineTo(0 + player.w, 10);
+		playerContext.lineTo(10 + player.w, 0);
+		playerContext.fill();
+		playerContext.stroke();
+		playerContext.closePath();
+		playerContext.restore();
 	}
-	playerContext.strokeStyle = '#000000';
-	playerContext.save();
-	playerContext.translate(player.x - viewPortX + (player.w / 2), player.y - viewPortY + (player.h / 2));
-	playerContext.rotate(aToPlayer);
-	playerContext.beginPath();
-	playerContext.moveTo(10 + player.w, 0);
-	playerContext.lineTo(0 + player.w, -10);
-	playerContext.lineTo(0 + player.w, 10);
-	playerContext.lineTo(10 + player.w, 0);
-	playerContext.fill();
-	playerContext.stroke();
-	playerContext.closePath();
-	playerContext.restore();
 }
 
 function drawBullets() {
 	for (var i = 0; i < bullets.length; i++) {
 		var bullet = bullets[i];
 		playerContext.fillStyle = rColors[bullet.key].l;
+		playerContext.strokeStyle = rColors[bullet.key].bd;
+		playerContext.lineWidth = 1;
 		playerContext.save();
 		playerContext.translate(bullet.x - viewPortX, bullet.y - viewPortY);
 		playerContext.rotate(bullet.a);
@@ -931,9 +987,92 @@ function drawBullets() {
 		playerContext.fill();
 		// playerContext.moveTo(0, 0);
 		// playerContext.lineTo(-10, 0);
-		// playerContext.stroke();
+		playerContext.stroke();
 		playerContext.closePath();
 		playerContext.restore();
+	}
+}
+
+function drawDoorArrow(door, doorX, doorY) {
+	if (door.dt === -1) {
+		tileContext.fillStyle = '#000000';
+	} else {
+		tileContext.fillStyle = rColors[door.dt].l;
+	}
+	tileContext.strokeStyle = '#FFFFFF';
+	tileContext.save();
+	var rotation = 0;
+	var xOffset = 16 * 10;
+	var yOffset = (16 * 10) / 2;
+	if (door.dir === "N") {
+		rotation = 90;
+		yOffset = 0;
+		xOffset = (16 * 10) / 2;
+	}
+	if (door.dir === "W") {
+		rotation = 180;
+		xOffset = 0;
+		yOffset = (16 * 10) / 2;
+	}
+	if (door.dir === "S") {
+		rotation = 270;
+		xOffset = (16 * 10) / 2;
+		yOffset = 16 * 10;
+	}
+	tileContext.translate((doorX * 16 * 10) - viewPortX + xOffset, (doorY * 16 * 10) - viewPortY + yOffset);
+	// tileContext.rotate(rotation * 180 / Math.PI);
+	tileContext.beginPath();
+	if (door.dir === "N") {
+		tileContext.moveTo(0, -20);
+		tileContext.lineTo(10, -10);
+		tileContext.lineTo(-10, -10);
+		tileContext.lineTo(0, -20);
+	}
+	if (door.dir === "W") {
+		tileContext.moveTo(-20, 0);
+		tileContext.lineTo(-10, -10);
+		tileContext.lineTo(-10, 10);
+		tileContext.lineTo(-20, 0);
+	}
+	if (door.dir === "S") {
+		tileContext.moveTo(0, 20);
+		tileContext.lineTo(10, 10);
+		tileContext.lineTo(-10, 10);
+		tileContext.lineTo(0, 20);
+	}
+	if (door.dir === "E") {
+		tileContext.moveTo(20, 0);
+		tileContext.lineTo(10, -10);
+		tileContext.lineTo(10, 10);
+		tileContext.lineTo(20, 0);
+	}
+	// tileContext.moveTo(10, 0);
+	// tileContext.lineTo(0, -10);
+	// tileContext.lineTo(0, 10);
+	// tileContext.lineTo(10, 0);
+	tileContext.fill();
+	tileContext.stroke();
+	tileContext.closePath();
+	tileContext.restore();
+}
+
+function drawFrontiers() {
+	var frontier = null;
+	var i = 0;
+	miniMapIconsContext.fillStyle = "rgba(255,255,255,0.3)";
+	// var f = world.f;
+	var f = getFrontiersForAllRooms(world.r[2]);
+	while (i < f.length) {
+		frontier = f[i];
+		miniMapIconsContext.fillRect(frontier.x * 16, frontier.y * 16, 16, 16);
+		// drawRecta(Room(frontier.x, frontier.y, 1, 1, null));
+		miniMapIconsContext.beginPath();
+		// miniMapIconsContext.fillStyle = rColors[player.keys[i]].l;
+		miniMapIconsContext.rect((frontier.x * 16) - miniViewPortX, (frontier.y * 16) - miniViewPortY, 16, 16);
+		miniMapIconsContext.fill();
+		miniMapIconsContext.stroke();
+		miniMapIconsContext.closePath();
+		i++;
 	}
 }
 var playerCanvas, tileCanvas, bdCanvas, playerContext, tileContext, bdContext, minimapContext, minimapCanvas, miniMapIconsContext, miniMapIconsCanvas;
@@ -967,6 +1106,7 @@ var player = {
 	ῼ: 5,
 	dc: window.performance.now(),
 	mῼ: 5,
+	// keys: [0,1,2,3,4]
 	keys: []
 };
 var dt = currentTick - lastTick;
@@ -1045,28 +1185,41 @@ function DOMLoaded() {
 	minimapContext = minimapCanvas.getContext("2d");
 	miniMapIconsContext = miniMapIconsCanvas.getContext("2d");
 	resizeCanvas();
-	startWorld();
+	create();
+	var previousRegion = null;
 	for (var r = 0; r < rColors.length; r++) {
-		// var rooms = random(10, 20);
-		var rooms = random(1, 2);
+		var rooms = random(5, 10);
+		// var rooms = random(1, 2);
 		for (var i = 0; i < rooms; i++) {
-			addRoomToWorld();
+			createRoom();
 		}
+		// if (previousRegion) {
+		// 	while (world.r[world.r.length - 1].bds.indexOf(previousRegion) === -1) {
+		// 		createRoom();
+		// 	}
+		// }
 		if (r + 1 < rColors.length) {
-			addRegion();
+			previousRegion = world.r[world.r.length - 1];
+			startNewRegion(nextRegion(),previousRegion);
+			// startNewRegion(nextRegion());
 		}
 	}
-	d();
-	var door = world.rooms[0].d[0];
+	var room = world.r[0].rooms[0];
+	var door = room.d[0];
 	var direction = door.dir;
 	var position = door.x;
+	room.sr = true;
+	room.sx = position - room.x;
+	room.sy = door.y - room.y;
 	if (door.dir === "E" || door.dir === "W") {
 		position = door.y;
 	}
-	enterRoom(world.rooms[0], direction, position);
+	clearDoorTypes();
+	assignDoorTypes();
+	enterRoom(room, direction, position);
 	loop();
 	var div = document.createElement("span");
-	div.innerHTML = "<p>A, D, to move</p><p>space to jump</p><p>mouse to aim</p><p>left click to take colors</p><p>right click to place colors</p><p>middle click to change colors</p>";
+	div.innerHTML = "<p>find 5 color circles</p><br><p>A, D, to move</p><p>space to jump</p><p>mouse to aim</p><p>left click to take colors</p><p>right click to place colors</p><p>middle click to change colors</p><p>hold tab for a larger minimap</p>";
 	document.body.appendChild(div);
 }
 
@@ -1099,7 +1252,8 @@ function eachFrame() {
 			testFalling(entity);
 		}
 		processShot();
-		for(var i=0;i<bullets.length;i++) {
+		placeBl();
+		for (var i = 0; i < bullets.length; i++) {
 			bulletPhysics(bullets[i]);
 		}
 		playerContext.clearRect(0, 0, playerCanvas.width, playerCanvas.height);
@@ -1143,7 +1297,6 @@ document.addEventListener("keyup", trigger);
 document.addEventListener("frame", trigger);
 document.addEventListener("mousemove", trigger);
 document.addEventListener("contextmenu", trigger);
-
 function random(min, max) {
 	return Math.floor(Math.random() * (max - min + 1) + min);
 }
@@ -1193,6 +1346,9 @@ function handleKeyDown(event) {
 		if (event.keyCode === keys.space) {
 			player.j = 1;
 		}
+		if (event.keyCode === keys.tab) {
+			miniMapPixelSize = Math.min(modulus(window.innerHeight) * 16, modulus(window.innerWidth) * 16);
+		}
 	}
 	keymap[event.keyCode] = event.type;
 	if (event.keyCode === keys.d) {
@@ -1214,6 +1370,9 @@ function handleKeyUp(event) {
 		}
 	}
 	keymap[event.keyCode] = event.type;
+	if (event.keyCode === keys.tab) {
+		miniMapPixelSize = 150;
+	}
 	if (event.keyCode === keys.d || event.keyCode === keys.a) {
 		if (keymap[keys.d] && keymap[keys.a]) {
 			if (keymap[keys.d] === event.type && keymap[keys.a] === event.type) {
@@ -1230,20 +1389,20 @@ var aToPlayer = 0;
 var bullets = [];
 var lastShot = window.performance.now();
 var clicking = false;
+var placing = false;
 var delayBetweenShots = 150;
-var bls = [0,0,0,0,0];
+var bls = [0, 0, 0, 0, 0];
 var mouseCanvasX = -1;
 var mouseCanvasY = -1;
 var selectedColor = 0;
 
 function mousePosition(event) {
-	if (event.target === playerCanvas) {
-		mouseCanvasX = event.layerX;
-		mouseCanvasY = event.layerY;
-	}
+	var rect = playerCanvas.getBoundingClientRect();
+	mouseCanvasX = event.clientX - rect.left;
+	mouseCanvasY = event.clientY - rect.top;
 	mouseX = event.clientX;
 	mouseY = event.clientY;
-	aToPlayer = Math.atan2(playerCanvas.offsetTop + player.y - viewPortY - mouseY, playerCanvas.offsetLeft + player.x - viewPortX - mouseX) + Math.PI;
+	aToPlayer = Math.atan2(player.y + (player.h / 2) - viewPortY - mouseCanvasY, player.x + (player.w / 2) - viewPortX - mouseCanvasX) + Math.PI;
 }
 
 function click(event) {
@@ -1253,9 +1412,12 @@ function click(event) {
 	}
 	if (event.which === 2) {
 		selectedColor++;
-		if(selectedColor > player.keys.length-1) {
+		if (selectedColor > player.keys.length - 1) {
 			selectedColor = 0;
 		}
+	}
+	if (event.which === 3) {
+		placing = true;
 	}
 }
 
@@ -1263,6 +1425,9 @@ function release(event) {
 	event.preventDefault();
 	if (event.which === 1) {
 		clicking = false;
+	}
+	if (event.which === 3) {
+		placing = false;
 	}
 }
 
@@ -1277,13 +1442,18 @@ function processShot() {
 
 function place(event) {
 	event.preventDefault();
-	var x = mouseCanvasX + viewPortX;
-	var y = mouseCanvasY + viewPortY;
-	if (x >= 0 && x < mwidth * 16 && y >= 0 && y < mheight * 16) {
-		var coord = coordinate(modulus(x), modulus(y), currentMapTiles);
-		if(currentMap[coord] === 0 && bls[player.keys[selectedColor]] > 0) {
-			currentMap[coord] = 1;
-			bls[player.keys[selectedColor]]--;
+}
+
+function placeBl() {
+	if (placing) {
+		var x = mouseCanvasX + viewPortX;
+		var y = mouseCanvasY + viewPortY;
+		if (x >= 0 && x < mwidth * 16 && y >= 0 && y < mheight * 16) {
+			var coord = coordinate(modulus(x), modulus(y), currentMapTiles);
+			if (currentMap[coord] === 0 && bls[player.keys[selectedColor]] > 0) {
+				currentMap[coord] = player.keys[selectedColor] + 2;
+				bls[player.keys[selectedColor]]--;
+			}
 		}
 	}
 }
@@ -1293,7 +1463,7 @@ function Bullet(x, y, a, key) {
 		x: x,
 		y: y,
 		a: a,
-		key:key
+		key: key
 	}
 }
 function handleXMovement(entity) {
@@ -1464,7 +1634,7 @@ function bulletPhysics(bullet) {
 		// 	currentMap[coord] = 0;
 		// 	bls++;
 		// }
-		if (currentMap[coord] > 1 && player.keys.indexOf(currentMap[coord] - 2) > -1) {
+		if (currentMap[coord] > 1 && player.keys[selectedColor] === currentMap[coord] - 2) {
 			bls[currentMap[coord] - 2]++;
 			currentMap[coord] = 0;
 		}
@@ -1554,8 +1724,10 @@ function BigRoom(width, height, worldRoom, roomCreator) {
 			var mapCoord = coordinate(x, y, topSize * 10);
 			var roomCoord = coordinate(x % 10, y % 10, 10);
 			map[mapCoord] = room.map[roomCoord];
-			if (map[mapCoord] === 0 && room.type !== 9 && x < width * 10 && y < height * 10 && x < width * 10 && y < height * 10) {
-				map[mapCoord] = worldRoom.r.id + 2;
+			if (worldRoom.r.id !== 0 && map[mapCoord] === 0 && room.type !== 9 && x < width * 10 && y < height * 10 && x < width * 10 && y < height * 10) {
+				if (random(0, 1) === 1) {
+					map[mapCoord] = worldRoom.r.id + 2;
+				}
 			}
 			// top walls
 			if ((y === 0 && northDoor === null && x < width * 10)) {
@@ -1817,19 +1989,56 @@ function playerSizedRoom(room) {
 		}
 		return array;
 	});
-	if (room.s > -1) {
-		var randomW = random(1, room.mw * 1) - 1;
-		var randomH = random(1, room.mh * 1) - 1;
-		var randomX = random(1, 10 - 1);
-		var randomY = random(1, 10 - 1);
-		while (room.map.map[coordinate((randomW * 10) + randomX, (randomH * 10) + randomY, room.map.tiles)] !== 0 && room.map.map[coordinate((randomW * 10) + randomX, (randomH * 10) + randomY, room.map.tiles)] !== room.r.id + 2) {
-			console.log(room.map.map[coordinate((randomW * 10) + randomX, (randomH * 10) + randomY, room.map.tiles)], room.r.id + 2)
-			randomX = random(1, 10 - 1);
-			randomY = random(1, 10 - 1);
-			randomW = random(1, room.mw * 1) - 1;
-			randomH = random(1, room.mh * 1) - 1;
+	if (room.s > -1 && player.keys.indexOf(room.s) === -1) {
+		var attempts = 0;
+		var found = false;
+		while (found === false && attempts < 5) {
+			if (room.sr) {
+				var randomW = room.sx * 1;
+				var randomH = room.sy * 1;
+				var randomX = random(1, 10 - 1);
+				var randomY = random(1, 10 - 1);
+			} else {
+				var randomW = random(1, room.mw * 1) - 1;
+				var randomH = random(1, room.mh * 1) - 1;
+				var randomX = random(1, 10 - 1);
+				var randomY = random(1, 10 - 1);
+			}
+			var coord = coordinate((randomW * 10) + randomX, (randomH * 10) + randomY, room.map.tiles);
+			var validPlacement = room.map.map[coord] === 0 || room.map.map[coord] === room.r.id + 2;
+			if (validPlacement) {
+				found = true;
+				room.map.map[coordinate((randomW * 10) + randomX, (randomH * 10) + randomY, room.map.tiles)] = 9;
+			}
+			attempts++;
 		}
-		room.map.map[coordinate((randomW * 10) + randomX, (randomH * 10) + randomY, room.map.tiles)] = 9;
+		if (!found) {
+			if (room.sr) {
+				var startX = room.sx * 1 * 10;
+				var startY = room.sy * 1 * 10;
+				for (var x = startX + 1; x < startX + 10 - 1; x++) {
+					for (var y = startY + 1; y < startY + 10 - 1; y++) {
+						var coord = coordinate(x, y, room.map.tiles);
+						var validPlacement = room.map.map[coord] === 0 || room.map.map[coord] === room.r.id + 2;
+						if (validPlacement) {
+							room.map.map[coord] = 9;
+						}
+					}
+				}
+			} else {
+				var startX = room.sx * 1 * 10;
+				var startY = room.sy * 1 * 10;
+				for (var x = 0 + 1; x < (room.mw * 1 * 10) - 1; x++) {
+					for (var y = 0 + 1; y < (room.mh * 1 * 10) - 1; y++) {
+						var coord = coordinate(x, y, room.map.tiles);
+						var validPlacement = room.map.map[coord] === 0 || room.map.map[coord] === room.r.id + 2;
+						if (validPlacement) {
+							room.map.map[coord] = 9;
+						}
+					}
+				}
+			}
+		}
 	}
 }
 var currentMap = null;
@@ -2098,22 +2307,22 @@ var rColors = [{
 	l: "#FFFFFF",
 	name: "Dungeon"
 }, {
-	bd: "#990000",
 	bg: "#FF3333",
+	bd: "#990000",
 	o: "#FF0000",
-	l: "#FF0000",
+	l: "#FFAAAA",
 	name: "Fire"
 }, {
-	bd: "#006600",
 	bg: "#00BB00",
+	bd: "#006600",
 	o: "#00BB00",
-	l: "#00FF00",
+	l: "#AAFFAA",
 	name: "Air"
 }, {
-	bd: "#000066",
 	bg: "#3333FF",
+	bd: "#000066",
 	o: "#0000FF",
-	l: "#0000FF",
+	l: "#AAAAFF",
 	name: "Water"
 }, {
 	bg: "#9F9F9F",
@@ -2133,37 +2342,55 @@ function startAt(x, y, r) {
 	world.r.push(r);
 }
 
-function startNewRegion(r) {
+function startNewRegion(r, previousRegion) {
 	var trapped = true;
-	var f = getFrontiersForAllRooms();
+	var f = getFrontiersForAllRooms(previousRegion);
 	var test = [];
 	var frontier = null;
+	var used = [];
 	while (trapped) {
 		var emptySides = 0;
-		frontier = getRandom(f);
+		frontier = getRandom(f, used);
 		test.length = 0;
-		test.push(getRoom(frontier.x - 1, frontier.y), getRoom(frontier.x + 1, frontier.y), getRoom(frontier.x, frontier.y - 1), getRoom(frontier.x, frontier.y + 1));
-		for (var i = 0; i < 4; i++) {
-			if (test[i] === null) {
-				emptySides++;
+		if (frontier) {
+			test.push(getRoom(frontier.x - 1, frontier.y), getRoom(frontier.x + 1, frontier.y), getRoom(frontier.x, frontier.y - 1), getRoom(frontier.x, frontier.y + 1));
+			for (var i = 0; i < 4; i++) {
+				if (test[i] === null) {
+					emptySides++;
+				}
 			}
+		} else {
+			trapped = false;
 		}
 		if (emptySides > 2) {
 			trapped = false;
 		}
 	}
-	startAt(frontier.x, frontier.y, r);
+	if (frontier) {
+		startAt(frontier.x, frontier.y, r);
+	}
 }
 
-function getRandom(array) {
+function getRandom(array, used) {
+	if (used.length === array.length) {
+		return false;
+	}
 	var index = random(0, array.length - 1);
+	while (used.indexOf(index) > -1) {
+		index = random(0, array.length - 1);
+	}
+	used.push(index);
 	return array[index];
 }
 
-function getFrontiersForAllRooms() {
+function getFrontiersForAllRooms(previousRegion) {
 	var results = [];
-	for (var i = 0; i < world.rooms.length; i++) {
-		results = addBorderingFrontiers(results, world.rooms[i]);
+	var rooms = world.rooms;
+	if (previousRegion) {
+		rooms = previousRegion.rooms;
+	}
+	for (var i = 0; i < rooms.length; i++) {
+		results = addBorderingFrontiers(results, rooms[i]);
 	}
 	return results;
 }
@@ -2252,6 +2479,18 @@ function addDoors(room) {
 		}
 		// console.log(times, stop)
 	}
+	for (var i = 0; i < room.d.length; i++) {
+		var r1 = room.r;
+		var r2 = o(door, room).r;
+		if (r1 !== r2) {
+			if (r1.bds.indexOf(r2) === -1) {
+				r1.bds.push(r2);
+			}
+			if (r2.bds.indexOf(r1) === -1) {
+				r2.bds.push(r1);
+			}
+		}
+	}
 }
 
 function addDoorsAlongNorthWall(room) {
@@ -2281,7 +2520,7 @@ function addDoorsAlongNorthWall(room) {
 				hasDoor = true;
 			}
 		}
-		if (!(Math.random() > chanceOfAddingDoor || indexOf(room.d, object) >= 0) && !hasDoor) {
+		if (!( Math.random() > chanceOfAddingDoor ||  indexOf(room.d, object) >= 0) && !hasDoor) {
 			door = Door(object.x, object.y, "N", room, object.o);
 			door2 = Door(object.x, object.y - 1, "S", object.o, room);
 			room.d.push(door);
@@ -2322,7 +2561,7 @@ function addDoorsAlongSouthWall(room) {
 				hasDoor = true;
 			}
 		}
-		if (!(Math.random() > chanceOfAddingDoor || indexOf(room.d, object) >= 0) && !hasDoor) {
+		if (!( Math.random() > chanceOfAddingDoor ||  indexOf(room.d, object) >= 0) && !hasDoor) {
 			door = Door(object.x, object.y, "S", room, object.o);
 			door2 = Door(object.x, object.y + 1, "N", object.o, room);
 			room.d.push(door);
@@ -2363,7 +2602,7 @@ function addDoorsAlongWestWall(room) {
 				hasDoor = true;
 			}
 		}
-		if (!(Math.random() > chanceOfAddingDoor || indexOf(room.d, object) >= 0) && !hasDoor) {
+		if (!( Math.random() > chanceOfAddingDoor ||  indexOf(room.d, object) >= 0) && !hasDoor) {
 			door = Door(object.x, object.y, "W", room, object.o);
 			door2 = Door(object.x - 1, object.y, "E", object.o, room);
 			room.d.push(door);
@@ -2404,7 +2643,7 @@ function addDoorsAlongEastWall(room) {
 				hasDoor = true;
 			}
 		}
-		if (!(Math.random() > chanceOfAddingDoor || indexOf(room.d, object) >= 0) && !hasDoor) {
+		if (!( Math.random() > chanceOfAddingDoor ||  indexOf(room.d, object) >= 0) && !hasDoor) {
 			door = Door(object.x, object.y, "E", room, object.o);
 			door2 = Door(object.x + 1, object.y, "W", object.o, room);
 			door.o = door2;
@@ -2453,14 +2692,11 @@ function createRooms(numberOfRooms) {
 }
 
 function createRoom() {
-	// if (world.f.length > 0) {
-	var frontier = getRandom(world.f);
-	try {
+	var used = [];
+	var frontier = getRandom(world.f, used);
+	if(frontier) {
 		addRoom(growRoom(frontier.x, frontier.y));
-	} catch (e) {
-		console.log(world, frontier, e);
 	}
-	// }
 }
 
 function addRoom(room) {
@@ -2470,9 +2706,6 @@ function addRoom(room) {
 	var array = [];
 	array = removeFrontiers(array, room);
 	world.f = addBorderingFrontiers(array, room);
-	if (world.f.length === 0) {
-		console.log(array, room, addBorderingFrontiers(array, room));
-	}
 	room.c = world.cr.color;
 	world.rooms.push(room);
 	world.cr.rooms.push(room);
@@ -2607,17 +2840,23 @@ function assignDoorTypes() { // FIXME
 	var r2 = null;
 	var room = null;
 	for (var i = 0; i < world.r.length; i++) {
+		var used = [];
 		r1 = world.r[i];
-		room = getRandom(r1.rooms);
-		room.s = (i + 1) % rColors.length;
+		if (i !== 0) {
+			room = getRandom(r1.rooms, used);
+			room.s = (i + 1) % rColors.length;
+		}
 		for (var e = 0; e < r1.rooms.length; e++) {
 			room = r1.rooms[e];
+			if (i === 0 && room.sr) {
+				room.s = (i + 1) % rColors.length;
+			}
 			for (var r = 0; r < room.d.length; r++) {
 				door = room.d[r];
 				r2 = o(door, room).r;
 				if (r2 !== r1) {
 					if (door.o.dt === -1) {
-						door.o.dt = (i + 1) % rColors.length;
+						door.o.dt = (i) % rColors.length;
 					}
 				}
 			}
@@ -2633,6 +2872,11 @@ function collectKey(room) {
 }
 
 function unlRooms() {
+	for(var e=0;e<world.r.length;e++) {
+		if(player.keys.indexOf(world.r[e].id) > -1) {
+			world.r[e].u = true;
+		}
+	}
 	for (var i = 0; i < world.rooms.length; i++) {
 		var hasDoor = false;
 		var room = world.rooms[i];
@@ -2660,13 +2904,13 @@ function unlRooms() {
 			// 		room.map.map[index] = 0;
 			// 	}
 			// }
-			for (var r = 0; r < room.map.map.length; r++) {
-				if (room.map.map[r] > 1) {
-					if (player.keys.indexOf(room.map.map[r] - 1) > -1) {
-						room.map.map[r] = 0;
-					}
-				}
-			}
+			// for (var r = 0; r < room.map.map.length; r++) {
+			// 	if (room.map.map[r] > 1) {
+			// 		if (player.keys.indexOf(room.map.map[r] - 1) > -1) {
+			// 			room.map.map[r] = 0;
+			// 		}
+			// 	}
+			// }
 		}
 	}
 }
@@ -2704,24 +2948,9 @@ function Region(color, maxWidth, maxHeight, id) {
 		maxW: maxWidth,
 		maxH: maxHeight,
 		id: id,
+		u: false,
+		bds: [],
 		rooms: []
 	};
-}
-
-function startWorld() {
-	create();
-}
-
-function addRoomToWorld() {
-	createRoom();
-}
-
-function addRegion() {
-	startNewRegion(nextRegion());
-}
-
-function d() {
-	clearDoorTypes();
-	assignDoorTypes();
 }
 })(window,document);

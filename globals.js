@@ -24,6 +24,7 @@ module.exports = {
 	mapH: "mh",
 	mapColor: "c",
 	currentRegion: "cr",
+	unlocked: "u",
 	regions: "r",
 	region: "r",
 	specialType: "s",
