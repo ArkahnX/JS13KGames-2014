@@ -507,7 +507,7 @@ function drawMap() {
 					tileContext.lineWidth = 2;
 					tileContext.stroke();
 					tileContext.closePath();
-				} else if (currentMap[coordinate(x, y, currentMapTiles)] !== 9) {
+				} else if (currentMap[coordinate(x, y, currentMapTiles)] !== 9 && currentMap[coordinate(x, y, currentMapTiles)] !== 10) {
 					tileContext.fillStyle = rColors[currentMap[coordinate(x, y, currentMapTiles)] - 2].l;
 					drawRect(y, (x * 16) - viewPortX, 16, true);
 				}
@@ -1075,7 +1075,7 @@ function drawFrontiers() {
 		i++;
 	}
 }
-var playerCanvas, tileCanvas, bdCanvas, playerContext, tileContext, bdContext, minimapContext, minimapCanvas, miniMapIconsContext, miniMapIconsCanvas;
+var playerCanvas, tileCanvas, bdCanvas, playerContext, tileContext, bdContext, minimapContext, minimapCanvas, miniMapIconsContext, miniMapIconsCanvas, colorCircles;
 var runGameLoop = true;
 var animate = true;
 var frameEvent = new CustomEvent("frame");
@@ -1174,6 +1174,7 @@ function getByType(id) {
 
 
 function DOMLoaded() {
+	colorCircles = getByType("clr");
 	playerCanvas = getByType("p");
 	bdCanvas = getByType("b");
 	tileCanvas = getByType("t");
@@ -1200,9 +1201,15 @@ function DOMLoaded() {
 		// }
 		if (r + 1 < rColors.length) {
 			previousRegion = world.r[world.r.length - 1];
-			startNewRegion(nextRegion(),previousRegion);
+			startNewRegion(nextRegion(), previousRegion);
 			// startNewRegion(nextRegion());
 		}
+	}
+	startNewRegion(nextRegion(), world.r[0]);
+	var rooms = random(5, 10);
+	// var rooms = random(1, 2);
+	for (var i = 0; i < rooms; i++) {
+		createRoom();
 	}
 	var room = world.r[0].rooms[0];
 	var door = room.d[0];
@@ -1218,9 +1225,6 @@ function DOMLoaded() {
 	assignDoorTypes();
 	enterRoom(room, direction, position);
 	loop();
-	var div = document.createElement("span");
-	div.innerHTML = "<p>find 5 color circles</p><br><p>A, D, to move</p><p>space to jump</p><p>mouse to aim</p><p>left click to take colors</p><p>right click to place colors</p><p>middle click to change colors</p><p>hold tab for a larger minimap</p>";
-	document.body.appendChild(div);
 }
 
 function resizeCanvas() {
@@ -1466,6 +1470,402 @@ function Bullet(x, y, a, key) {
 		key: key
 	}
 }
+var songJSON = {
+	"songLen": 29,
+	"songData": [{
+		"oo": 7,
+		"od": 0,
+		"oe": 0,
+		"ox": 0,
+		"ov": 127,
+		"ow": 1,
+		"po": 6,
+		"pd": 0,
+		"pe": 9,
+		"px": 0,
+		"pv": 93,
+		"pw": 1,
+		"nf": 0,
+		"ea": 137,
+		"es": 2000,
+		"er": 4611,
+		"em": 192,
+		"ff": 1,
+		"fq": 982,
+		"fr": 89,
+		"ft": 6,
+		"fm": 25,
+		"fp": 6,
+		"ft": 77,
+		"lf": 0,
+		"lq": 1,
+		"lr": 3,
+		"la": 69,
+		"lw": 0,
+		"p": [
+			1,
+			1,
+			1,
+			1,
+			2,
+			2
+		],
+		"c": [{
+			"n": [
+				0,
+				135,
+				135,
+				135,
+				135,
+				135,
+				135,
+				135,
+				135,
+				135,
+				135,
+				135,
+				135,
+				135,
+				0,
+				0,
+				135,
+				140,
+				140,
+				0,
+				0,
+				0,
+				0,
+				140,
+				137,
+				0,
+				135,
+				135,
+				135,
+				0,
+				0,
+				0
+			]
+		}, {
+			"n": [
+				0,
+				142,
+				142,
+				142,
+				142,
+				142,
+				142,
+				142,
+				142,
+				142,
+				142,
+				142,
+				142,
+				142,
+				0,
+				0,
+				142,
+				147,
+				147,
+				0,
+				0,
+				0,
+				0,
+				147,
+				144,
+				0,
+				142,
+				142,
+				142,
+				0,
+				0,
+				0
+			]
+		}]
+	}, {
+		"oo": 7,
+		"od": 0,
+		"oe": 0,
+		"ox": 0,
+		"ov": 192,
+		"ow": 2,
+		"po": 7,
+		"pd": 0,
+		"pe": 0,
+		"px": 0,
+		"pv": 201,
+		"pw": 3,
+		"nf": 0,
+		"ea": 100,
+		"es": 150,
+		"er": 13636,
+		"em": 191,
+		"ff": 2,
+		"fq": 5839,
+		"fr": 254,
+		"ft": 6,
+		"fm": 121,
+		"fp": 6,
+		"ft": 147,
+		"lf": 0,
+		"lq": 1,
+		"lr": 6,
+		"la": 195,
+		"lw": 0,
+		"p": [
+			2,
+			2,
+			2,
+			2,
+			3,
+			3
+		],
+		"c": [{
+			"n": [
+				135,
+				0,
+				135,
+				0,
+				0,
+				135,
+				0,
+				135,
+				135,
+				0,
+				135,
+				0,
+				0,
+				135,
+				0,
+				135,
+				135,
+				0,
+				135,
+				0,
+				0,
+				135,
+				0,
+				135,
+				135,
+				0,
+				135,
+				0,
+				0,
+				135,
+				0,
+				135
+			]
+		}, {
+			"n": [
+				135,
+				0,
+				0,
+				0,
+				135,
+				0,
+				0,
+				0,
+				135,
+				0,
+				0,
+				0,
+				135,
+				0,
+				0,
+				0,
+				135,
+				0,
+				0,
+				0,
+				135,
+				0,
+				0,
+				0,
+				135,
+				0,
+				0,
+				0,
+				135,
+				0,
+				0,
+				0
+			]
+		}, {
+			"n": [
+				149,
+				0,
+				0,
+				0,
+				149,
+				0,
+				0,
+				0,
+				149,
+				0,
+				0,
+				0,
+				149,
+				0,
+				0,
+				0,
+				149,
+				0,
+				0,
+				0,
+				149,
+				0,
+				0,
+				0,
+				149,
+				0,
+				0,
+				0,
+				149,
+				0,
+				0,
+				0
+			]
+		}]
+	}, {
+		"oo": 7,
+		"od": 0,
+		"oe": 0,
+		"ox": 0,
+		"ov": 192,
+		"ow": 2,
+		"po": 7,
+		"pd": 0,
+		"pe": 0,
+		"px": 0,
+		"pv": 201,
+		"pw": 3,
+		"nf": 0,
+		"ea": 100,
+		"es": 150,
+		"er": 13636,
+		"em": 191,
+		"ff": 2,
+		"fq": 5839,
+		"fr": 254,
+		"ft": 6,
+		"fm": 121,
+		"fp": 6,
+		"ft": 147,
+		"lf": 0,
+		"lq": 1,
+		"lr": 6,
+		"la": 195,
+		"lw": 0,
+		"p": [
+			1,
+			1,
+			1,
+			1,
+			2,
+			2
+		],
+		"c": [{
+			"n": [
+				154,
+				0,
+				151,
+				0,
+				0,
+				156,
+				152,
+				0,
+				0,
+				154,
+				0,
+				0,
+				151,
+				0,
+				156,
+				0,
+				0,
+				152,
+				0,
+				0,
+				154,
+				0,
+				0,
+				151,
+				0,
+				0,
+				154,
+				154,
+				0,
+				0,
+				0,
+				0
+			]
+		}, {
+			"n": [
+				161,
+				0,
+				158,
+				0,
+				0,
+				163,
+				159,
+				0,
+				0,
+				161,
+				0,
+				0,
+				158,
+				0,
+				163,
+				0,
+				0,
+				159,
+				0,
+				0,
+				161,
+				0,
+				0,
+				158,
+				0,
+				0,
+				161,
+				161,
+				0,
+				0,
+				0,
+				0
+			]
+		}]
+	}],
+	"rowLen": 5606,
+	"endPattern": 7
+};
+
+var songGen = MusicGenerator(songJSON);
+var source, sourceBuffer;
+createAudioBuffer(songGen, function(buffer) {
+	sourceBuffer = buffer;
+	toggle();
+});
+var playing = false;
+var startOffset = 0;
+var startTime = 0;
+
+function toggle() {
+	if (playing) {
+		source.stop();
+		// Measure how much time passed since the last pause.
+		startOffset += audioCtx.currentTime - startTime;
+	} else {
+		startTime = audioCtx.currentTime;
+		source = audioCtx.createBufferSource();
+		// Connect graph
+		source.buffer = sourceBuffer;
+		source.loop = true;
+		source.connect(audioCtx.destination);
+		// Start playback, but make sure we stay in bound of the buffer.
+		source.start(0, startOffset % sourceBuffer.duration);
+	}
+	playing = !playing;
+};
 function handleXMovement(entity) {
 	entity.xa = entity.xa + (entity.xd / 60 * dt);
 	if (entity.xa > entity.maxa) {
@@ -1723,43 +2123,114 @@ function BigRoom(width, height, worldRoom, roomCreator) {
 			}
 			var mapCoord = coordinate(x, y, topSize * 10);
 			var roomCoord = coordinate(x % 10, y % 10, 10);
-			map[mapCoord] = room.map[roomCoord];
-			if (worldRoom.r.id !== 0 && map[mapCoord] === 0 && room.type !== 9 && x < width * 10 && y < height * 10 && x < width * 10 && y < height * 10) {
-				if (random(0, 1) === 1) {
+			var leftMap = coordinate(x - 1, y, topSize * 10);
+			var rightMap = coordinate(x + 1, y, topSize * 10);
+			var aboveMap = coordinate(x, y - 1, topSize * 10);
+			var aboveAbove = coordinate(x, y - 2, topSize * 10);
+			if (y - 1 < 0) {
+				aboveMap = -1;
+			}
+			if (x - 1 < 0) {
+				leftMap = -1;
+			}
+			if (y + 1 > (height * 10) - 1) {
+				belowMap = -1;
+			}
+			if (x + 1 > (width * 10) - 1) {
+				rightMap = -1;
+			}
+			if (worldRoom.r.u && worldRoom.r.id === 0 && room.map[roomCoord] !== 0 && x < width * 10 && y < height * 10 && x < width * 10 && y < height * 10) {
+				if (random(0, 5) === 1) {
+					map[mapCoord] = random(0, rColors.length - 1) + 2;
+				} else {
+					map[mapCoord] = 0;
+				}
+			} else {
+				map[mapCoord] = room.map[roomCoord];
+
+			}
+			if (worldRoom.r.u && map[mapCoord] === 0 && room.type !== 9 && x < width * 10 && y < height * 10 && x < width * 10 && y < height * 10) {
+				if (worldRoom.r.id === 1 || worldRoom.r.id === 2 || worldRoom.r.id === 3) {
+					map[mapCoord] = worldRoom.r.id + 2;
+				}
+				if (random(0, 6) < 2 && worldRoom.r.id === 2) {
+					map[mapCoord] = 0;
+				}
+				if (random(0, 6) < 4 && worldRoom.r.id === 3) {
+					map[mapCoord] = 0;
+				}
+				if (random(0, 3) === 1 && worldRoom.r.id === 4) {
+					map[mapCoord] = worldRoom.r.id + 2;
+				}
+				if (random(0, 3) === 1 && worldRoom.r.id === 0) {
 					map[mapCoord] = worldRoom.r.id + 2;
 				}
 			}
+			if (worldRoom.r.u && (worldRoom.r.id === 3 || worldRoom.r.id === 4 || worldRoom.r.id === 0) && map[mapCoord] === 1 && room.type !== 9 && x < width * 10 && y < height * 10 && x < width * 10 && y < height * 10) {
+				if (random(0, 3) === 1) {
+					map[mapCoord] = worldRoom.r.id + 2;
+				} else if (random(0, 3) === 2) {
+					map[mapCoord] = 0;
+				}
+			}
+			var roomTileHeight = height * 10;
+			var roomTileWidth = width * 10;
+			var inRoomX = x % 10;
+			var inRoomY = y % 10;
 			// top walls
-			if ((y === 0 && northDoor === null && x < width * 10)) {
+			if ((y === 0 && northDoor === null && x < roomTileWidth)) {
 				map[mapCoord] = 1;
 			}
 			// left walls
-			if ((x === 0 && westDoor === null && y < height * 10)) {
+			if ((x === 0 && westDoor === null && y < roomTileHeight)) {
 				map[mapCoord] = 1;
 			}
 			// bottom walls
-			if ((y === height * 10 - 1 && southDoor === null && x < width * 10)) {
+			if ((y === roomTileHeight - 1 && southDoor === null && x < roomTileWidth)) {
 				map[mapCoord] = 1;
 			}
 			// right walls
-			if ((x === width * 10 - 1 && eastDoor === null && y < height * 10)) {
+			if ((x === roomTileWidth - 1 && eastDoor === null && y < roomTileHeight)) {
+				map[mapCoord] = 1;
+			}
+
+			function test(x, y) {
+				if (x > -1 && x < 2 && y > -1 && y < 2) {
+					return true;
+				}
+				if (x > 10 - 3 && x < 10 && y > -1 && y < 2) {
+					return true;
+				}
+				if (x > -1 && x < 2 && y > 10 - 3 && y < 10) {
+					return true;
+				}
+				if (x > 10 - 3 && x < 10 && y > 10 - 3 && y < 10) {
+					return true;
+				}
+			}
+			// if ((inRoomX === 0 && inRoomY === 0) || (inRoomX === 10 - 1 && inRoomY === 0) || (inRoomX === 0 && inRoomY === 10 - 1) || (inRoomX === 10 - 1 && inRoomY === 10 - 1)) {
+			// 	map[mapCoord] = 1;
+			// }
+			if (test(inRoomX, inRoomY)) {
 				map[mapCoord] = 1;
 			}
 			// top walls
-			if ((y === 0 && northDoor !== null && x < width * 10 && northDoor.dt > -1 && map[mapCoord] === 0)) {
-				map[mapCoord] = northDoor.dt + 2;
-			}
-			// left walls
-			if ((x === 0 && westDoor !== null && y < height * 10 && westDoor.dt > -1 && map[mapCoord] === 0)) {
-				map[mapCoord] = westDoor.dt + 2;
-			}
-			// bottom walls
-			if ((y === height * 10 - 1 && southDoor !== null && x < width * 10 && southDoor.dt > -1 && map[mapCoord] === 0)) {
-				map[mapCoord] = southDoor.dt + 2;
-			}
-			// right walls
-			if ((x === width * 10 - 1 && eastDoor !== null && y < height * 10 && eastDoor.dt > -1 && map[mapCoord] === 0)) {
-				map[mapCoord] = eastDoor.dt + 2;
+			if (map[mapCoord] === 0) {
+				if ((y === 0 && northDoor !== null && x < roomTileWidth && northDoor.dt > -1)) {
+					map[mapCoord] = northDoor.dt + 2;
+				}
+				// left walls
+				if ((x === 0 && westDoor !== null && y < roomTileHeight && westDoor.dt > -1)) {
+					map[mapCoord] = westDoor.dt + 2;
+				}
+				// bottom walls
+				if ((y === roomTileHeight - 1 && southDoor !== null && x < roomTileWidth && southDoor.dt > -1)) {
+					map[mapCoord] = southDoor.dt + 2;
+				}
+				// right walls
+				if ((x === roomTileWidth - 1 && eastDoor !== null && y < roomTileHeight && eastDoor.dt > -1)) {
+					map[mapCoord] = eastDoor.dt + 2;
+				}
 			}
 		}
 	}
@@ -2520,7 +2991,7 @@ function addDoorsAlongNorthWall(room) {
 				hasDoor = true;
 			}
 		}
-		if (!( Math.random() > chanceOfAddingDoor ||  indexOf(room.d, object) >= 0) && !hasDoor) {
+		if (!(Math.random() > chanceOfAddingDoor || indexOf(room.d, object) >= 0) && !hasDoor) {
 			door = Door(object.x, object.y, "N", room, object.o);
 			door2 = Door(object.x, object.y - 1, "S", object.o, room);
 			room.d.push(door);
@@ -2561,7 +3032,7 @@ function addDoorsAlongSouthWall(room) {
 				hasDoor = true;
 			}
 		}
-		if (!( Math.random() > chanceOfAddingDoor ||  indexOf(room.d, object) >= 0) && !hasDoor) {
+		if (!(Math.random() > chanceOfAddingDoor || indexOf(room.d, object) >= 0) && !hasDoor) {
 			door = Door(object.x, object.y, "S", room, object.o);
 			door2 = Door(object.x, object.y + 1, "N", object.o, room);
 			room.d.push(door);
@@ -2602,7 +3073,7 @@ function addDoorsAlongWestWall(room) {
 				hasDoor = true;
 			}
 		}
-		if (!( Math.random() > chanceOfAddingDoor ||  indexOf(room.d, object) >= 0) && !hasDoor) {
+		if (!(Math.random() > chanceOfAddingDoor || indexOf(room.d, object) >= 0) && !hasDoor) {
 			door = Door(object.x, object.y, "W", room, object.o);
 			door2 = Door(object.x - 1, object.y, "E", object.o, room);
 			room.d.push(door);
@@ -2643,7 +3114,7 @@ function addDoorsAlongEastWall(room) {
 				hasDoor = true;
 			}
 		}
-		if (!( Math.random() > chanceOfAddingDoor ||  indexOf(room.d, object) >= 0) && !hasDoor) {
+		if (!(Math.random() > chanceOfAddingDoor || indexOf(room.d, object) >= 0) && !hasDoor) {
 			door = Door(object.x, object.y, "E", room, object.o);
 			door2 = Door(object.x + 1, object.y, "W", object.o, room);
 			door.o = door2;
@@ -2694,7 +3165,7 @@ function createRooms(numberOfRooms) {
 function createRoom() {
 	var used = [];
 	var frontier = getRandom(world.f, used);
-	if(frontier) {
+	if (frontier) {
 		addRoom(growRoom(frontier.x, frontier.y));
 	}
 }
@@ -2872,8 +3343,12 @@ function collectKey(room) {
 }
 
 function unlRooms() {
-	for(var e=0;e<world.r.length;e++) {
-		if(player.keys.indexOf(world.r[e].id) > -1) {
+	colorCircles.innerHTML = "find " + (5 - player.keys.length) + " color circles";
+	if((5 - player.keys.length) === 0) {
+		colorCircles.innerHTML = "find the exit";
+	}
+	for (var e = 0; e < world.r.length; e++) {
+		if (player.keys.indexOf(world.r[e].id) > -1) {
 			world.r[e].u = true;
 		}
 	}

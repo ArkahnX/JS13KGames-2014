@@ -71,43 +71,114 @@ function BigRoom(width, height, worldRoom, roomCreator) {
 			}
 			var mapCoord = coordinate(x, y, topSize * roomSize);
 			var roomCoord = coordinate(x % roomSize, y % roomSize, roomSize);
-			map[mapCoord] = room.map[roomCoord];
-			if (worldRoom.region.id !== 0 && map[mapCoord] === 0 && room.type !== 9 && x < width * roomSize && y < height * roomSize && x < width * roomSize && y < height * roomSize) {
-				if (random(0, 1) === 1) {
+			var leftMap = coordinate(x - 1, y, topSize * roomSize);
+			var rightMap = coordinate(x + 1, y, topSize * roomSize);
+			var aboveMap = coordinate(x, y - 1, topSize * roomSize);
+			var aboveAbove = coordinate(x, y - 2, topSize * roomSize);
+			if (y - 1 < 0) {
+				aboveMap = -1;
+			}
+			if (x - 1 < 0) {
+				leftMap = -1;
+			}
+			if (y + 1 > (height * roomSize) - 1) {
+				belowMap = -1;
+			}
+			if (x + 1 > (width * roomSize) - 1) {
+				rightMap = -1;
+			}
+			if (worldRoom.region.unlocked && worldRoom.region.id === 0 && room.map[roomCoord] !== 0 && x < width * roomSize && y < height * roomSize && x < width * roomSize && y < height * roomSize) {
+				if (random(0, 5) === 1) {
+					map[mapCoord] = random(0, regionColors.length - 1) + 2;
+				} else {
+					map[mapCoord] = 0;
+				}
+			} else {
+				map[mapCoord] = room.map[roomCoord];
+
+			}
+			if (worldRoom.region.unlocked && map[mapCoord] === 0 && room.type !== 9 && x < width * roomSize && y < height * roomSize && x < width * roomSize && y < height * roomSize) {
+				if (worldRoom.region.id === 1 || worldRoom.region.id === 2 || worldRoom.region.id === 3) {
+					map[mapCoord] = worldRoom.region.id + 2;
+				}
+				if (random(0, 6) < 2 && worldRoom.region.id === 2) {
+					map[mapCoord] = 0;
+				}
+				if (random(0, 6) < 4 && worldRoom.region.id === 3) {
+					map[mapCoord] = 0;
+				}
+				if (random(0, 3) === 1 && worldRoom.region.id === 4) {
+					map[mapCoord] = worldRoom.region.id + 2;
+				}
+				if (random(0, 3) === 1 && worldRoom.region.id === 0) {
 					map[mapCoord] = worldRoom.region.id + 2;
 				}
 			}
+			if (worldRoom.region.unlocked && (worldRoom.region.id === 3 || worldRoom.region.id === 4 || worldRoom.region.id === 0) && map[mapCoord] === 1 && room.type !== 9 && x < width * roomSize && y < height * roomSize && x < width * roomSize && y < height * roomSize) {
+				if (random(0, 3) === 1) {
+					map[mapCoord] = worldRoom.region.id + 2;
+				} else if (random(0, 3) === 2) {
+					map[mapCoord] = 0;
+				}
+			}
+			var roomTileHeight = height * roomSize;
+			var roomTileWidth = width * roomSize;
+			var inRoomX = x % roomSize;
+			var inRoomY = y % roomSize;
 			// top walls
-			if ((y === 0 && northDoor === null && x < width * roomSize)) {
+			if ((y === 0 && northDoor === null && x < roomTileWidth)) {
 				map[mapCoord] = 1;
 			}
 			// left walls
-			if ((x === 0 && westDoor === null && y < height * roomSize)) {
+			if ((x === 0 && westDoor === null && y < roomTileHeight)) {
 				map[mapCoord] = 1;
 			}
 			// bottom walls
-			if ((y === height * roomSize - 1 && southDoor === null && x < width * roomSize)) {
+			if ((y === roomTileHeight - 1 && southDoor === null && x < roomTileWidth)) {
 				map[mapCoord] = 1;
 			}
 			// right walls
-			if ((x === width * roomSize - 1 && eastDoor === null && y < height * roomSize)) {
+			if ((x === roomTileWidth - 1 && eastDoor === null && y < roomTileHeight)) {
+				map[mapCoord] = 1;
+			}
+
+			function test(x, y) {
+				if (x > -1 && x < 2 && y > -1 && y < 2) {
+					return true;
+				}
+				if (x > roomSize - 3 && x < roomSize && y > -1 && y < 2) {
+					return true;
+				}
+				if (x > -1 && x < 2 && y > roomSize - 3 && y < roomSize) {
+					return true;
+				}
+				if (x > roomSize - 3 && x < roomSize && y > roomSize - 3 && y < roomSize) {
+					return true;
+				}
+			}
+			// if ((inRoomX === 0 && inRoomY === 0) || (inRoomX === roomSize - 1 && inRoomY === 0) || (inRoomX === 0 && inRoomY === roomSize - 1) || (inRoomX === roomSize - 1 && inRoomY === roomSize - 1)) {
+			// 	map[mapCoord] = 1;
+			// }
+			if (test(inRoomX, inRoomY)) {
 				map[mapCoord] = 1;
 			}
 			// top walls
-			if ((y === 0 && northDoor !== null && x < width * roomSize && northDoor.doorType > -1 && map[mapCoord] === 0)) {
-				map[mapCoord] = northDoor.doorType + 2;
-			}
-			// left walls
-			if ((x === 0 && westDoor !== null && y < height * roomSize && westDoor.doorType > -1 && map[mapCoord] === 0)) {
-				map[mapCoord] = westDoor.doorType + 2;
-			}
-			// bottom walls
-			if ((y === height * roomSize - 1 && southDoor !== null && x < width * roomSize && southDoor.doorType > -1 && map[mapCoord] === 0)) {
-				map[mapCoord] = southDoor.doorType + 2;
-			}
-			// right walls
-			if ((x === width * roomSize - 1 && eastDoor !== null && y < height * roomSize && eastDoor.doorType > -1 && map[mapCoord] === 0)) {
-				map[mapCoord] = eastDoor.doorType + 2;
+			if (map[mapCoord] === 0) {
+				if ((y === 0 && northDoor !== null && x < roomTileWidth && northDoor.doorType > -1)) {
+					map[mapCoord] = northDoor.doorType + 2;
+				}
+				// left walls
+				if ((x === 0 && westDoor !== null && y < roomTileHeight && westDoor.doorType > -1)) {
+					map[mapCoord] = westDoor.doorType + 2;
+				}
+				// bottom walls
+				if ((y === roomTileHeight - 1 && southDoor !== null && x < roomTileWidth && southDoor.doorType > -1)) {
+					map[mapCoord] = southDoor.doorType + 2;
+				}
+				// right walls
+				if ((x === roomTileWidth - 1 && eastDoor !== null && y < roomTileHeight && eastDoor.doorType > -1)) {
+					map[mapCoord] = eastDoor.doorType + 2;
+				}
 			}
 		}
 	}

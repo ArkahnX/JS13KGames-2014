@@ -72,7 +72,7 @@ function drawMap() {
 					tileContext.lineWidth = 2;
 					tileContext.stroke();
 					tileContext.closePath();
-				} else if (currentMap[coordinate(x, y, currentMapTiles)] !== 9) {
+				} else if (currentMap[coordinate(x, y, currentMapTiles)] !== 9 && currentMap[coordinate(x, y, currentMapTiles)] !== 10) {
 					tileContext.fillStyle = regionColors[currentMap[coordinate(x, y, currentMapTiles)] - 2].lock;
 					drawRect(y, (x * tileSize) - viewPortX, tileSize, true);
 				}

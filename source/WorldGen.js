@@ -223,7 +223,7 @@ function addDoorsAlongNorthWall(room) {
 				hasDoor = true;
 			}
 		}
-		if (!( Math.random() > chanceOfAddingDoor ||  indexOf(room.doors, object) >= 0) && !hasDoor) {
+		if (!(Math.random() > chanceOfAddingDoor || indexOf(room.doors, object) >= 0) && !hasDoor) {
 			door = Door(object.x, object.y, "N", room, object.other);
 			door2 = Door(object.x, object.y - 1, "S", object.other, room);
 			room.doors.push(door);
@@ -264,7 +264,7 @@ function addDoorsAlongSouthWall(room) {
 				hasDoor = true;
 			}
 		}
-		if (!( Math.random() > chanceOfAddingDoor ||  indexOf(room.doors, object) >= 0) && !hasDoor) {
+		if (!(Math.random() > chanceOfAddingDoor || indexOf(room.doors, object) >= 0) && !hasDoor) {
 			door = Door(object.x, object.y, "S", room, object.other);
 			door2 = Door(object.x, object.y + 1, "N", object.other, room);
 			room.doors.push(door);
@@ -305,7 +305,7 @@ function addDoorsAlongWestWall(room) {
 				hasDoor = true;
 			}
 		}
-		if (!( Math.random() > chanceOfAddingDoor ||  indexOf(room.doors, object) >= 0) && !hasDoor) {
+		if (!(Math.random() > chanceOfAddingDoor || indexOf(room.doors, object) >= 0) && !hasDoor) {
 			door = Door(object.x, object.y, "W", room, object.other);
 			door2 = Door(object.x - 1, object.y, "E", object.other, room);
 			room.doors.push(door);
@@ -346,7 +346,7 @@ function addDoorsAlongEastWall(room) {
 				hasDoor = true;
 			}
 		}
-		if (!( Math.random() > chanceOfAddingDoor ||  indexOf(room.doors, object) >= 0) && !hasDoor) {
+		if (!(Math.random() > chanceOfAddingDoor || indexOf(room.doors, object) >= 0) && !hasDoor) {
 			door = Door(object.x, object.y, "E", room, object.other);
 			door2 = Door(object.x + 1, object.y, "W", object.other, room);
 			door.other = door2;
@@ -397,7 +397,7 @@ function createRooms(numberOfRooms) {
 function createRoom() {
 	var used = [];
 	var frontier = getRandom(world.frontiers, used);
-	if(frontier) {
+	if (frontier) {
 		addRoom(growRoom(frontier.x, frontier.y));
 	}
 }
@@ -575,8 +575,12 @@ function collectKey(room) {
 }
 
 function unlockRooms() {
-	for(var e=0;e<world.regions.length;e++) {
-		if(player.keys.indexOf(world.regions[e].id) > -1) {
+	colorCircles.innerHTML = "find " + (5 - player.keys.length) + " color circles";
+	if((5 - player.keys.length) === 0) {
+		colorCircles.innerHTML = "find the exit";
+	}
+	for (var e = 0; e < world.regions.length; e++) {
+		if (player.keys.indexOf(world.regions[e].id) > -1) {
 			world.regions[e].unlocked = true;
 		}
 	}

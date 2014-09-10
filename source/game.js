@@ -1,4 +1,4 @@
-var playerCanvas, tileCanvas, borderCanvas, playerContext, tileContext, borderContext, minimapContext, minimapCanvas, miniMapIconsContext, miniMapIconsCanvas;
+var playerCanvas, tileCanvas, borderCanvas, playerContext, tileContext, borderContext, minimapContext, minimapCanvas, miniMapIconsContext, miniMapIconsCanvas, colorCircles;
 var runGameLoop = true;
 var animate = true;
 var frameEvent = new CustomEvent("frame");
@@ -6,7 +6,7 @@ var currentTick = window.performance.now();
 var lastTick = window.performance.now();
 var events = {};
 var keymap = {};
-
+var BEGINPATH = "beginPath";
 var player = {
 	x: -1,
 	y: -1,
@@ -97,6 +97,7 @@ function getByType(id) {
 
 
 function DOMLoaded() {
+	colorCircles = getByType("clr");
 	playerCanvas = getByType("p");
 	borderCanvas = getByType("b");
 	tileCanvas = getByType("t");
@@ -123,9 +124,15 @@ function DOMLoaded() {
 		// }
 		if (r + 1 < regionColors.length) {
 			previousRegion = world.regions[world.regions.length - 1];
-			startNewRegion(nextRegion(),previousRegion);
+			startNewRegion(nextRegion(), previousRegion);
 			// startNewRegion(nextRegion());
 		}
+	}
+	startNewRegion(nextRegion(), world.regions[0]);
+	var rooms = random(5, 10);
+	// var rooms = random(1, 2);
+	for (var i = 0; i < rooms; i++) {
+		createRoom();
 	}
 	var room = world.regions[0].rooms[0];
 	var door = room.doors[0];
@@ -141,9 +148,6 @@ function DOMLoaded() {
 	assignDoorTypes();
 	enterRoom(room, direction, position);
 	loop();
-	var div = document.createElement("span");
-	div.innerHTML = "<p>find 5 color circles</p><br><p>A, D, to move</p><p>space to jump</p><p>mouse to aim</p><p>left click to take colors</p><p>right click to place colors</p><p>middle click to change colors</p><p>hold tab for a larger minimap</p>";
-	document.body.appendChild(div);
 }
 
 function resizeCanvas() {
