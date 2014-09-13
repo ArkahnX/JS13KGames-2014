@@ -940,7 +940,7 @@ function moveContext(context, x, y, a, callback) {
 	callback();
 	context.restore();
 }
-var playerCanvas, tileCanvas, bdCanvas, playerContext, tileContext, bdContext, minimapContext, minimapCanvas, miniMapIconsContext, miniMapIconsCanvas, colorCircles;
+var playerCanvas, tileCanvas, bdCanvas, playerContext, tileContext, bdContext, minimapContext, minimapCanvas, miniMapIconsContext, miniMapIconsCanvas, colorCircles, blCount;
 var runGameLoop = true;
 var animate = true;
 var frameEvent = new CustomEvent("frame");
@@ -1044,6 +1044,7 @@ function DOMLoaded() {
 	bdCanvas = getByType("b");
 	tileCanvas = getByType("t");
 	minimapCanvas = getByType("m");
+	blCount = getByType("v");
 	miniMapIconsCanvas = getByType("i");
 	playerContext = playerCanvas.getContext("2d");
 	bdContext = bdCanvas.getContext("2d");
@@ -1105,7 +1106,16 @@ function resizeCanvas() {
 	}
 }
 
-
+var end = false;
+setInterval(function() {
+	playerSizedRoom(currentRoom);
+	currentMapTiles = currentRoom.map.tiles;
+	currentMap = currentRoom.map.map;
+	mheight = currentRoom.map.height * 10;
+	mwidth = currentRoom.map.width * 10;
+	realMapHeight = currentRoom.map.height * 10 * 16;
+	realMapWidth = currentRoom.map.width * 10 * 16;
+}, 15000);
 
 function eachFrame() {
 	if (runGameLoop) {
@@ -1120,6 +1130,13 @@ function eachFrame() {
 			testDoors();
 			testFalling(entity);
 		}
+		if (currentRoom === world.rooms[world.rooms.length - 1] && !end) {
+			colorCircles.innerHTML = "there is no exit...";
+			setTimeout(function() {
+				colorCircles.innerHTML = "Simulation complete.";
+			}, 3000);
+			end = true;
+		}
 		processShot();
 		placeBl();
 		for (var i = 0; i < bullets.length; i++) {
@@ -1131,6 +1148,7 @@ function eachFrame() {
 		drawWorld();
 		drawArrow();
 		drawBullets();
+		blCount.innerHTML = bls[player.keys[selectedColor]];
 	}
 }
 
@@ -2044,32 +2062,33 @@ function BigRoom(width, height, worldRoom, roomCreator) {
 			var inRoomX = x % 10;
 			var inRoomY = y % 10;
 			// top walls
-			if ((y === 0 && northDoor === null && x < roomTileWidth)) {
+			if ((y === 0 && northDoor === null && x < roomTileWidth) && onScreen) {
 				map[mapCoord] = 1;
 			}
 			// left walls
-			if ((x === 0 && westDoor === null && y < roomTileHeight)) {
+			if ((x === 0 && westDoor === null && y < roomTileHeight) && onScreen) {
 				map[mapCoord] = 1;
 			}
 			// bottom walls
-			if ((y === roomTileHeight - 1 && southDoor === null && x < roomTileWidth)) {
+			if ((y === roomTileHeight - 1 && southDoor === null && x < roomTileWidth) && onScreen) {
 				map[mapCoord] = 1;
 			}
 			// right walls
-			if ((x === roomTileWidth - 1 && eastDoor === null && y < roomTileHeight)) {
+			if ((x === roomTileWidth - 1 && eastDoor === null && y < roomTileHeight) && onScreen) {
 				map[mapCoord] = 1;
 			}
-
-			if (x > -1 && x < 2 && y > -1 && y < 2) {
+			var roomX = x % 10;
+			var roomY = y % 10;
+			if (roomX > -1 && roomX < 2 && roomY > -1 && roomY < 2 && onScreen) {
 				map[mapCoord] = 1;
 			}
-			if (x > 10 - 3 && x < 10 && y > -1 && y < 2) {
+			if (roomX > 10 - 3 && roomX < 10 && roomY > -1 && roomY < 2 && onScreen) {
 				map[mapCoord] = 1;
 			}
-			if (x > -1 && x < 2 && y > 10 - 3 && y < 10) {
+			if (roomX > -1 && roomX < 2 && roomY > 10 - 3 && roomY < 10 && onScreen) {
 				map[mapCoord] = 1;
 			}
-			if (x > 10 - 3 && x < 10 && y > 10 - 3 && y < 10) {
+			if (roomX > 10 - 3 && roomX < 10 && roomY > 10 - 3 && roomY < 10 && onScreen) {
 				map[mapCoord] = 1;
 			}
 
