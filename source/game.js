@@ -1,4 +1,4 @@
-var playerCanvas, tileCanvas, borderCanvas, playerContext, tileContext, borderContext, minimapContext, minimapCanvas, miniMapIconsContext, miniMapIconsCanvas, colorCircles;
+var playerCanvas, tileCanvas, borderCanvas, playerContext, tileContext, borderContext, minimapContext, minimapCanvas, miniMapIconsContext, miniMapIconsCanvas, colorCircles, blockCount;
 var runGameLoop = true;
 var animate = true;
 var frameEvent = new CustomEvent("frame");
@@ -102,6 +102,7 @@ function DOMLoaded() {
 	borderCanvas = getByType("b");
 	tileCanvas = getByType("t");
 	minimapCanvas = getByType("m");
+	blockCount = getByType("v");
 	miniMapIconsCanvas = getByType("i");
 	playerContext = playerCanvas.getContext("2d");
 	borderContext = borderCanvas.getContext("2d");
@@ -163,7 +164,16 @@ function resizeCanvas() {
 	}
 }
 
-
+var end = false;
+setInterval(function() {
+	playerSizedRoom(currentRoom);
+	currentMapTiles = currentRoom.map.tiles;
+	currentMap = currentRoom.map.map;
+	mapHeight = currentRoom.map.height * roomSize;
+	mapWidth = currentRoom.map.width * roomSize;
+	realMapHeight = currentRoom.map.height * roomSize * tileSize;
+	realMapWidth = currentRoom.map.width * roomSize * tileSize;
+}, 15000);
 
 function eachFrame() {
 	if (runGameLoop) {
@@ -178,6 +188,13 @@ function eachFrame() {
 			testDoors();
 			testFalling(entity);
 		}
+		if (currentRoom === world.rooms[world.rooms.length - 1] && !end) {
+			colorCircles.innerHTML = "there is no exit...";
+			setTimeout(function() {
+				colorCircles.innerHTML = "Simulation complete.";
+			}, 3000);
+			end = true;
+		}
 		processShot();
 		placeBlock();
 		for (var i = 0; i < bullets.length; i++) {
@@ -189,6 +206,7 @@ function eachFrame() {
 		drawWorld();
 		drawArrow();
 		drawBullets();
+		blockCount.innerHTML = blocks[player.keys[selectedColor]];
 	}
 }
 

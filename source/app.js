@@ -1,449 +1,446 @@
 (function(window,document){
 
-var WAVE_SPS = 44100; // Samples per second
-var WAVE_CHAN = 2; // Channels
-var MAX_TIME = 33; // maximum time, in millis, that the generator can use consecutively
+// var WAVE_SPS = 44100; // Samples per second
+// var WAVE_CHAN = 2; // Channels
+// var MAX_TIME = 33; // maximum time, in millis, that the generator can use consecutively
+// var s3k = 32768;
+// var s255 = 255;
+// var audioCtx = null;
 
-var audioCtx = null;
+// // Oscillators
+// function osc_sin(value) {
+// 	return Math.sin(value * 6.283184);
+// }
 
-// Oscillators
-function osc_sin(value) {
-	return Math.sin(value * 6.283184);
-}
+// function osc_square(value) {
+// 	if (osc_sin(value) < 0) return -1;
+// 	return 1;
+// }
 
-function osc_square(value) {
-	if (osc_sin(value) < 0) return -1;
-	return 1;
-}
+// function osc_saw(value) {
+// 	return (value % 1) - 0.5;
+// }
 
-function osc_saw(value) {
-	return (value % 1) - 0.5;
-}
+// function osc_tri(value) {
+// 	var v2 = (value % 1) * 4;
+// 	if (v2 < 2) return v2 - 1;
+// 	return 3 - v2;
+// }
 
-function osc_tri(value) {
-	var v2 = (value % 1) * 4;
-	if (v2 < 2) return v2 - 1;
-	return 3 - v2;
-}
+// // Array of oscillator functions
+// var oscillators =
+// 	[
+// 		osc_sin,
+// 		osc_square,
+// 		osc_saw,
+// 		osc_tri
+// 	];
 
-// Array of oscillator functions
-var oscillators =
-	[
-		osc_sin,
-		osc_square,
-		osc_saw,
-		osc_tri
-	];
+// function getnotefreq(n) {
+// 	return 0.00390625 * Math.pow(1.059463094, n - 128);
+// }
 
-function getnotefreq(n) {
-	return 0.00390625 * Math.pow(1.059463094, n - 128);
-}
+// function genBuffer(waveSize, callBack) {
+// 	setTimeout(function() {
+// 		// Create the channel work buffer
+// 		var buf = new Uint8Array(waveSize * WAVE_CHAN * 2);
+// 		var b = buf.length - 2;
+// 		var iterate = function() {
+// 			var begin = new Date();
+// 			var count = 0;
+// 			while (b >= 0) {
+// 				buf[b] = 0;
+// 				buf[b + 1] = 128;
+// 				b -= 2;
+// 				count += 1;
+// 				if (count % 1000 === 0 && (new Date() - begin) > MAX_TIME) {
+// 					setTimeout(iterate, 0);
+// 					return;
+// 				}
+// 			}
+// 			setTimeout(function() {
+// 				callBack(buf);
+// 			}, 0);
+// 		};
+// 		setTimeout(iterate, 0);
+// 	}, 0);
+// }
 
-function genBuffer(waveSize, callBack) {
-	setTimeout(function() {
-		// Create the channel work buffer
-		var buf = new Uint8Array(waveSize * WAVE_CHAN * 2);
-		var b = buf.length - 2;
-		var iterate = function() {
-			var begin = new Date();
-			var count = 0;
-			while (b >= 0) {
-				buf[b] = 0;
-				buf[b + 1] = 128;
-				b -= 2;
-				count += 1;
-				if (count % 1000 === 0 && (new Date() - begin) > MAX_TIME) {
-					setTimeout(iterate, 0);
-					return;
-				}
-			}
-			setTimeout(function() {
-				callBack(buf);
-			}, 0);
-		};
-		setTimeout(iterate, 0);
-	}, 0);
-}
+// function applyDelay(chnBuf, waveSamples, instr, rowLen, callBack) {
+// 	var p1 = (instr.ft * rowLen) >> 1;
+// 	var t1 = instr.fm / s255;
 
-function applyDelay(chnBuf, waveSamples, instr, rowLen, callBack) {
-	var p1 = (instr.ft * rowLen) >> 1;
-	var t1 = instr.fm / 255;
+// 	var n1 = 0;
+// 	var iterate = function() {
+// 		var beginning = new Date();
+// 		var count = 0;
+// 		while (n1 < waveSamples - p1) {
+// 			var b1 = 4 * n1;
+// 			var l = 4 * (n1 + p1);
 
-	var n1 = 0;
-	var iterate = function() {
-		var beginning = new Date();
-		var count = 0;
-		while (n1 < waveSamples - p1) {
-			var b1 = 4 * n1;
-			var l = 4 * (n1 + p1);
+// 			// Left channel = left + right[-p1] * t1
+// 			var x1 = chnBuf[l] + (chnBuf[l + 1] << 8) +
+// 				(chnBuf[b1 + 2] + (chnBuf[b1 + 3] << 8) - s3k) * t1;
+// 			chnBuf[l] = x1 & s255;
+// 			chnBuf[l + 1] = (x1 >> 8) & s255;
 
-			// Left channel = left + right[-p1] * t1
-			var x1 = chnBuf[l] + (chnBuf[l + 1] << 8) +
-				(chnBuf[b1 + 2] + (chnBuf[b1 + 3] << 8) - 32768) * t1;
-			chnBuf[l] = x1 & 255;
-			chnBuf[l + 1] = (x1 >> 8) & 255;
-
-			// Right channel = right + left[-p1] * t1
-			x1 = chnBuf[l + 2] + (chnBuf[l + 3] << 8) +
-				(chnBuf[b1] + (chnBuf[b1 + 1] << 8) - 32768) * t1;
-			chnBuf[l + 2] = x1 & 255;
-			chnBuf[l + 3] = (x1 >> 8) & 255;
-			++n1;
-			count += 1;
-			if (count % 1000 === 0 && (new Date() - beginning) > MAX_TIME) {
-				setTimeout(iterate, 0);
-				return;
-			}
-		}
-		setTimeout(callBack, 0);
-	};
-	setTimeout(iterate, 0);
-}
+// 			// Right channel = right + left[-p1] * t1
+// 			x1 = chnBuf[l + 2] + (chnBuf[l + 3] << 8) +
+// 				(chnBuf[b1] + (chnBuf[b1 + 1] << 8) - s3k) * t1;
+// 			chnBuf[l + 2] = x1 & s255;
+// 			chnBuf[l + 3] = (x1 >> 8) & s255;
+// 			++n1;
+// 			count += 1;
+// 			if (count % 1000 === 0 && (new Date() - beginning) > MAX_TIME) {
+// 				setTimeout(iterate, 0);
+// 				return;
+// 			}
+// 		}
+// 		setTimeout(callBack, 0);
+// 	};
+// 	setTimeout(iterate, 0);
+// }
 
 
-function MusicGenerator(song) {
-	return {
-		song: song,
-		waveSize: WAVE_SPS * song.songLen // Total song size (in samples)
-	}
-}
+// function MusicGenerator(song) {
+// 	return {
+// 		song: song,
+// 		waveSize: WAVE_SPS * song.songLen // Total song size (in samples)
+// 	}
+// }
 
-function createAudioBuffer(music, callBack) {
-	getAudioGenerator(music, function(ag) {
-		getAudioBuffer(ag, callBack);
-	});
-}
-
-function getAudioBuffer(ag, callBack) {
-	if (audioCtx === null) {
-		audioCtx = new AudioContext();
-	}
-	var mixBuf = ag.mixBuf;
-	var waveSize = ag.waveSize;
-
-	var waveBytes = waveSize * WAVE_CHAN * 2;
-	var buffer = audioCtx.createBuffer(WAVE_CHAN, ag.waveSize, WAVE_SPS); // Create Mono Source Buffer from Raw Binary
-	var lchan = buffer.getChannelData(0);
-	var rchan = buffer.getChannelData(1);
-	var b = 0;
-	var iterate = function() {
-		var beginning = new Date();
-		var count = 0;
-		while (b < (waveBytes / 2)) {
-			var y = 4 * (mixBuf[b * 4] + (mixBuf[(b * 4) + 1] << 8) - 32768);
-			y = y < -32768 ? -32768 : (y > 32767 ? 32767 : y);
-			lchan[b] = y / 32768;
-			y = 4 * (mixBuf[(b * 4) + 2] + (mixBuf[(b * 4) + 3] << 8) - 32768);
-			y = y < -32768 ? -32768 : (y > 32767 ? 32767 : y);
-			rchan[b] = y / 32768;
-			b += 1;
-			count += 1;
-			if (count % 1000 === 0 && new Date() - beginning > MAX_TIME) {
-				setTimeout(iterate, 0);
-				return;
-			}
-		}
-		setTimeout(function() {
-			callBack(buffer);
-		}, 0);
-	};
-	setTimeout(iterate, 0);
-}
-
-function AudioGenerator(mixBuf) {
-	return {
-		mixBuf: mixBuf,
-		waveSize: mixBuf.length / WAVE_CHAN / 2
-	};
-}
-
-function getAudioGenerator(music, callBack) {
-	genBuffer(music.waveSize, function(mixBuf) {
-		var t = 0;
-		var recu = function() {
-			if (t < music.song.songData.length) {
-				t += 1;
-				generateTrack(music, music.song.songData[t - 1], mixBuf, recu);
-			} else {
-				callBack(AudioGenerator(mixBuf));
-			}
-		};
-		recu();
-	});
-}
-
-function SoundGenerator(instr, rowLen) {
-	return {
-		instr: instr,
-		rowLen: rowLen || 5605,
-
-		osc_lfo: oscillators[instr.lw],
-		osc1: oscillators[instr.ow],
-		osc2: oscillators[instr.pw],
-		attack: instr.ea,
-		sustain: instr.es,
-		release: instr.er,
-		panFreq: Math.pow(2, instr.fp - 8) / rowLen,
-		lfoFreq: Math.pow(2, instr.lr - 8) / rowLen
-	}
-}
-
-function generateTrack(music, instr, mixBuf, callBack) {
-	genBuffer(music.waveSize, function(chnBuf) {
-		// Preload/precalc some properties/expressions (for improved performance)
-		var waveSamples = music.waveSize,
-			waveBytes = music.waveSize * WAVE_CHAN * 2,
-			rowLen = music.song.rowLen,
-			endPattern = music.song.endPattern,
-			soundGen = SoundGenerator(instr, rowLen);
-
-		var currentpos = 0;
-		var p = 0;
-		var row = 0;
-		var recordSounds = function() {
-			var beginning = new Date();
-			while (true) {
-				if (row === 32) {
-					row = 0;
-					p += 1;
-					continue;
-				}
-				if (p === endPattern - 1) {
-					setTimeout(delay, 0);
-					return;
-				}
-				var cp = instr.p[p];
-				if (cp) {
-					var n = instr.c[cp - 1].n[row];
-					if (n) {
-						SoundGeneratorGenSound(soundGen, n, chnBuf, currentpos);
-					}
-				}
-				currentpos += rowLen;
-				row += 1;
-				if (new Date() - beginning > MAX_TIME) {
-					setTimeout(recordSounds, 0);
-					return;
-				}
-			}
-		};
-
-		var delay = function() {
-			applyDelay(chnBuf, waveSamples, instr, rowLen, finalize);
-		};
-
-		var b2 = 0;
-		var finalize = function() {
-			var beginning = new Date();
-			var count = 0;
-			// Add to mix buffer
-			while (b2 < waveBytes) {
-				var x2 = mixBuf[b2] + (mixBuf[b2 + 1] << 8) + chnBuf[b2] + (chnBuf[b2 + 1] << 8) - 32768;
-				mixBuf[b2] = x2 & 255;
-				mixBuf[b2 + 1] = (x2 >> 8) & 255;
-				b2 += 2;
-				count += 1;
-				if (count % 1000 === 0 && (new Date() - beginning) > MAX_TIME) {
-					setTimeout(finalize, 0);
-					return;
-				}
-			}
-			setTimeout(callBack, 0);
-		};
-		setTimeout(recordSounds, 0);
-	});
-}
-
-function SoundGeneratorGenSound(soundGen, n, chnBuf, currentpos) {
-	var marker = new Date();
-	var c1 = 0;
-	var c2 = 0;
-
-	// Precalculate frequencues
-	var o1t = getnotefreq(n + (soundGen.instr.oo - 8) * 12 + soundGen.instr.od) * (1 + 0.0008 * soundGen.instr.oe);
-	var o2t = getnotefreq(n + (soundGen.instr.po - 8) * 12 + soundGen.instr.pd) * (1 + 0.0008 * soundGen.instr.pe);
-
-	// State variable init
-	var q = soundGen.instr.fr / 255;
-	var low = 0;
-	var band = 0;
-	for (var j = soundGen.attack + soundGen.sustain + soundGen.release - 1; j >= 0; --j) {
-		var k = j + currentpos;
-
-		// LFO
-		var lfor = soundGen.osc_lfo(k * soundGen.lfoFreq) * soundGen.instr.la / 512 + 0.5;
-
-		// Envelope
-		var e = 1;
-		if (j < soundGen.attack)
-			e = j / soundGen.attack;
-		else if (j >= soundGen.attack + soundGen.sustain)
-			e -= (j - soundGen.attack - soundGen.sustain) / soundGen.release;
-
-		// Oscillator 1
-		var t = o1t;
-		if (soundGen.instr.lf) t += lfor;
-		if (soundGen.instr.ox) t *= e * e;
-		c1 += t;
-		var rsample = soundGen.osc1(c1) * soundGen.instr.ov;
-
-		// Oscillator 2
-		t = o2t;
-		if (soundGen.instr.px) t *= e * e;
-		c2 += t;
-		rsample += soundGen.osc2(c2) * soundGen.instr.pv;
-
-		// Noise oscillator
-		if (soundGen.instr.nf) rsample += (2 * Math.random() - 1) * soundGen.instr.nf * e;
-
-		rsample *= e / 255;
-
-		// State variable filter
-		var f = soundGen.instr.fq;
-		if (soundGen.instr.lq) f *= lfor;
-		f = 1.5 * Math.sin(f * 3.141592 / WAVE_SPS);
-		low += f * band;
-		var high = q * (rsample - band) - low;
-		band += f * high;
-		var test = soundGen.instr.ff;
-		if (test === 1) { // Hipass
-			rsample = high;
-		}
-		if (test === 2) { // Lopass
-			rsample = low;
-		}
-		if (test === 3) { // Bandpass
-			rsample = band;
-		}
-		if (test === 4) { // Notch
-			rsample = low + high;
-		}
-
-		// Panning & master volume
-		t = osc_sin(k * soundGen.panFreq) * soundGen.instr.ft / 512 + 0.5;
-		rsample *= 39 * soundGen.instr.em;
-
-		// Add to 16-bit channel buffer
-		k = k * 4;
-		if (k + 3 < chnBuf.length) {
-			var x = chnBuf[k] + (chnBuf[k + 1] << 8) + rsample * (1 - t);
-			chnBuf[k] = x & 255;
-			chnBuf[k + 1] = (x >> 8) & 255;
-			x = chnBuf[k + 2] + (chnBuf[k + 3] << 8) + rsample * t;
-			chnBuf[k + 2] = x & 255;
-			chnBuf[k + 3] = (x >> 8) & 255;
-		}
-	}
-}
-
-// function createSFXBuffer(sound, n, callBack) {
-// 	getSFXGenerator(sound, n, function(ag) {
+// function createAudioBuffer(music, callBack) {
+// 	getAudioGenerator(music, function(ag) {
 // 		getAudioBuffer(ag, callBack);
 // 	});
 // }
 
-// function getSFXGenerator(sound, n, callBack) {
-// 	var bufferSize = (sound.attack + sound.sustain + sound.release - 1) + (32 * sound.rowLen);
-// 	genBuffer(bufferSize, function(buffer) {
-// 		genSFX(sound, n, buffer, 0);
-// 		applyDelay(buffer, bufferSize, sound.instr, sound.rowLen, function() {
-// 			callBack(AudioGenerator(buffer));
-// 		});
-// 	});
-// };
+// function getAudioBuffer(ag, callBack) {
+// 	if (audioCtx === null) {
+// 		audioCtx = new AudioContext();
+// 	}
+// 	var mixBuf = ag.mixBuf;
+// 	var waveSize = ag.waveSize;
 
-// function genSFX(sound, n, chnBuf, currentpos) {
-// 		var marker = new Date();
-// 		var c1 = 0;
-// 		var c2 = 0;
-
-// 		// Precalculate frequencues
-// 		var o1t = getnotefreq(n + (sound.instr.oo - 8) * 12 + sound.instr.od) * (1 + 0.0008 * sound.instr.oe);
-// 		var o2t = getnotefreq(n + (sound.instr.po - 8) * 12 + sound.instr.pd) * (1 + 0.0008 * sound.instr.pe);
-
-// 		// State variable init
-// 		var q = sound.instr.fr / 255;
-// 		var low = 0;
-// 		var band = 0;
-// 		for (var j = sound.attack + sound.sustain + sound.release - 1; j >= 0; --j) {
-// 			var k = j + currentpos;
-
-// 			// LFO
-// 			var lfor = sound.osc_lfo(k * sound.lfoFreq) * sound.instr.la / 512 + 0.5;
-
-// 			// Envelope
-// 			var e = 1;
-// 			if (j < sound.attack)
-// 				e = j / sound.attack;
-// 			else if (j >= sound.attack + sound.sustain)
-// 				e -= (j - sound.attack - sound.sustain) / sound.release;
-
-// 			// Oscillator 1
-// 			var t = o1t;
-// 			if (sound.instr.lf) t += lfor;
-// 			if (sound.instr.ox) t *= e * e;
-// 			c1 += t;
-// 			var rsample = sound.osc1(c1) * sound.instr.ov;
-
-// 			// Oscillator 2
-// 			t = o2t;
-// 			if (sound.instr.px) t *= e * e;
-// 			c2 += t;
-// 			rsample += sound.osc2(c2) * sound.instr.pv;
-
-// 			// Noise oscillator
-// 			if (sound.instr.nf) rsample += (2 * Math.random() - 1) * sound.instr.nf * e;
-
-// 			rsample *= e / 255;
-
-// 			// State variable filter
-// 			var f = sound.instr.fq;
-// 			if (sound.instr.lq) f *= lfor;
-// 			f = 1.5 * Math.sin(f * 3.141592 / WAVE_SPS);
-// 			low += f * band;
-// 			var high = q * (rsample - band) - low;
-// 			band += f * high;
-//             var test = sound.instr.ff;
-//             if(test === 1) { // Hipass
-//                 rsample = high;
-//             }
-//             if(test === 2) { // Lopass
-//                 rsample = low;
-//             }
-//             if(test === 3) { // Bandpass
-//                 rsample = band;
-//             }
-//             if(test === 4) { // Notch
-//                 rsample = low + high;
-//             }
-
-// 			// Panning & master volume
-// 			t = osc_sin(k * sound.panFreq) * sound.instr.ft / 512 + 0.5;
-// 			rsample *= 39 * sound.instr.em;
-
-// 			// Add to 16-bit channel buffer
-// 			k = k * 4;
-// 			if (k + 3 < chnBuf.length) {
-// 				var x = chnBuf[k] + (chnBuf[k + 1] << 8) + rsample * (1 - t);
-// 				chnBuf[k] = x & 255;
-// 				chnBuf[k + 1] = (x >> 8) & 255;
-// 				x = chnBuf[k + 2] + (chnBuf[k + 3] << 8) + rsample * t;
-// 				chnBuf[k + 2] = x & 255;
-// 				chnBuf[k + 3] = (x >> 8) & 255;
+// 	var waveBytes = waveSize * WAVE_CHAN * 2;
+// 	var buffer = audioCtx.createBuffer(WAVE_CHAN, ag.waveSize, WAVE_SPS); // Create Mono Source Buffer from Raw Binary
+// 	var lchan = buffer.getChannelData(0);
+// 	var rchan = buffer.getChannelData(1);
+// 	var b = 0;
+// 	var iterate = function() {
+// 		var beginning = new Date();
+// 		var count = 0;
+// 		while (b < (waveBytes / 2)) {
+// 			var y = 4 * (mixBuf[b * 4] + (mixBuf[(b * 4) + 1] << 8) - s3k);
+// 			y = y < -s3k ? -s3k : (y > 32767 ? 32767 : y);
+// 			lchan[b] = y / s3k;
+// 			y = 4 * (mixBuf[(b * 4) + 2] + (mixBuf[(b * 4) + 3] << 8) - s3k);
+// 			y = y < -s3k ? -s3k : (y > 32767 ? 32767 : y);
+// 			rchan[b] = y / s3k;
+// 			b += 1;
+// 			count += 1;
+// 			if (count % 1000 === 0 && new Date() - beginning > MAX_TIME) {
+// 				setTimeout(iterate, 0);
+// 				return;
 // 			}
 // 		}
+// 		setTimeout(function() {
+// 			callBack(buffer);
+// 		}, 0);
 // 	};
+// 	setTimeout(iterate, 0);
+// }
+
+// function AudioGenerator(mixBuf) {
+// 	return {
+// 		mixBuf: mixBuf,
+// 		waveSize: mixBuf.length / WAVE_CHAN / 2
+// 	};
+// }
+
+// function getAudioGenerator(music, callBack) {
+// 	genBuffer(music.waveSize, function(mixBuf) {
+// 		var t = 0;
+// 		var recu = function() {
+// 			if (t < music.song.songData.length) {
+// 				t += 1;
+// 				generateTrack(music, music.song.songData[t - 1], mixBuf, recu);
+// 			} else {
+// 				callBack(AudioGenerator(mixBuf));
+// 			}
+// 		};
+// 		recu();
+// 	});
+// }
+
+// function SoundGenerator(instr, rowLen) {
+// 	return {
+// 		instr: instr,
+// 		rowLen: rowLen || 5605,
+
+// 		osc_lfo: oscillators[instr.lw],
+// 		osc1: oscillators[instr.ow],
+// 		osc2: oscillators[instr.pw],
+// 		attack: instr.ea,
+// 		sustain: instr.es,
+// 		release: instr.er,
+// 		panFreq: Math.pow(2, instr.fp - 8) / rowLen,
+// 		lfoFreq: Math.pow(2, instr.lr - 8) / rowLen
+// 	}
+// }
+
+// function generateTrack(music, instr, mixBuf, callBack) {
+// 	genBuffer(music.waveSize, function(chnBuf) {
+// 		// Preload/precalc some properties/expressions (for improved performance)
+// 		var waveSamples = music.waveSize,
+// 			waveBytes = music.waveSize * WAVE_CHAN * 2,
+// 			rowLen = music.song.rowLen,
+// 			endPattern = music.song.endPattern,
+// 			soundGen = SoundGenerator(instr, rowLen);
+
+// 		var currentpos = 0;
+// 		var p = 0;
+// 		var row = 0;
+// 		var recordSounds = function() {
+// 			var beginning = new Date();
+// 			while (true) {
+// 				if (row === 32) {
+// 					row = 0;
+// 					p += 1;
+// 					continue;
+// 				}
+// 				if (p === endPattern - 1) {
+// 					setTimeout(delay, 0);
+// 					return;
+// 				}
+// 				var cp = instr.p[p];
+// 				if (cp) {
+// 					var n = instr.c[cp - 1].n[row];
+// 					if (n) {
+// 						SoundGeneratorGenSound(soundGen, n, chnBuf, currentpos);
+// 					}
+// 				}
+// 				currentpos += rowLen;
+// 				row += 1;
+// 				if (new Date() - beginning > MAX_TIME) {
+// 					setTimeout(recordSounds, 0);
+// 					return;
+// 				}
+// 			}
+// 		};
+
+// 		var delay = function() {
+// 			applyDelay(chnBuf, waveSamples, instr, rowLen, finalize);
+// 		};
+
+// 		var b2 = 0;
+// 		var finalize = function() {
+// 			var beginning = new Date();
+// 			var count = 0;
+// 			// Add to mix buffer
+// 			while (b2 < waveBytes) {
+// 				var x2 = mixBuf[b2] + (mixBuf[b2 + 1] << 8) + chnBuf[b2] + (chnBuf[b2 + 1] << 8) - s3k;
+// 				mixBuf[b2] = x2 & s255;
+// 				mixBuf[b2 + 1] = (x2 >> 8) & s255;
+// 				b2 += 2;
+// 				count += 1;
+// 				if (count % 1000 === 0 && (new Date() - beginning) > MAX_TIME) {
+// 					setTimeout(finalize, 0);
+// 					return;
+// 				}
+// 			}
+// 			setTimeout(callBack, 0);
+// 		};
+// 		setTimeout(recordSounds, 0);
+// 	});
+// }
+
+// function SoundGeneratorGenSound(soundGen, n, chnBuf, currentpos) {
+// 	var marker = new Date();
+// 	var c1 = 0;
+// 	var c2 = 0;
+
+// 	// Precalculate frequencues
+// 	var o1t = getnotefreq(n + (soundGen.instr.oo - 8) * 12 + soundGen.instr.od) * (1 + 0.0008 * soundGen.instr.oe);
+// 	var o2t = getnotefreq(n + (soundGen.instr.po - 8) * 12 + soundGen.instr.pd) * (1 + 0.0008 * soundGen.instr.pe);
+
+// 	// State variable init
+// 	var q = soundGen.instr.fr / s255;
+// 	var low = 0;
+// 	var band = 0;
+// 	for (var j = soundGen.attack + soundGen.sustain + soundGen.release - 1; j >= 0; --j) {
+// 		var k = j + currentpos;
+
+// 		// LFO
+// 		var lfor = soundGen.osc_lfo(k * soundGen.lfoFreq) * soundGen.instr.la / 512 + 0.5;
+
+// 		// Envelope
+// 		var e = 1;
+// 		if (j < soundGen.attack)
+// 			e = j / soundGen.attack;
+// 		else if (j >= soundGen.attack + soundGen.sustain)
+// 			e -= (j - soundGen.attack - soundGen.sustain) / soundGen.release;
+
+// 		// Oscillator 1
+// 		var t = o1t;
+// 		if (soundGen.instr.lf) t += lfor;
+// 		if (soundGen.instr.ox) t *= e * e;
+// 		c1 += t;
+// 		var rsample = soundGen.osc1(c1) * soundGen.instr.ov;
+
+// 		// Oscillator 2
+// 		t = o2t;
+// 		if (soundGen.instr.px) t *= e * e;
+// 		c2 += t;
+// 		rsample += soundGen.osc2(c2) * soundGen.instr.pv;
+
+// 		// Noise oscillator
+// 		if (soundGen.instr.nf) rsample += (2 * Math.random() - 1) * soundGen.instr.nf * e;
+
+// 		rsample *= e / s255;
+
+// 		// State variable filter
+// 		var f = soundGen.instr.fq;
+// 		if (soundGen.instr.lq) f *= lfor;
+// 		f = 1.5 * Math.sin(f * 3.141592 / WAVE_SPS);
+// 		low += f * band;
+// 		var high = q * (rsample - band) - low;
+// 		band += f * high;
+// 		var test = soundGen.instr.ff;
+// 		if (test === 1) { // Hipass
+// 			rsample = high;
+// 		}
+// 		if (test === 2) { // Lopass
+// 			rsample = low;
+// 		}
+// 		if (test === 3) { // Bandpass
+// 			rsample = band;
+// 		}
+// 		if (test === 4) { // Notch
+// 			rsample = low + high;
+// 		}
+
+// 		// Panning & master volume
+// 		t = osc_sin(k * soundGen.panFreq) * soundGen.instr.ft / 512 + 0.5;
+// 		rsample *= 39 * soundGen.instr.em;
+
+// 		// Add to 16-bit channel buffer
+// 		k = k * 4;
+// 		if (k + 3 < chnBuf.length) {
+// 			var x = chnBuf[k] + (chnBuf[k + 1] << 8) + rsample * (1 - t);
+// 			chnBuf[k] = x & s255;
+// 			chnBuf[k + 1] = (x >> 8) & s255;
+// 			x = chnBuf[k + 2] + (chnBuf[k + 3] << 8) + rsample * t;
+// 			chnBuf[k + 2] = x & s255;
+// 			chnBuf[k + 3] = (x >> 8) & s255;
+// 		}
+// 	}
+// }
+
+// // function createSFXBuffer(sound, n, callBack) {
+// // 	getSFXGenerator(sound, n, function(ag) {
+// // 		getAudioBuffer(ag, callBack);
+// // 	});
+// // }
+
+// // function getSFXGenerator(sound, n, callBack) {
+// // 	var bufferSize = (sound.attack + sound.sustain + sound.release - 1) + (32 * sound.rowLen);
+// // 	genBuffer(bufferSize, function(buffer) {
+// // 		genSFX(sound, n, buffer, 0);
+// // 		applyDelay(buffer, bufferSize, sound.instr, sound.rowLen, function() {
+// // 			callBack(AudioGenerator(buffer));
+// // 		});
+// // 	});
+// // };
+
+// // function genSFX(sound, n, chnBuf, currentpos) {
+// // 		var marker = new Date();
+// // 		var c1 = 0;
+// // 		var c2 = 0;
+
+// // 		// Precalculate frequencues
+// // 		var o1t = getnotefreq(n + (sound.instr.oo - 8) * 12 + sound.instr.od) * (1 + 0.0008 * sound.instr.oe);
+// // 		var o2t = getnotefreq(n + (sound.instr.po - 8) * 12 + sound.instr.pd) * (1 + 0.0008 * sound.instr.pe);
+
+// // 		// State variable init
+// // 		var q = sound.instr.fr / s255;
+// // 		var low = 0;
+// // 		var band = 0;
+// // 		for (var j = sound.attack + sound.sustain + sound.release - 1; j >= 0; --j) {
+// // 			var k = j + currentpos;
+
+// // 			// LFO
+// // 			var lfor = sound.osc_lfo(k * sound.lfoFreq) * sound.instr.la / 512 + 0.5;
+
+// // 			// Envelope
+// // 			var e = 1;
+// // 			if (j < sound.attack)
+// // 				e = j / sound.attack;
+// // 			else if (j >= sound.attack + sound.sustain)
+// // 				e -= (j - sound.attack - sound.sustain) / sound.release;
+
+// // 			// Oscillator 1
+// // 			var t = o1t;
+// // 			if (sound.instr.lf) t += lfor;
+// // 			if (sound.instr.ox) t *= e * e;
+// // 			c1 += t;
+// // 			var rsample = sound.osc1(c1) * sound.instr.ov;
+
+// // 			// Oscillator 2
+// // 			t = o2t;
+// // 			if (sound.instr.px) t *= e * e;
+// // 			c2 += t;
+// // 			rsample += sound.osc2(c2) * sound.instr.pv;
+
+// // 			// Noise oscillator
+// // 			if (sound.instr.nf) rsample += (2 * Math.random() - 1) * sound.instr.nf * e;
+
+// // 			rsample *= e / s255;
+
+// // 			// State variable filter
+// // 			var f = sound.instr.fq;
+// // 			if (sound.instr.lq) f *= lfor;
+// // 			f = 1.5 * Math.sin(f * 3.141592 / WAVE_SPS);
+// // 			low += f * band;
+// // 			var high = q * (rsample - band) - low;
+// // 			band += f * high;
+// //             var test = sound.instr.ff;
+// //             if(test === 1) { // Hipass
+// //                 rsample = high;
+// //             }
+// //             if(test === 2) { // Lopass
+// //                 rsample = low;
+// //             }
+// //             if(test === 3) { // Bandpass
+// //                 rsample = band;
+// //             }
+// //             if(test === 4) { // Notch
+// //                 rsample = low + high;
+// //             }
+
+// // 			// Panning & master volume
+// // 			t = osc_sin(k * sound.panFreq) * sound.instr.ft / 512 + 0.5;
+// // 			rsample *= 39 * sound.instr.em;
+
+// // 			// Add to 16-bit channel buffer
+// // 			k = k * 4;
+// // 			if (k + 3 < chnBuf.length) {
+// // 				var x = chnBuf[k] + (chnBuf[k + 1] << 8) + rsample * (1 - t);
+// // 				chnBuf[k] = x & s255;
+// // 				chnBuf[k + 1] = (x >> 8) & s255;
+// // 				x = chnBuf[k + 2] + (chnBuf[k + 3] << 8) + rsample * t;
+// // 				chnBuf[k + 2] = x & s255;
+// // 				chnBuf[k + 3] = (x >> 8) & s255;
+// // 			}
+// // 		}
+// // 	};
 var miniMapPixelSize = 150;
 
 function drawMap() {
 	parseViewPort();
-	// bdContext.strokeStyle = currentRoom.c.bd;
-	// bdContext.lineWidth = 2;
-	// tileContext.fillStyle = currentRoom.c.bd;
 	colorize(tileContext, currentRoom.c.bd, currentRoom.c.bd, 2);
 	tileContext.fillRect(0, 0, tileCanvas.width, tileCanvas.height);
 	tileContext.fillStyle = currentRoom.c.bg;
-	// optimize
 	tileContext.clearRect(0 - viewPortX, 0 - viewPortY, realMapWidth, realMapHeight);
 	var x1 = modulus(viewPortX) - 1;
 	var y1 = modulus(viewPortY) - 1;
@@ -468,10 +465,10 @@ function drawMap() {
 		var startX = -currentMapTiles * 16 * 2;
 		var hasFloor = 0;
 		var topTile;
-		// tileContext.fillStyle = currentRoom.c.bg;
 		colorize(tileContext, currentRoom.c.bg, false, false);
 		for (var x = x1; x < x2; x++) {
-			if (currentMap[coordinate(x, y, currentMapTiles)] === 1) {
+			var coord = coordinate(x, y, currentMapTiles);
+			if (currentMap[coord] === 1) {
 				rectWidth += 1 * 16;
 				if (startX === -currentMapTiles * 16 * 2) {
 					startX = (x * 16) - viewPortX;
@@ -485,19 +482,16 @@ function drawMap() {
 					hasFloor = 1;
 				}
 			}
-			if (currentMap[coordinate(x, y, currentMapTiles)] !== 1 || x === x2 - 1) {
-				// drawRect(y, startX, rectWidth, hasFloor);
+			if (currentMap[coord] !== 1 || x === x2 - 1) {
 				var canvasX = startX;
 				var canvasY = (y * 16) - viewPortY;
 				if (hasFloor) {
-					// tileContext.fillRect(canvasX, canvasY - (16 * 0.3125), rectWidth, 16 + (16 * 0.3125));
 					drawCanvasRecta(tileContext, true, false, canvasX, canvasY - (16 * 0.3125), rectWidth, 16 + (16 * 0.3125));
 				} else {
-					// tileContext.fillRect(canvasX, canvasY, rectWidth, 16);
 					drawCanvasRecta(tileContext, true, false, canvasX, canvasY, rectWidth, 16);
 				}
 			}
-			if (currentMap[coordinate(x, y, currentMapTiles)] !== 1 || x === x2 - 1) {
+			if (currentMap[coord] !== 1 || x === x2 - 1) {
 				rectWidth = 0;
 				startX = -currentMapTiles * 16 * 2;
 				hasFloor = 0;
@@ -507,29 +501,15 @@ function drawMap() {
 
 	for (var y = y1; y < y2; y++) {
 		for (var x = x1; x < x2; x++) {
-			if (currentMap[coordinate(x, y, currentMapTiles)] > 1) {
-				if (currentMap[coordinate(x, y, currentMapTiles)] === 9 && currentRoom.s > -1) {
-					// tileContext.fillStyle = rColors[currentRoom.s].l;
-					// tileContext.strokeStyle = rColors[currentRoom.s].bd;
+			var coord = coordinate(x, y, currentMapTiles);
+			var tile = currentMap[coord];
+			if (tile > 1) {
+				if (tile === 9 && currentRoom.s > -1) {
 					colorize(tileContext, rColors[currentRoom.s].l, rColors[currentRoom.s].bd, 2);
-					var radius = 8;
-					tileContext.beginPath();
-					tileContext.arc((x * 16) + (16 / 2) - viewPortX, (y * 16) + (16 / 2) - viewPortY, radius, 0, 2 * Math.PI, false);
-					tileContext.fill();
-					// tileContext.lineWidth = 2;
-					tileContext.stroke();
-					tileContext.closePath();
-				} else if (currentMap[coordinate(x, y, currentMapTiles)] !== 9 && currentMap[coordinate(x, y, currentMapTiles)] !== 10) {
-					// tileContext.fillStyle = rColors[currentMap[coordinate(x, y, currentMapTiles)] - 2].l;
-					colorize(tileContext, rColors[currentMap[coordinate(x, y, currentMapTiles)] - 2].l, false, false);
-					var canvasX = (x * 16) - viewPortX;
-					var canvasY = (y * 16) - viewPortY;
-					if (hasFloor) {
-						// tileContext.fillRect(canvasX, canvasY - (16 * 0.3125), rectWidth, 16 + (16 * 0.3125));
-						drawCanvasRecta(tileContext, true, false, canvasX, canvasY - (16 * 0.3125), rectWidth, 16 + (16 * 0.3125));
-					}
-					// drawRect(y, (x * 16) - viewPortX, 16, true);
-					// drawCanvasRecta(context, fill, stroke, x, y, w, h)
+					drawCircle(tileContext, (x * 16) + (16 / 2) - viewPortX-8, (y * 16) + (16 / 2) - viewPortY, 8, true);
+				} else if (tile !== 9 && tile !== 10) {
+					colorize(tileContext, rColors[tile - 2].l, false, false);
+					drawCanvasRecta(tileContext, true, false, (x * 16) - viewPortX, (y * 16) - viewPortY - (16 * 0.3125), 16, 16 + (16 * 0.3125));
 				}
 			}
 		}
@@ -562,16 +542,6 @@ function drawMap() {
 	parseHorizontalLines(x1, y1, x2, y2, 8);
 }
 
-function drawRect(y, startX, rectWidth, hasFloor) {
-	var canvasX = startX;
-	var canvasY = (y * 16) - viewPortY;
-	if (hasFloor) {
-		tileContext.fillRect(canvasX, canvasY - (16 * 0.3125), rectWidth, 16 + (16 * 0.3125));
-	} else {
-		tileContext.fillRect(canvasX, canvasY, rectWidth, 16);
-	}
-}
-
 function parseVerticalLines(x1, y1, x2, y2, type) {
 	for (var x = x1; x < x2; x++) {
 		var rectSize = 0;
@@ -601,10 +571,8 @@ function parseVerticalLines(x1, y1, x2, y2, type) {
 					}
 					startPosition = (y * 16) - viewPortY;
 				}
-				// drawTile(x, y, currentMap, currentMapTiles, startPosition, rectSize, hasFloor);
 			}
 			if (currentMap[coordinate(x, y, currentMapTiles)] === 0 || currentMap[coordinate(x, y, currentMapTiles)] === 9 || y === y2 - 1 || mainTile > 0) {
-				// bdContext.beginPath();
 				var canvasY = startPosition;
 				var canvasX = (x * 16) - viewPortX;
 				var canvasY2 = canvasY + rectSize;
@@ -617,14 +585,10 @@ function parseVerticalLines(x1, y1, x2, y2, type) {
 					canvasY = canvasY - (16 * 0.3125);
 				}
 				if (((type === 4 && topRightTile === 0) || (type === 1 && topLeftTile === 0)) && mainTile > 0) {
-					// drawLine(startX, canvasY, startX, canvasY2 + (16 * 0.1875));
 					drawCanvasLine(bdContext, false, true, startX, canvasY, startX, canvasY2 + (16 * 0.1875));
 				} else {
-					// drawLine(startX, canvasY, startX, canvasY2);
 					drawCanvasLine(bdContext, false, true, startX, canvasY, startX, canvasY2);
 				}
-				// bdContext.closePath();
-				// bdContext.stroke();
 			}
 			if (currentMap[coordinate(x, y, currentMapTiles)] === 0 || currentMap[coordinate(x, y, currentMapTiles)] === 9 || y === y2 - 1 || mainTile > 0) {
 				rectSize = 0;
@@ -660,30 +624,22 @@ function parseHorizontalLines(x1, y1, x2, y2, type) {
 				if (startPosition === -currentMapTiles * 16 * 2) {
 					startPosition = (x * 16) - viewPortX;
 				}
-				// drawTile(x, y, currentMap, currentMapTiles, startPosition, rectSize, hasFloor);
 			}
 			if (currentMap[coordinate(x, y, currentMapTiles)] === 0 || currentMap[coordinate(x, y, currentMapTiles)] === 9 || x === x2 - 1 || mainTile > 0) {
-				// bdContext.beginPath();
 				var canvasX = startPosition;
 				var canvasY = (y * 16) - viewPortY;
 				var canvasX2 = canvasX + rectSize;
 				var canvasY2 = ((y + 1) * 16) - viewPortY;
 				if (type === 2) {
 					if (hasFloor === 1) {
-						// drawLine(canvasX, canvasY - (16 * 0.3125), canvasX2, canvasY - (16 * 0.3125));
-						// drawLine(canvasX, canvasY + (16 * 0.1875), canvasX2, canvasY + (16 * 0.1875));
 						drawCanvasLine(bdContext, false, true, canvasX, canvasY - (16 * 0.3125), canvasX2, canvasY - (16 * 0.3125));
 						drawCanvasLine(bdContext, false, true, canvasX, canvasY + (16 * 0.1875), canvasX2, canvasY + (16 * 0.1875));
 					} else {
-						// drawLine(canvasX, canvasY, canvasX2, canvasY);
 						drawCanvasLine(bdContext, false, true, canvasX, canvasY2, canvasX2, canvasY2);
 					}
 				} else if (type === 8) {
 					drawCanvasLine(bdContext, false, true, canvasX, canvasY2, canvasX2, canvasY2);
-					// drawLine(canvasX, canvasY2, canvasX2, canvasY2);
 				}
-				// bdContext.closePath();
-				// bdContext.stroke();
 			}
 			if (currentMap[coordinate(x, y, currentMapTiles)] === 0 || currentMap[coordinate(x, y, currentMapTiles)] === 9 || x === x2 - 1 || mainTile > 0) {
 				rectSize = 0;
@@ -694,44 +650,11 @@ function parseHorizontalLines(x1, y1, x2, y2, type) {
 	}
 }
 
-
-function drawLine(startX, startY, endX, endY) {
-	bdContext.moveTo(startX, startY);
-	bdContext.lineTo(endX, endY);
-}
-
-var faviconEl = document.getElementById('f');
-var canvas = document.createElement('canvas');
-canvas.height = 16;
-canvas.width = 16;
-var ctx = canvas.getContext('2d');
-// (function() {
-// 	// faviconEl.rel = 'icon';
-// 	// faviconEl.type = 'image/png'; //required for chromium
-// 	// document.head.appendChild(faviconEl);
-// 	var start = new Date().getTime();
-// 	ctx.font = '5pt arial';
-// 	(function() {
-// 		parseMinimapViewport();
-// 		miniMapPlayerX = (currentRoom.x * 16) + (modulus(modulus(modulus(player.x), 10), 1) * 16);
-// 		miniMapPlayerY = (currentRoom.y * 16) + (modulus(modulus(modulus(player.y), 10), 1) * 16);
-// 		minimapCanvas.width = 150;
-// 		minimapCanvas.height = 150;
-// 		minimapContext.clearRect(0, 0, minimapCanvas.width, minimapCanvas.height);
-// 		drawnDoors.length = 0;
-// 		minimapContext.lineWidth = 2;
-// 		minimapContext.fillStyle = "#000";
-// 		forEachRoom("bg", "bd", function(room, roomX, roomY) {
-// 			if (room.v) {
-// 				minimapContext.beginPath();
-// 				minimapContext.rect(roomX / 16, roomY / 16, room.mw, room.mh);
-// 				minimapContext.fill();
-// 				minimapContext.stroke();
-// 				minimapContext.closePath();
-// 			}
-// 		});
-// 	})();
-// })();
+// var faviconEl = document.getElementById('f');
+// var canvas = document.createElement('canvas');
+// canvas.height = 16;
+// canvas.width = 16;
+// var ctx = canvas.getContext('2d');
 var miniMapPlayerX = 0;
 var miniMapPlayerY = 0;
 
@@ -743,8 +666,6 @@ function drawWorld() {
 	miniMapPlayerY = (currentRoom.y * 16) + (modulus(modulus(modulus(player.y), 10), 1) * 16);
 	minimapContext.clearRect(0, 0, minimapCanvas.width, minimapCanvas.height);
 	drawnDoors.length = 0;
-	// minimapContext.lineWidth = 2;
-	// minimapContext.fillStyle = "#000";
 	colorize(minimapContext, "#000", false, 2);
 	for (var r = 0; r < world.r.length; r++) {
 		for (var i = 0; i < world.r[r].rooms.length; i++) {
@@ -752,48 +673,27 @@ function drawWorld() {
 			var roomX = (room.x * 16) - miniViewPortX;
 			var roomY = (room.y * 16) - miniViewPortY;
 			if (roomX + (room.mw * 16) > 0 && roomY + (room.mh * 16) > 0 && roomX < minimapCanvas.width && roomY < minimapCanvas.height) {
-				// minimapContext.beginPath();
-				// minimapContext.rect(roomX, roomY, room.mw * 16, room.mh * 16);
-				// minimapContext.fill();
-				// minimapContext.closePath();
 				drawCanvasRecta(minimapContext, true, false, roomX, roomY, room.mw * 16, room.mh * 16);
 			}
 		}
 	}
 	forEachRoom("bg", "bd", function(room, roomX, roomY) {
 		if (room.v) {
-			// minimapContext.beginPath();
-			// minimapContext.rect(roomX, roomY, room.mw * 16, room.mh * 16);
-			// minimapContext.fill();
-			// minimapContext.stroke();
-			// minimapContext.closePath();
 			drawCanvasRecta(minimapContext, true, true, roomX, roomY, room.mw * 16, room.mh * 16);
 		}
 	}, minimapContext);
 	forEachRoom("bd", 0, function(room, roomX, roomY) {
 		if (room.r.u && !room.v) {
-			// minimapContext.beginPath();
-			// minimapContext.rect(roomX, roomY, room.mw * 16, room.mh * 16);
-			// minimapContext.fill();
-			// minimapContext.stroke();
-			// minimapContext.closePath();
 			drawCanvasRecta(minimapContext, true, false, roomX, roomY, room.mw * 16, room.mh * 16);
 		}
 	}, minimapContext);
-	ctx.clearRect(0, 0, 16, 16);
-	forEachRoom("bg", "bd", function(room, roomX, roomY) {
-		if (room.v) {
-			// roomX = roomX - (canvas.width/2);
-			// roomY = roomY - (canvas.height/2);
-			// ctx.beginPath();
-			// ctx.rect(roomX / 16 * 2, roomY / 16 * 2, room.mw * 2, room.mh * 2);
-			// ctx.fill();
-			// ctx.stroke();
-			// ctx.closePath();
-			drawCanvasRecta(ctx, true, true, roomX / 16 * 2, roomY / 16 * 2, room.mw * 2, room.mh * 2);
-		}
-	}, ctx);
-	faviconEl.href = canvas.toDataURL();
+	// ctx.clearRect(0, 0, 16, 16);
+	// forEachRoom("bg", "bd", function(room, roomX, roomY) {
+		// if (room.v) {
+			// drawCanvasRecta(ctx, true, true, roomX / 16 * 2, roomY / 16 * 2, room.mw * 2, room.mh * 2);
+		// }
+	// }, ctx);
+	// faviconEl.href = canvas.toDataURL();
 	forEachRoom(0, "bg", drawDoors, minimapContext);
 	forEachRoom(0, 0, drawIcons, minimapContext);
 	drawPlayer();
@@ -801,19 +701,7 @@ function drawWorld() {
 
 function forEachRoom(fillStyle, strokeStyle, fn, context) {
 	var canvasContext = context || minimapContext;
-	// fillStyle = fillStyle || "rgba(0,0,0,0)";
-	// strokeStyle = strokeStyle || "rgba(0,0,0,0)";
 	for (var r = 0; r < world.r.length; r++) {
-		// if (typeof fillStyle === "string") {
-		// 	canvasContext.fillStyle = world.r[r].color[fillStyle];
-		// } else {
-		// 	canvasContext.fillStyle = "rgba(0,0,0,0)";
-		// }
-		// if (typeof strokeStyle === "string") {
-		// 	canvasContext.strokeStyle = world.r[r].color[strokeStyle];
-		// } else {
-		// 	canvasContext.strokeStyle = "rgba(0,0,0,0)";
-		// }
 		colorize(canvasContext, world.r[r].color[fillStyle] || "rgba(0,0,0,0)", world.r[r].color[strokeStyle] || "rgba(0,0,0,0)", false);
 		for (var i = 0; i < world.r[r].rooms.length; i++) {
 			var room = world.r[r].rooms[i];
@@ -834,8 +722,6 @@ function drawIcons(room) {
 		for (var i = 0; i < room.d.length; i++) {
 			door = room.d[i];
 			if (door.dt > -1) {
-				color = rColors[door.dt].l;
-				color2 = rColors[door.dt].bd;
 				var xModifier = 0;
 				var yModifier = 0;
 				if (door.dir === "N") {
@@ -853,29 +739,25 @@ function drawIcons(room) {
 					xModifier = 13;
 					yModifier = 8;
 				}
-				drawCircle(16 * door.x + xModifier, 16 * door.y + yModifier, color, color2);
+				colorize(minimapContext, rColors[door.dt].l, rColors[door.dt].bd, 2);
+				drawCircle(minimapContext, (16 * door.x) + xModifier - miniViewPortX, (16 * door.y) + yModifier - miniViewPortY, 3, true);
 			}
 		}
 		if (room.s > -1) {
-			color = rColors[room.s].l;
-			color2 = rColors[room.s].bd;
-			drawCircle(16 * (room.x + room.mw / 2) - 3, 16 * (room.y + room.mh / 2), color2, color);
+			colorize(minimapContext, rColors[room.s].bd, rColors[room.s].l, 2);
+			drawCircle(minimapContext, (16 * (room.x + room.mw / 2)) - 3 - miniViewPortX, (16 * (room.y + room.mh / 2)) - miniViewPortY, 3, true);
 		}
 	}
 }
 
-function drawCircle(centerX, centerY, color, bd) {
-	var radius = 3;
-	minimapContext.beginPath();
-	minimapContext.arc(centerX + radius - miniViewPortX, centerY - miniViewPortY, radius, 0, 2 * Math.PI, false);
-	minimapContext.fillStyle = color;
-	minimapContext.fill();
+function drawCircle(context, centerX, centerY, radius, bd) {
+	context.beginPath();
+	context.arc(centerX + radius, centerY, radius, 0, 2 * Math.PI, false);
+	context.fill();
 	if (bd) {
-		minimapContext.lineWidth = 2;
-		minimapContext.strokeStyle = bd;
-		minimapContext.stroke();
+		context.stroke();
 	}
-	minimapContext.closePath();
+	context.closePath();
 }
 
 var drawnDoors = [];
@@ -888,37 +770,25 @@ function drawDoors(room) {
 			var ID = room.x + "-" + room.y + "-" + door.r2.x + "-" + door.r2.y;
 			var ID2 = door.r2.x + "-" + door.r2.y + "-" + room.x + "-" + room.y;
 			if (drawnDoors.indexOf(ID2) === -1 && drawnDoors.indexOf(ID) === -1) {
-				var doorX = 16 * door.x;
-				var doorY = 16 * door.y;
+				var doorX = (16 * door.x) - miniViewPortX;
+				var doorY = (16 * door.y) - miniViewPortY;
 
 				if (door.dir === "N") {
-					// drawLine2(doorX + 4, doorY, doorX + 16 - 4, doorY);
-					drawCanvasLine(minimapContext, false, true, doorX + 4, doorY, doorX + 16 - 4, doorY);
+					drawCanvasLine(minimapContext, true, true, doorX + 4, doorY, doorX + 16 - 4, doorY);
 				}
 				if (door.dir === "S") {
-					// drawLine2(doorX + 4, 16 * (door.y + 1), doorX + 16 - 4, 16 * (door.y + 1));
-					drawCanvasLine(minimapContext, false, true, doorX + 4, 16 * (door.y + 1), doorX + 16 - 4, 16 * (door.y + 1));
+					drawCanvasLine(minimapContext, true, true, doorX + 4, (16 * (door.y + 1)) - miniViewPortY, doorX + 16 - 4, (16 * (door.y + 1)) - miniViewPortY);
 				}
 				if (door.dir === "W") {
-					// drawLine2(doorX, doorY + 4, doorX, doorY + 16 - 4);
-					drawCanvasLine(minimapContext, false, true, doorX, doorY + 4, doorX, doorY + 16 - 4);
+					drawCanvasLine(minimapContext, true, true, doorX, doorY + 4, doorX, doorY + 16 - 4);
 				}
 				if (door.dir === "E") {
-					// drawLine2(16 * (door.x + 1), doorY + 4, 16 * (door.x + 1), doorY + 16 - 4);
-					drawCanvasLine(minimapContext, false, true, 16 * (door.x + 1), doorY + 4, 16 * (door.x + 1), doorY + 16 - 4);
+					drawCanvasLine(minimapContext, true, true, (16 * (door.x + 1)) - miniViewPortX, doorY + 4, (16 * (door.x + 1)) - miniViewPortX, doorY + 16 - 4);
 				}
 				drawnDoors.push(ID);
 			}
 		}
 	}
-}
-
-function drawLine2(startX, startY, endX, endY) {
-	minimapContext.beginPath();
-	minimapContext.moveTo(startX - miniViewPortX, startY - miniViewPortY);
-	minimapContext.lineTo(endX - miniViewPortX, endY - miniViewPortY);
-	minimapContext.stroke();
-	minimapContext.closePath();
 }
 
 var animationLoopProgress = 0;
@@ -928,37 +798,18 @@ var lastFrame = 0;
 
 function fillKeys() {
 	for (var i = 0; i < player.keys.length; i++) {
-		// playerContext.beginPath();
-		// playerContext.fillStyle = rColors[player.keys[i]].l;
-		// playerContext.rect(player.x - viewPortX+1, player.y - viewPortY + ((4 - i) * player.h / 5), player.w-2, (player.h / 5)-1);
-		// playerContext.fill();
-		// playerContext.closePath();
 		colorize(playerContext, rColors[player.keys[i]].l, false, false);
 		drawCanvasRecta(playerContext, true, false, player.x - viewPortX + 1, player.y - viewPortY + ((4 - i) * player.h / 5), player.w - 2, (player.h / 5) - 1);
 	}
 }
 
 function drawPlayer() {
-	// playerContext.fillStyle = "#000000";
 	for (var i = 0; i < entities.length; i++) {
 		var entity = entities[i];
 		var red = (15 - ((15) * (player.ῼ / player.mῼ))).toString(16);
-		// playerContext.beginPath();
-		// playerContext.fillStyle = 'rgba(0,0,0,0.1)';
-		// colorize(miniMapIconsContext, 'rgba(0,0,0,0.1)', false, 1);
-		// playerContext.rect(entity.x - viewPortX, entity.y - viewPortY, entity.w, entity.h);
-		// playerContext.fill();
-		// playerContext.closePath();
 		colorize(playerContext, 'rgba(0,0,0,0.1)', '#' + red + red + '0000', 1);
 		drawCanvasRecta(playerContext, true, true, entity.x - viewPortX, entity.y - viewPortY, entity.w, entity.h);
 		fillKeys();
-		// playerContext.beginPath();
-		// playerContext.lineWidth = 1;
-		// playerContext.strokeStyle = '#' + red + red + '0000';
-		// playerContext.fillStyle = 'rgba(0,0,0,0)';
-		// playerContext.rect(entity.x - viewPortX, entity.y - viewPortY, entity.w, entity.h);
-		// playerContext.stroke();
-		// playerContext.closePath();
 	}
 	animationLoopProgress += 2 * (dt / 1000);
 	animationLoopProgress = animationLoopProgress % 2;
@@ -967,59 +818,27 @@ function drawPlayer() {
 		frame = 0;
 	}
 	if (lastFrame !== frame) {
-		// miniMapIconsContext.fillStyle = "rgba(255,255,0," + (0.6 * frame) + ")";
-		// miniMapIconsContext.strokeStyle = "rgba(255,255,0," + (0.8 * frame) + ")";
 		colorize(miniMapIconsContext, "rgba(255,255,0," + (0.6 * frame) + ")", "rgba(255,255,0," + (0.8 * frame) + ")", false);
 	}
 	if (miniMapIconsCanvas.width !== minimapCanvas.width) {
 		miniMapIconsCanvas.width = minimapCanvas.width;
 		miniMapIconsCanvas.height = minimapCanvas.height;
-		// miniMapIconsContext.fillStyle = "rgba(255,255,0," + (0.6 * frame) + ")";
-		// miniMapIconsContext.strokeStyle = "rgba(255,255,0," + (0.8 * frame) + ")";
 		colorize(miniMapIconsContext, "rgba(255,255,0," + (0.6 * frame) + ")", "rgba(255,255,0," + (0.8 * frame) + ")", false);
 	}
 	if (!initPlayerCanvas) {
 		colorize(miniMapIconsContext, false, false, 1);
-		// miniMapIconsContext.lineWidth = 1;
 		initPlayerCanvas = true;
 	}
 	miniMapIconsContext.clearRect(0, 0, miniMapIconsCanvas.width, miniMapIconsCanvas.height);
-	// miniMapIconsContext.beginPath();
-	// miniMapIconsContext.rect(miniMapPlayerX - miniViewPortX, miniMapPlayerY - miniViewPortY, 16, 16);
-	// miniMapIconsContext.fill();
-	// miniMapIconsContext.stroke();
-	// miniMapIconsContext.closePath();
 	drawCanvasRecta(miniMapIconsContext, true, true, miniMapPlayerX - miniViewPortX, miniMapPlayerY - miniViewPortY, 16, 16);
-	// ctx.beginPath();
-	// ctx.fillStyle = "rgba(200,200,255,1)";
-	// ctx.strokeStyle = "rgba(200,200,255,1)";
-	colorize(ctx, "rgba(200,200,255,1)", "rgba(200,200,255,1)", false);
-	drawCanvasRecta(ctx, true, true, (miniMapPlayerX - miniViewPortX) / 16 * 2, (miniMapPlayerY - miniViewPortY) / 16 * 2, 2, 2);
-	// ctx.rect((miniMapPlayerX - miniViewPortX) / 16 * 2, (miniMapPlayerY - miniViewPortY) / 16 * 2, 2, 2);
-	// ctx.fill();
-	// ctx.stroke();
-	// ctx.closePath();
+	// colorize(ctx, "rgba(200,200,255,1)", "rgba(200,200,255,1)", false);
+	// drawCanvasRecta(ctx, true, true, (miniMapPlayerX - miniViewPortX) / 16 * 2, (miniMapPlayerY - miniViewPortY) / 16 * 2, 2, 2);
 	lastFrame = frame;
-	// drawFrontiers();
 }
 
 function drawArrow() {
 	if (player.keys.length > 0) {
 		colorize(playerContext, rColors[player.keys[selectedColor]].l, '#000000', false);
-		// playerContext.fillStyle = rColors[player.keys[selectedColor]].l;
-		// playerContext.strokeStyle = '#000000';
-		// playerContext.save();
-		// playerContext.translate(player.x - viewPortX + (player.w / 2), player.y - viewPortY + (player.h / 2));
-		// playerContext.rotate(aToPlayer);
-		// playerContext.beginPath();
-		// playerContext.moveTo(10 + player.w, 0);
-		// playerContext.lineTo(0 + player.w, -10);
-		// playerContext.lineTo(0 + player.w, 10);
-		// playerContext.lineTo(10 + player.w, 0);
-		// playerContext.fill();
-		// playerContext.stroke();
-		// playerContext.closePath();
-		// playerContext.restore();
 		moveContext(playerContext, player.x - viewPortX + (player.w / 2), player.y - viewPortY + (player.h / 2), aToPlayer, function() {
 			drawCanvasLine(playerContext, true, true, 10 + player.w, 0, 0 + player.w, -10, 0 + player.w, 10, 10 + player.w, 0);
 		});
@@ -1029,24 +848,10 @@ function drawArrow() {
 function drawBullets() {
 	for (var i = 0; i < bullets.length; i++) {
 		var bullet = bullets[i];
-		// playerContext.fillStyle = rColors[bullet.key].l;
-		// playerContext.strokeStyle = rColors[bullet.key].bd;
 		colorize(playerContext, rColors[bullet.key].l, rColors[bullet.key].bd, 1);
-		// playerContext.lineWidth = 1;
 		moveContext(playerContext, bullet.x - viewPortX, bullet.y - viewPortY, bullet.a, function() {
 			drawCanvasRecta(playerContext, true, true, 0, 0, 10, 2);
 		});
-		// playerContext.save();
-		// playerContext.translate(bullet.x - viewPortX, bullet.y - viewPortY);
-		// playerContext.rotate(bullet.a);
-		// playerContext.beginPath();
-		// playerContext.rect(0, 0, 10, 2);
-		// playerContext.fill();
-		// playerContext.moveTo(0, 0);
-		// playerContext.lineTo(-10, 0);
-		// playerContext.stroke();
-		// playerContext.closePath();
-		// playerContext.restore();
 	}
 }
 
@@ -1057,89 +862,34 @@ function drawDoorArrow(door, doorX, doorY) {
 		fillStyle = rColors[door.dt].l;
 	}
 	colorize(tileContext, fillStyle, strokeStyle, false);
-	// tileContext.save();
-	var rotation = 0;
 	var xOffset = 16 * 10;
 	var yOffset = (16 * 10) / 2;
 	if (door.dir === "N") {
-		rotation = 90;
+		xOffset = yOffset;
 		yOffset = 0;
-		xOffset = (16 * 10) / 2;
 	}
 	if (door.dir === "W") {
-		rotation = 180;
 		xOffset = 0;
-		yOffset = (16 * 10) / 2;
 	}
 	if (door.dir === "S") {
-		rotation = 270;
-		xOffset = (16 * 10) / 2;
+		xOffset = yOffset;
 		yOffset = 16 * 10;
 	}
-	// tileContext.translate((doorX * 16 * 10) - viewPortX + xOffset, (doorY * 16 * 10) - viewPortY + yOffset);
-	// tileContext.rotate(rotation * 180 / Math.PI);
-	// tileContext.beginPath();
 	moveContext(tileContext, (doorX * 16 * 10) - viewPortX + xOffset, (doorY * 16 * 10) - viewPortY + yOffset, false, function() {
 
 		if (door.dir === "N") {
-			// tileContext.moveTo(0, -20);
-			// tileContext.lineTo(10, -10);
-			// tileContext.lineTo(-10, -10);
-			// tileContext.lineTo(0, -20);
 			drawCanvasLine(tileContext, true, true, 0, -20, 10, -10, -10, -10, 0, -20);
 		}
 		if (door.dir === "W") {
-			// tileContext.moveTo(-20, 0);
-			// tileContext.lineTo(-10, -10);
-			// tileContext.lineTo(-10, 10);
-			// tileContext.lineTo(-20, 0);
 			drawCanvasLine(tileContext, true, true, -20, 0, -10, -10, -10, 10, -20, 0);
 		}
 		if (door.dir === "S") {
-			// tileContext.moveTo(0, 20);
-			// tileContext.lineTo(10, 10);
-			// tileContext.lineTo(-10, 10);
-			// tileContext.lineTo(0, 20);
 			drawCanvasLine(tileContext, true, true, 0, 20, 10, 10, -10, 10, 0, 20);
 		}
 		if (door.dir === "E") {
-			// tileContext.moveTo(20, 0);
-			// tileContext.lineTo(10, -10);
-			// tileContext.lineTo(10, 10);
-			// tileContext.lineTo(20, 0);
 			drawCanvasLine(tileContext, true, true, 20, 0, 10, -10, 10, 10, 20, 0);
 		}
 	})
-	// tileContext.moveTo(10, 0);
-	// tileContext.lineTo(0, -10);
-	// tileContext.lineTo(0, 10);
-	// tileContext.lineTo(10, 0);
-	// tileContext.fill();
-	// tileContext.stroke();
-	// tileContext.closePath();
-	// tileContext.restore();
-}
-
-function drawFrontiers() {
-	var frontier = null;
-	var i = 0;
-	// miniMapIconsContext.fillStyle = "rgba(255,255,255,0.3)";
-	colorize(miniMapIconsContext, "rgba(255,255,255,0.3)", false, false);
-	// var f = world.f;
-	var f = getFrontiersForAllRooms(world.r[2]);
-	while (i < f.length) {
-		frontier = f[i];
-		miniMapIconsContext.fillRect(frontier.x * 16, frontier.y * 16, 16, 16);
-		// drawRecta(Room(frontier.x, frontier.y, 1, 1, null));
-		// miniMapIconsContext.beginPath();
-		// // miniMapIconsContext.fillStyle = rColors[player.keys[i]].l;
-		// miniMapIconsContext.rect((frontier.x * 16) - miniViewPortX, (frontier.y * 16) - miniViewPortY, 16, 16);
-		// miniMapIconsContext.fill();
-		// miniMapIconsContext.stroke();
-		// miniMapIconsContext.closePath();
-		drawCanvasRecta(miniMapIconsContext, fill, stroke, (frontier.x * 16) - miniViewPortX, (frontier.y * 16) - miniViewPortY, 16, 16);
-		i++;
-	}
 }
 
 function colorize(context, fillStyle, strokeStyle, lineWidth) {
@@ -1150,7 +900,7 @@ function colorize(context, fillStyle, strokeStyle, lineWidth) {
 		context.strokeStyle = strokeStyle;
 	}
 	if (lineWidth !== false) {
-		playerContext.lineWidth = lineWidth;
+		context.lineWidth = lineWidth;
 	}
 }
 
@@ -1585,402 +1335,402 @@ function Bullet(x, y, a, key) {
 		key: key
 	}
 }
-var songJSON = {
-	"songLen": 29,
-	"songData": [{
-		"oo": 7,
-		"od": 0,
-		"oe": 0,
-		"ox": 0,
-		"ov": 127,
-		"ow": 1,
-		"po": 6,
-		"pd": 0,
-		"pe": 9,
-		"px": 0,
-		"pv": 93,
-		"pw": 1,
-		"nf": 0,
-		"ea": 137,
-		"es": 2000,
-		"er": 4611,
-		"em": 192,
-		"ff": 1,
-		"fq": 982,
-		"fr": 89,
-		"ft": 6,
-		"fm": 25,
-		"fp": 6,
-		"ft": 77,
-		"lf": 0,
-		"lq": 1,
-		"lr": 3,
-		"la": 69,
-		"lw": 0,
-		"p": [
-			1,
-			1,
-			1,
-			1,
-			2,
-			2
-		],
-		"c": [{
-			"n": [
-				0,
-				135,
-				135,
-				135,
-				135,
-				135,
-				135,
-				135,
-				135,
-				135,
-				135,
-				135,
-				135,
-				135,
-				0,
-				0,
-				135,
-				140,
-				140,
-				0,
-				0,
-				0,
-				0,
-				140,
-				137,
-				0,
-				135,
-				135,
-				135,
-				0,
-				0,
-				0
-			]
-		}, {
-			"n": [
-				0,
-				142,
-				142,
-				142,
-				142,
-				142,
-				142,
-				142,
-				142,
-				142,
-				142,
-				142,
-				142,
-				142,
-				0,
-				0,
-				142,
-				147,
-				147,
-				0,
-				0,
-				0,
-				0,
-				147,
-				144,
-				0,
-				142,
-				142,
-				142,
-				0,
-				0,
-				0
-			]
-		}]
-	}, {
-		"oo": 7,
-		"od": 0,
-		"oe": 0,
-		"ox": 0,
-		"ov": 192,
-		"ow": 2,
-		"po": 7,
-		"pd": 0,
-		"pe": 0,
-		"px": 0,
-		"pv": 201,
-		"pw": 3,
-		"nf": 0,
-		"ea": 100,
-		"es": 150,
-		"er": 13636,
-		"em": 191,
-		"ff": 2,
-		"fq": 5839,
-		"fr": 254,
-		"ft": 6,
-		"fm": 121,
-		"fp": 6,
-		"ft": 147,
-		"lf": 0,
-		"lq": 1,
-		"lr": 6,
-		"la": 195,
-		"lw": 0,
-		"p": [
-			2,
-			2,
-			2,
-			2,
-			3,
-			3
-		],
-		"c": [{
-			"n": [
-				135,
-				0,
-				135,
-				0,
-				0,
-				135,
-				0,
-				135,
-				135,
-				0,
-				135,
-				0,
-				0,
-				135,
-				0,
-				135,
-				135,
-				0,
-				135,
-				0,
-				0,
-				135,
-				0,
-				135,
-				135,
-				0,
-				135,
-				0,
-				0,
-				135,
-				0,
-				135
-			]
-		}, {
-			"n": [
-				135,
-				0,
-				0,
-				0,
-				135,
-				0,
-				0,
-				0,
-				135,
-				0,
-				0,
-				0,
-				135,
-				0,
-				0,
-				0,
-				135,
-				0,
-				0,
-				0,
-				135,
-				0,
-				0,
-				0,
-				135,
-				0,
-				0,
-				0,
-				135,
-				0,
-				0,
-				0
-			]
-		}, {
-			"n": [
-				149,
-				0,
-				0,
-				0,
-				149,
-				0,
-				0,
-				0,
-				149,
-				0,
-				0,
-				0,
-				149,
-				0,
-				0,
-				0,
-				149,
-				0,
-				0,
-				0,
-				149,
-				0,
-				0,
-				0,
-				149,
-				0,
-				0,
-				0,
-				149,
-				0,
-				0,
-				0
-			]
-		}]
-	}, {
-		"oo": 7,
-		"od": 0,
-		"oe": 0,
-		"ox": 0,
-		"ov": 192,
-		"ow": 2,
-		"po": 7,
-		"pd": 0,
-		"pe": 0,
-		"px": 0,
-		"pv": 201,
-		"pw": 3,
-		"nf": 0,
-		"ea": 100,
-		"es": 150,
-		"er": 13636,
-		"em": 191,
-		"ff": 2,
-		"fq": 5839,
-		"fr": 254,
-		"ft": 6,
-		"fm": 121,
-		"fp": 6,
-		"ft": 147,
-		"lf": 0,
-		"lq": 1,
-		"lr": 6,
-		"la": 195,
-		"lw": 0,
-		"p": [
-			1,
-			1,
-			1,
-			1,
-			2,
-			2
-		],
-		"c": [{
-			"n": [
-				154,
-				0,
-				151,
-				0,
-				0,
-				156,
-				152,
-				0,
-				0,
-				154,
-				0,
-				0,
-				151,
-				0,
-				156,
-				0,
-				0,
-				152,
-				0,
-				0,
-				154,
-				0,
-				0,
-				151,
-				0,
-				0,
-				154,
-				154,
-				0,
-				0,
-				0,
-				0
-			]
-		}, {
-			"n": [
-				161,
-				0,
-				158,
-				0,
-				0,
-				163,
-				159,
-				0,
-				0,
-				161,
-				0,
-				0,
-				158,
-				0,
-				163,
-				0,
-				0,
-				159,
-				0,
-				0,
-				161,
-				0,
-				0,
-				158,
-				0,
-				0,
-				161,
-				161,
-				0,
-				0,
-				0,
-				0
-			]
-		}]
-	}],
-	"rowLen": 5606,
-	"endPattern": 7
-};
+// var songJSON = {
+// 	"songLen": 29,
+// 	"songData": [{
+// 		"oo": 7,
+// 		"od": 0,
+// 		"oe": 0,
+// 		"ox": 0,
+// 		"ov": 127,
+// 		"ow": 1,
+// 		"po": 6,
+// 		"pd": 0,
+// 		"pe": 9,
+// 		"px": 0,
+// 		"pv": 93,
+// 		"pw": 1,
+// 		"nf": 0,
+// 		"ea": 137,
+// 		"es": 2000,
+// 		"er": 4611,
+// 		"em": 192,
+// 		"ff": 1,
+// 		"fq": 982,
+// 		"fr": 89,
+// 		"ft": 6,
+// 		"fm": 25,
+// 		"fp": 6,
+// 		"ft": 77,
+// 		"lf": 0,
+// 		"lq": 1,
+// 		"lr": 3,
+// 		"la": 69,
+// 		"lw": 0,
+// 		"p": [
+// 			1,
+// 			1,
+// 			1,
+// 			1,
+// 			2,
+// 			2
+// 		],
+// 		"c": [{
+// 			"n": [
+// 				0,
+// 				135,
+// 				135,
+// 				135,
+// 				135,
+// 				135,
+// 				135,
+// 				135,
+// 				135,
+// 				135,
+// 				135,
+// 				135,
+// 				135,
+// 				135,
+// 				0,
+// 				0,
+// 				135,
+// 				140,
+// 				140,
+// 				0,
+// 				0,
+// 				0,
+// 				0,
+// 				140,
+// 				137,
+// 				0,
+// 				135,
+// 				135,
+// 				135,
+// 				0,
+// 				0,
+// 				0
+// 			]
+// 		}, {
+// 			"n": [
+// 				0,
+// 				142,
+// 				142,
+// 				142,
+// 				142,
+// 				142,
+// 				142,
+// 				142,
+// 				142,
+// 				142,
+// 				142,
+// 				142,
+// 				142,
+// 				142,
+// 				0,
+// 				0,
+// 				142,
+// 				147,
+// 				147,
+// 				0,
+// 				0,
+// 				0,
+// 				0,
+// 				147,
+// 				144,
+// 				0,
+// 				142,
+// 				142,
+// 				142,
+// 				0,
+// 				0,
+// 				0
+// 			]
+// 		}]
+// 	}, {
+// 		"oo": 7,
+// 		"od": 0,
+// 		"oe": 0,
+// 		"ox": 0,
+// 		"ov": 192,
+// 		"ow": 2,
+// 		"po": 7,
+// 		"pd": 0,
+// 		"pe": 0,
+// 		"px": 0,
+// 		"pv": 201,
+// 		"pw": 3,
+// 		"nf": 0,
+// 		"ea": 100,
+// 		"es": 150,
+// 		"er": 13636,
+// 		"em": 191,
+// 		"ff": 2,
+// 		"fq": 5839,
+// 		"fr": 254,
+// 		"ft": 6,
+// 		"fm": 121,
+// 		"fp": 6,
+// 		"ft": 147,
+// 		"lf": 0,
+// 		"lq": 1,
+// 		"lr": 6,
+// 		"la": 195,
+// 		"lw": 0,
+// 		"p": [
+// 			2,
+// 			2,
+// 			2,
+// 			2,
+// 			3,
+// 			3
+// 		],
+// 		"c": [{
+// 			"n": [
+// 				135,
+// 				0,
+// 				135,
+// 				0,
+// 				0,
+// 				135,
+// 				0,
+// 				135,
+// 				135,
+// 				0,
+// 				135,
+// 				0,
+// 				0,
+// 				135,
+// 				0,
+// 				135,
+// 				135,
+// 				0,
+// 				135,
+// 				0,
+// 				0,
+// 				135,
+// 				0,
+// 				135,
+// 				135,
+// 				0,
+// 				135,
+// 				0,
+// 				0,
+// 				135,
+// 				0,
+// 				135
+// 			]
+// 		}, {
+// 			"n": [
+// 				135,
+// 				0,
+// 				0,
+// 				0,
+// 				135,
+// 				0,
+// 				0,
+// 				0,
+// 				135,
+// 				0,
+// 				0,
+// 				0,
+// 				135,
+// 				0,
+// 				0,
+// 				0,
+// 				135,
+// 				0,
+// 				0,
+// 				0,
+// 				135,
+// 				0,
+// 				0,
+// 				0,
+// 				135,
+// 				0,
+// 				0,
+// 				0,
+// 				135,
+// 				0,
+// 				0,
+// 				0
+// 			]
+// 		}, {
+// 			"n": [
+// 				149,
+// 				0,
+// 				0,
+// 				0,
+// 				149,
+// 				0,
+// 				0,
+// 				0,
+// 				149,
+// 				0,
+// 				0,
+// 				0,
+// 				149,
+// 				0,
+// 				0,
+// 				0,
+// 				149,
+// 				0,
+// 				0,
+// 				0,
+// 				149,
+// 				0,
+// 				0,
+// 				0,
+// 				149,
+// 				0,
+// 				0,
+// 				0,
+// 				149,
+// 				0,
+// 				0,
+// 				0
+// 			]
+// 		}]
+// 	}, {
+// 		"oo": 7,
+// 		"od": 0,
+// 		"oe": 0,
+// 		"ox": 0,
+// 		"ov": 192,
+// 		"ow": 2,
+// 		"po": 7,
+// 		"pd": 0,
+// 		"pe": 0,
+// 		"px": 0,
+// 		"pv": 201,
+// 		"pw": 3,
+// 		"nf": 0,
+// 		"ea": 100,
+// 		"es": 150,
+// 		"er": 13636,
+// 		"em": 191,
+// 		"ff": 2,
+// 		"fq": 5839,
+// 		"fr": 254,
+// 		"ft": 6,
+// 		"fm": 121,
+// 		"fp": 6,
+// 		"ft": 147,
+// 		"lf": 0,
+// 		"lq": 1,
+// 		"lr": 6,
+// 		"la": 195,
+// 		"lw": 0,
+// 		"p": [
+// 			1,
+// 			1,
+// 			1,
+// 			1,
+// 			2,
+// 			2
+// 		],
+// 		"c": [{
+// 			"n": [
+// 				154,
+// 				0,
+// 				151,
+// 				0,
+// 				0,
+// 				156,
+// 				152,
+// 				0,
+// 				0,
+// 				154,
+// 				0,
+// 				0,
+// 				151,
+// 				0,
+// 				156,
+// 				0,
+// 				0,
+// 				152,
+// 				0,
+// 				0,
+// 				154,
+// 				0,
+// 				0,
+// 				151,
+// 				0,
+// 				0,
+// 				154,
+// 				154,
+// 				0,
+// 				0,
+// 				0,
+// 				0
+// 			]
+// 		}, {
+// 			"n": [
+// 				161,
+// 				0,
+// 				158,
+// 				0,
+// 				0,
+// 				163,
+// 				159,
+// 				0,
+// 				0,
+// 				161,
+// 				0,
+// 				0,
+// 				158,
+// 				0,
+// 				163,
+// 				0,
+// 				0,
+// 				159,
+// 				0,
+// 				0,
+// 				161,
+// 				0,
+// 				0,
+// 				158,
+// 				0,
+// 				0,
+// 				161,
+// 				161,
+// 				0,
+// 				0,
+// 				0,
+// 				0
+// 			]
+// 		}]
+// 	}],
+// 	"rowLen": 5606,
+// 	"endPattern": 7
+// };
 
-var songGen = MusicGenerator(songJSON);
-var source, sourceBuffer;
-createAudioBuffer(songGen, function(buffer) {
-	sourceBuffer = buffer;
-	toggle();
-});
-var playing = false;
-var startOffset = 0;
-var startTime = 0;
+// var songGen = MusicGenerator(songJSON);
+// var source, sourceBuffer;
+// createAudioBuffer(songGen, function(buffer) {
+// 	sourceBuffer = buffer;
+// 	toggle();
+// });
+// var playing = false;
+// var startOffset = 0;
+// var startTime = 0;
 
-function toggle() {
-	if (playing) {
-		source.stop();
-		// Measure how much time passed since the last pause.
-		startOffset += audioCtx.currentTime - startTime;
-	} else {
-		startTime = audioCtx.currentTime;
-		source = audioCtx.createBufferSource();
-		// Connect graph
-		source.buffer = sourceBuffer;
-		source.loop = true;
-		source.connect(audioCtx.destination);
-		// Start playback, but make sure we stay in bound of the buffer.
-		source.start(0, startOffset % sourceBuffer.duration);
-	}
-	playing = !playing;
-};
+// function toggle() {
+// 	if (playing) {
+// 		source.stop();
+// 		// Measure how much time passed since the last pause.
+// 		startOffset += audioCtx.currentTime - startTime;
+// 	} else {
+// 		startTime = audioCtx.currentTime;
+// 		source = audioCtx.createBufferSource();
+// 		// Connect graph
+// 		source.buffer = sourceBuffer;
+// 		source.loop = true;
+// 		source.connect(audioCtx.destination);
+// 		// Start playback, but make sure we stay in bound of the buffer.
+// 		source.start(0, startOffset % sourceBuffer.duration);
+// 	}
+// 	playing = !playing;
+// };
 function handleXMovement(entity) {
 	entity.xa = entity.xa + (entity.xd / 60 * dt);
 	if (entity.xa > entity.maxa) {
@@ -2238,23 +1988,24 @@ function BigRoom(width, height, worldRoom, roomCreator) {
 			}
 			var mapCoord = coordinate(x, y, topSize * 10);
 			var roomCoord = coordinate(x % 10, y % 10, 10);
-			var leftMap = coordinate(x - 1, y, topSize * 10);
-			var rightMap = coordinate(x + 1, y, topSize * 10);
-			var aboveMap = coordinate(x, y - 1, topSize * 10);
-			var aboveAbove = coordinate(x, y - 2, topSize * 10);
-			if (y - 1 < 0) {
-				aboveMap = -1;
-			}
-			if (x - 1 < 0) {
-				leftMap = -1;
-			}
-			if (y + 1 > (height * 10) - 1) {
-				belowMap = -1;
-			}
-			if (x + 1 > (width * 10) - 1) {
-				rightMap = -1;
-			}
-			if (worldRoom.r.u && worldRoom.r.id === 0 && room.map[roomCoord] !== 0 && x < width * 10 && y < height * 10 && x < width * 10 && y < height * 10) {
+			// var leftMap = coordinate(x - 1, y, topSize * 10);
+			// var rightMap = coordinate(x + 1, y, topSize * 10);
+			// var aboveMap = coordinate(x, y - 1, topSize * 10);
+			// var aboveAbove = coordinate(x, y - 2, topSize * 10);
+			// if (y - 1 < 0) {
+			// 	aboveMap = -1;
+			// }
+			// if (x - 1 < 0) {
+			// 	leftMap = -1;
+			// }
+			// if (y + 1 > (height * 10) - 1) {
+			// 	belowMap = -1;
+			// }
+			// if (x + 1 > (width * 10) - 1) {
+			// 	rightMap = -1;
+			// }
+			var onScreen = x < width * 10 && y < height * 10 && x < width * 10 && y < height * 10;
+			if (worldRoom.r.u && worldRoom.r.id === 0 && room.map[roomCoord] !== 0 && onScreen) {
 				if (random(0, 5) === 1) {
 					map[mapCoord] = random(0, rColors.length - 1) + 2;
 				} else {
@@ -2264,7 +2015,7 @@ function BigRoom(width, height, worldRoom, roomCreator) {
 				map[mapCoord] = room.map[roomCoord];
 
 			}
-			if (worldRoom.r.u && map[mapCoord] === 0 && room.type !== 9 && x < width * 10 && y < height * 10 && x < width * 10 && y < height * 10) {
+			if (worldRoom.r.u && map[mapCoord] === 0 && room.type !== 9 && onScreen) {
 				if (worldRoom.r.id === 1 || worldRoom.r.id === 2 || worldRoom.r.id === 3) {
 					map[mapCoord] = worldRoom.r.id + 2;
 				}
@@ -2281,7 +2032,7 @@ function BigRoom(width, height, worldRoom, roomCreator) {
 					map[mapCoord] = worldRoom.r.id + 2;
 				}
 			}
-			if (worldRoom.r.u && (worldRoom.r.id === 3 || worldRoom.r.id === 4 || worldRoom.r.id === 0) && map[mapCoord] === 1 && room.type !== 9 && x < width * 10 && y < height * 10 && x < width * 10 && y < height * 10) {
+			if (worldRoom.r.u && worldRoom.r.id !== 2 && worldRoom.r.id !== 1 && map[mapCoord] === 1 && room.type !== 9 && onScreen) {
 				if (random(0, 3) === 1) {
 					map[mapCoord] = worldRoom.r.id + 2;
 				} else if (random(0, 3) === 2) {
@@ -2309,28 +2060,21 @@ function BigRoom(width, height, worldRoom, roomCreator) {
 				map[mapCoord] = 1;
 			}
 
-			function test(x, y) {
-				if (x > -1 && x < 2 && y > -1 && y < 2) {
-					return true;
-				}
-				if (x > 10 - 3 && x < 10 && y > -1 && y < 2) {
-					return true;
-				}
-				if (x > -1 && x < 2 && y > 10 - 3 && y < 10) {
-					return true;
-				}
-				if (x > 10 - 3 && x < 10 && y > 10 - 3 && y < 10) {
-					return true;
-				}
-			}
-			// if ((inRoomX === 0 && inRoomY === 0) || (inRoomX === 10 - 1 && inRoomY === 0) || (inRoomX === 0 && inRoomY === 10 - 1) || (inRoomX === 10 - 1 && inRoomY === 10 - 1)) {
-			// 	map[mapCoord] = 1;
-			// }
-			if (test(inRoomX, inRoomY)) {
+			if (x > -1 && x < 2 && y > -1 && y < 2) {
 				map[mapCoord] = 1;
 			}
+			if (x > 10 - 3 && x < 10 && y > -1 && y < 2) {
+				map[mapCoord] = 1;
+			}
+			if (x > -1 && x < 2 && y > 10 - 3 && y < 10) {
+				map[mapCoord] = 1;
+			}
+			if (x > 10 - 3 && x < 10 && y > 10 - 3 && y < 10) {
+				map[mapCoord] = 1;
+			}
+
 			// top walls
-			if (map[mapCoord] === 0) {
+			if (map[mapCoord] === 0 && onScreen) {
 				if ((y === 0 && northDoor !== null && x < roomTileWidth && northDoor.dt > -1)) {
 					map[mapCoord] = northDoor.dt + 2;
 				}
@@ -2349,8 +2093,6 @@ function BigRoom(width, height, worldRoom, roomCreator) {
 			}
 		}
 	}
-	// currentMapTiles = topSize * 10;
-	// currentMap = map;
 	return {
 		map: map,
 		width: width,
@@ -2360,174 +2102,18 @@ function BigRoom(width, height, worldRoom, roomCreator) {
 	};
 }
 
-
-
-// function setRoom(startX, startY, currentX, currentY, arraySize, array, validRooms, roomSelection, roomsX, roomsY) {
-// 	roomSelection.length = 0;
-// 	for (var e = 0; e < roomList.length; e++) {
-// 		validRooms[e] = e;
-// 	}
-// 	var aboveRoom = array[coordinate(currentX, currentY - 1, arraySize)];
-// 	var leftRoom = array[coordinate(currentX - 1, currentY, arraySize)];
-// 	var rightRoom = array[coordinate(currentX + 1, currentY, arraySize)];
-// 	var belowRoom = array[coordinate(currentX, currentY + 1, arraySize)];
-// 	if (currentY - 1 < 0) {
-// 		aboveRoom = -1;
-// 	}
-// 	if (currentX - 1 < 0) {
-// 		leftRoom = -1;
-// 	}
-// 	if (currentY + 1 > roomsY - 1) {
-// 		belowRoom = -1;
-// 	}
-// 	if (currentX + 1 > roomsX - 1) {
-// 		rightRoom = -1;
-// 	}
-// 	if (aboveRoom === 4 || aboveRoom === 2 || aboveRoom === 6 || aboveRoom === 7 || aboveRoom === 9 || aboveRoom === 13) {
-// 		console.warn("Room for Above")
-// 		for (var i = 0; i < validRooms.length; i++) {
-// 			validRooms[i] = -1;
-// 		}
-// 		validRooms[2] = 2;
-// 		validRooms[3] = 3;
-// 		validRooms[5] = 5;
-// 		validRooms[8] = 8;
-// 		validRooms[9] = 9;
-// 		if (leftRoom !== -1) {
-// 			if (leftRoom === 1 || leftRoom === 3 || leftRoom === 4 || leftRoom === 5 || leftRoom === 6 || leftRoom === 9 || leftRoom === 10) {
-// 				console.warn("Room for Above and Left")
-// 				validRooms[2] = -1;
-// 				validRooms[5] = -1;
-// 				validRooms[3] = 3;
-// 				validRooms[8] = 8;
-// 				validRooms[9] = 9;
-// 				if (rightRoom !== -1) {
-// 					if (rightRoom === 1 || rightRoom === 3 || rightRoom === 4 || rightRoom === 7 || rightRoom === 8 || rightRoom === 9 || rightRoom === 11) {
-// 						validRooms[8] = -1;
-// 					}
-// 				}
-// 			}
-// 		}
-// 		if (rightRoom !== -1) {
-// 			if (rightRoom === 1 || rightRoom === 3 || rightRoom === 4 || rightRoom === 7 || rightRoom === 8 || rightRoom === 9 || rightRoom === 11) {
-// 				console.warn("Room for Above and Left")
-// 				validRooms[2] = -1;
-// 				validRooms[8] = -1;
-// 				validRooms[3] = 3;
-// 				validRooms[5] = 5;
-// 				validRooms[9] = 9;
-// 				if (leftRoom !== -1) {
-// 					if (leftRoom === 1 || leftRoom === 3 || leftRoom === 4 || leftRoom === 5 || leftRoom === 6 || leftRoom === 9 || leftRoom === 10) {
-// 						validRooms[5] = -1;
-// 					}
-// 				}
-// 			}
-// 		}
-// 	}
-// 	if (currentX === 0) {
-// 		console.warn("Left of Map")
-// 		validRooms[7] = -1;
-// 		validRooms[8] = -1;
-// 		validRooms[1] = -1;
-// 	}
-// 	if (currentX === roomsX - 1) {
-// 		console.warn("Right of Map")
-// 		validRooms[5] = -1;
-// 		validRooms[6] = -1;
-// 		validRooms[1] = -1;
-// 	}
-// 	if (currentY === 0) {
-// 		console.warn("Top of Map")
-// 		validRooms[3] = -1;
-// 		validRooms[5] = -1;
-// 		validRooms[8] = -1;
-// 		validRooms[2] = -1;
-// 	}
-// 	if (currentY === roomsY - 1) {
-// 		console.warn("Bottom of Map")
-// 		validRooms[4] = -1;
-// 		validRooms[6] = -1;
-// 		validRooms[7] = -1;
-// 		validRooms[2] = -1;
-// 	}
-// 	if (currentX === startX && currentY === startY) {
-// 		console.warn("Room for Start")
-// 		for (var i = 0; i < validRooms.length; i++) {
-// 			validRooms[i] = -1;
-// 		}
-// 		validRooms[10] = 10;
-// 		validRooms[11] = 11;
-// 		validRooms[12] = 12;
-// 		validRooms[13] = 13;
-// 		if (leftRoom === -1) {
-// 			validRooms[11] = -1;
-// 		}
-// 		if (aboveRoom === -1) {
-// 			validRooms[12] = -1;
-// 		}
-// 		if (rightRoom === -1) {
-// 			validRooms[10] = -1;
-// 		}
-// 		if (belowRoom === -1) {
-// 			validRooms[13] = -1;
-// 		}
-// 	} else {
-// 		validRooms[10] = -1;
-// 		validRooms[11] = -1;
-// 		validRooms[12] = -1;
-// 		validRooms[13] = -1;
-// 	}
-// 	validRooms[9] = 9;
-// 	for (var i = 0; i < validRooms.length; i++) {
-// 		if (validRooms[i] !== -1) {
-// 			roomSelection.push(validRooms[i]);
-// 		}
-// 	}
-// 	var selectedRoom = roomSelection[random(0, roomSelection.length - 1)];
-// 	if (selectedRoom === 11) {
-// 		if ([1, 3, 4, 5, 6, 9].indexOf(leftRoom) === -1) {
-// 			setRoom(startX, startY, currentX - 1, currentY, arraySize, array, validRooms, roomSelection, roomsX, roomsY);
-// 		}
-// 	}
-// 	if (selectedRoom === 12) {
-// 		if ([2, 4, 6, 7, 9].indexOf(aboveRoom) === -1) {
-// 			setRoom(startX, startY, currentX, currentY - 1, arraySize, array, validRooms, roomSelection, roomsX, roomsY);
-// 		}
-// 	}
-// 	array[coordinate(currentX, currentY, arraySize)] = selectedRoom;
-// }
-
 function playerSizedRoom(room) {
 	room.map = BigRoom(room.mw * 1, room.mh * 1, room, function(array, roomsX, roomsY, arraySize) {
 		var currentX = 0;
 		var currentY = 0;
 		var roomID = 0;
 		for (var i = 0; i < arraySize * arraySize; i++) {
-			// var aboveRoom = array[coordinate(currentX, currentY - 1, arraySize)];
-			// var leftRoom = array[coordinate(currentX - 1, currentY, arraySize)];
-			// var rightRoom = array[coordinate(currentX + 1, currentY, arraySize)];
-			// var belowRoom = array[coordinate(currentX, currentY + 1, arraySize)];
-			// var roomX = Math.floor(currentX / 10);
-			// var roomY = Math.floor(currentY / 10);
 			var northDoor = getDoor(room, currentX, currentY, "N");
 			var eastDoor = getDoor(room, currentX, currentY, "E");
 			var southDoor = getDoor(room, currentX, currentY, "S");
 			var westDoor = getDoor(room, currentX, currentY, "W");
 			var horizontalRooms = [1, 3, 4, 9];
 			var verticalRooms = [2, 9, 10, 11];
-			// if (currentY - 1 < 0) {
-			// 	aboveRoom = -1;
-			// }
-			// if (currentX - 1 < 0) {
-			// 	leftRoom = -1;
-			// }
-			// if (currentY + 1 > roomsY - 1) {
-			// 	belowRoom = -1;
-			// }
-			// if (currentX + 1 > roomsX - 1) {
-			// 	rightRoom = -1;
-			// }
-			// setRoom(startX, startY, currentX, currentY, arraySize, array, validRooms, roomSelection, roomsX, roomsY);
 			if (currentX === 0 || currentY === 0 || currentX === roomsX - 1 || currentY === roomsY - 1) {
 				roomID = random(0, 11);
 			}
@@ -2546,7 +2132,6 @@ function playerSizedRoom(room) {
 			if (room.mh === 1) {
 				roomID = horizontalRooms[random(0, 3)];
 			}
-			// if (room.mw === 2 || room.mh === 2) {
 			if (currentX === 0 && currentY === 0) {
 				roomID = 6;
 			}
@@ -2559,7 +2144,6 @@ function playerSizedRoom(room) {
 			if (currentX === roomsX - 1 && currentY === roomsY - 1) {
 				roomID = 8;
 			}
-			// }
 			if (northDoor || southDoor || eastDoor || westDoor) {
 				roomID = 9;
 			}
@@ -2582,14 +2166,12 @@ function playerSizedRoom(room) {
 			if (room.sr) {
 				var randomW = room.sx * 1;
 				var randomH = room.sy * 1;
-				var randomX = random(1, 10 - 1);
-				var randomY = random(1, 10 - 1);
 			} else {
 				var randomW = random(1, room.mw * 1) - 1;
 				var randomH = random(1, room.mh * 1) - 1;
-				var randomX = random(1, 10 - 1);
-				var randomY = random(1, 10 - 1);
 			}
+			var randomY = random(1, 10 - 1);
+			var randomX = random(1, 10 - 1);
 			var coord = coordinate((randomW * 10) + randomX, (randomH * 10) + randomY, room.map.tiles);
 			var validPlacement = room.map.map[coord] === 0 || room.map.map[coord] === room.r.id + 2;
 			if (validPlacement) {
@@ -2598,33 +2180,33 @@ function playerSizedRoom(room) {
 			}
 			attempts++;
 		}
-		if (!found) {
-			if (room.sr) {
-				var startX = room.sx * 1 * 10;
-				var startY = room.sy * 1 * 10;
-				for (var x = startX + 1; x < startX + 10 - 1; x++) {
-					for (var y = startY + 1; y < startY + 10 - 1; y++) {
-						var coord = coordinate(x, y, room.map.tiles);
-						var validPlacement = room.map.map[coord] === 0 || room.map.map[coord] === room.r.id + 2;
-						if (validPlacement) {
-							room.map.map[coord] = 9;
-						}
-					}
-				}
-			} else {
-				var startX = room.sx * 1 * 10;
-				var startY = room.sy * 1 * 10;
-				for (var x = 0 + 1; x < (room.mw * 1 * 10) - 1; x++) {
-					for (var y = 0 + 1; y < (room.mh * 1 * 10) - 1; y++) {
-						var coord = coordinate(x, y, room.map.tiles);
-						var validPlacement = room.map.map[coord] === 0 || room.map.map[coord] === room.r.id + 2;
-						if (validPlacement) {
-							room.map.map[coord] = 9;
-						}
-					}
-				}
-			}
-		}
+		// if (!found) {
+		// 	if (room.sr) {
+		// 		var startX = room.sx * 1 * 10;
+		// 		var startY = room.sy * 1 * 10;
+		// 		for (var x = startX + 1; x < startX + 10 - 1; x++) {
+		// 			for (var y = startY + 1; y < startY + 10 - 1; y++) {
+		// 				var coord = coordinate(x, y, room.map.tiles);
+		// 				var validPlacement = room.map.map[coord] === 0 || room.map.map[coord] === room.r.id + 2;
+		// 				if (validPlacement) {
+		// 					room.map.map[coord] = 9;
+		// 				}
+		// 			}
+		// 		}
+		// 	} else {
+		// 		var startX = room.sx * 1 * 10;
+		// 		var startY = room.sy * 1 * 10;
+		// 		for (var x = 0 + 1; x < (room.mw * 1 * 10) - 1; x++) {
+		// 			for (var y = 0 + 1; y < (room.mh * 1 * 10) - 1; y++) {
+		// 				var coord = coordinate(x, y, room.map.tiles);
+		// 				var validPlacement = room.map.map[coord] === 0 || room.map.map[coord] === room.r.id + 2;
+		// 				if (validPlacement) {
+		// 					room.map.map[coord] = 9;
+		// 				}
+		// 			}
+		// 		}
+		// 	}
+		// }
 	}
 }
 var currentMap = null;
@@ -3420,7 +3002,7 @@ function clearDoorTypes() {
 	}
 }
 
-function assignDoorTypes() { // FIXME
+function assignDoorTypes() {
 	var door = null;
 	var r1 = null;
 	var r2 = null;
@@ -3468,7 +3050,7 @@ function unlRooms() {
 		}
 	}
 	for (var i = 0; i < world.rooms.length; i++) {
-		var hasDoor = false;
+		// var hasDoor = false;
 		var room = world.rooms[i];
 		if (player.keys.indexOf(room.s) > -1) {
 			room.s = -1;
@@ -3483,25 +3065,25 @@ function unlRooms() {
 			var door = room.d[e];
 			if (player.keys.indexOf(door.dt) > -1) {
 				door.dt = -1;
-				hasDoor = true;
+				// hasDoor = true;
 			}
 		}
-		if (hasDoor && room.map !== null) {
-			if (room.s === -1) {}
-			// for (var r = 0; r < player.keys.length; r++) {
-			// 	var index = room.map.map.indexOf(player.keys[r] + 1);
-			// 	while (index > 0) {
-			// 		room.map.map[index] = 0;
-			// 	}
-			// }
-			// for (var r = 0; r < room.map.map.length; r++) {
-			// 	if (room.map.map[r] > 1) {
-			// 		if (player.keys.indexOf(room.map.map[r] - 1) > -1) {
-			// 			room.map.map[r] = 0;
-			// 		}
-			// 	}
-			// }
-		}
+		// if (hasDoor && room.map !== null) {
+		// 	if (room.s === -1) {}
+		// 	// for (var r = 0; r < player.keys.length; r++) {
+		// 	// 	var index = room.map.map.indexOf(player.keys[r] + 1);
+		// 	// 	while (index > 0) {
+		// 	// 		room.map.map[index] = 0;
+		// 	// 	}
+		// 	// }
+		// 	// for (var r = 0; r < room.map.map.length; r++) {
+		// 	// 	if (room.map.map[r] > 1) {
+		// 	// 		if (player.keys.indexOf(room.map.map[r] - 1) > -1) {
+		// 	// 			room.map.map[r] = 0;
+		// 	// 		}
+		// 	// 	}
+		// 	// }
+		// }
 	}
 }
 

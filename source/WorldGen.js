@@ -537,7 +537,7 @@ function clearDoorTypes() {
 	}
 }
 
-function assignDoorTypes() { // FIXME
+function assignDoorTypes() {
 	var door = null;
 	var region1 = null;
 	var region2 = null;
@@ -585,7 +585,7 @@ function unlockRooms() {
 		}
 	}
 	for (var i = 0; i < world.rooms.length; i++) {
-		var hasDoor = false;
+		// var hasDoor = false;
 		var room = world.rooms[i];
 		if (player.keys.indexOf(room.specialType) > -1) {
 			room.specialType = -1;
@@ -600,25 +600,25 @@ function unlockRooms() {
 			var door = room.doors[e];
 			if (player.keys.indexOf(door.doorType) > -1) {
 				door.doorType = -1;
-				hasDoor = true;
+				// hasDoor = true;
 			}
 		}
-		if (hasDoor && room.map !== null) {
-			if (room.specialType === -1) {}
-			// for (var r = 0; r < player.keys.length; r++) {
-			// 	var index = room.map.map.indexOf(player.keys[r] + 1);
-			// 	while (index > 0) {
-			// 		room.map.map[index] = 0;
-			// 	}
-			// }
-			// for (var r = 0; r < room.map.map.length; r++) {
-			// 	if (room.map.map[r] > 1) {
-			// 		if (player.keys.indexOf(room.map.map[r] - 1) > -1) {
-			// 			room.map.map[r] = 0;
-			// 		}
-			// 	}
-			// }
-		}
+		// if (hasDoor && room.map !== null) {
+		// 	if (room.specialType === -1) {}
+		// 	// for (var r = 0; r < player.keys.length; r++) {
+		// 	// 	var index = room.map.map.indexOf(player.keys[r] + 1);
+		// 	// 	while (index > 0) {
+		// 	// 		room.map.map[index] = 0;
+		// 	// 	}
+		// 	// }
+		// 	// for (var r = 0; r < room.map.map.length; r++) {
+		// 	// 	if (room.map.map[r] > 1) {
+		// 	// 		if (player.keys.indexOf(room.map.map[r] - 1) > -1) {
+		// 	// 			room.map.map[r] = 0;
+		// 	// 		}
+		// 	// 	}
+		// 	// }
+		// }
 	}
 }
 
